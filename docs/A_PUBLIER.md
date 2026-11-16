@@ -13,7 +13,8 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 
 ## Corrections
 
-- (rien pour l'instant)
+- Désinstallation, « Supprimer aussi les réglages » : n'efface plus que les réglages de Pixane Photo (avant :
+  toute la clé Software\Pixane, donc aussi les réglages de Pixane Video). Signalé par le projet Video.
 
 ## À mettre à jour le jour de la publication
 

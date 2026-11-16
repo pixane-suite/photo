@@ -1180,7 +1180,9 @@ begin
     end;
     if SupprimerReglages then
     begin
-      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Pixane');
+      { seulement les réglages de Pixane Photo : Software\Pixane garde ceux des autres logiciels de la Suite }
+      RegDeleteKeyIncludingSubkeys(HKCU, '{#CleReglages}');
+      RegDeleteKeyIfEmpty(HKCU, 'Software\Pixane');
       RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Chrypix');      { ancien nom }
       Travail := ExpandConstant('{localappdata}\Pixane');
       DeleteFile(Travail + '\config.json');
