@@ -548,6 +548,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         for mode, texte in (("perspective", tr("Perspective")), ("distordre", tr("Distordre")),
                             ("deformation", tr("Déformation"))):
             self._action(sous, texte, None, lambda *_, m_=mode: self.transformer(m_), f"a_transfo_{mode}")
+        m.addSeparator()
+        self._action(m, tr("Préférences…"), "Ctrl+,", self.preferences, "a_preferences")
 
         m = self.menuBar().addMenu(tr("&Sélection"))
         self._action(m, tr("Tout sélectionner"), "Ctrl+A", lambda: self._modifier_selection("tout"), "a_tout")
@@ -676,6 +678,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         groupe = QActionGroup(self)
         for mode, texte in ((theme.AUTO, tr("Comme Windows")), (theme.CLAIR, tr("Clair")), (theme.SOMBRE, tr("Sombre"))):
             a = QAction(texte, self, checkable=True)
+            a.setData(mode)
             a.setChecked(mode == self.mode_theme)
             a.triggered.connect(lambda _=False, md=mode: self.changer_theme(md))
             groupe.addAction(a)
@@ -686,10 +689,12 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         actuel = self.reglages.value("langue", langue.AUTO)
         for code, texte in [(langue.AUTO, tr("Comme Windows"))] + list(langue.LANGUES.items()):
             a = QAction(texte, self, checkable=True)
+            a.setData(code)
             a.setChecked(code == actuel)
             a.triggered.connect(lambda _=False, c=code: self.changer_langue(c))
             groupe.addAction(a)
             sous.addAction(a)
+        self._actions_langue = groupe
         # taille de toute l'interface (au prochain démarrage) et des icônes des outils (tout de suite)
         from .__main__ import ECHELLES
         sous = m.addMenu(tr("Taille de l'interface"))
@@ -1749,6 +1754,56 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                                                  "Pixane Photo.\n\nRedémarrer maintenant ?"))
         if rep == QMessageBox.Yes:
             self._redemarrer()
+
+    def preferences(self):
+        """Édition > Préférences… : appliqué après OK, avec les mêmes fonctions et les mêmes réglages que les menus."""
+        from .preferences import DialoguePreferences
+        d = DialoguePreferences(self)
+        if not d.exec():
+            return
+        v = d.valeurs()
+        if v["theme"] != self.mode_theme:
+            self.changer_theme(v["theme"])
+        if v["icones"] != self._taille_icones():
+            self.changer_taille_icones(v["icones"])
+        # cases des menus : leur fonction suit (toggled), comme un clic dans le menu
+        for action, cle in ((self.a_barre_rapide, "barre_rapide"), (self.a_option_polices, "polices"),
+                            (self.a_option_orthographe, "orthographe"), (self.a_ia_nouveau_calque, "nouveau_calque"),
+                            (self.a_maj_auto, "maj")):
+            if action.isChecked() != v[cle]:
+                action.setChecked(v[cle])
+        if self.barre_agrandir.pleine.isChecked() != v["pleine"]:
+            self.barre_agrandir.pleine.setChecked(v["pleine"])
+        if v["grille"] != self.canevas.pas_grille:
+            self.canevas.pas_grille = v["grille"]
+            self.reglages.setValue("pas_grille", v["grille"])
+            self.canevas.update()
+        self.reglages.setValue("recuperation_minutes", v["recuperation"])
+        self._recuperation.definir_minutes(v["recuperation"])
+        if v["dossier"] and Path(v["dossier"]).is_dir():
+            self.reglages.setValue("dossier", v["dossier"])
+        # langue et taille de l'interface : au prochain démarrage, une seule question
+        demarrage = False
+        if v["langue"] != self.reglages.value("langue", langue.AUTO):
+            self.reglages.setValue("langue", v["langue"])
+            demarrage = True
+        if v["echelle"] != self._echelle_reglee():
+            self.reglages.setValue("echelle_interface", int(v["echelle"]))
+            demarrage = True
+        self._cocher_menus()
+        if demarrage and QMessageBox.question(self, NOM, tr(
+                "La langue ou la taille de l'interface changera au prochain démarrage de Pixane Photo.\n\n"
+                "Redémarrer maintenant ?")) == QMessageBox.Yes:
+            self._redemarrer()
+
+    def _cocher_menus(self):
+        """Choix des sous-menus d'Affichage remis d'accord avec les réglages (changés dans les Préférences)."""
+        for groupe, actuel in ((self._actions_theme, self.mode_theme),
+                               (self._actions_langue, self.reglages.value("langue", langue.AUTO)),
+                               (self._actions_echelle, self._echelle_reglee()),
+                               (self._actions_icones, self._taille_icones())):
+            for a in groupe.actions():
+                a.setChecked(a.data() == actuel)
 
     def _redemarrer(self):
         """Ferme Pixane (en demandant pour les images non enregistrées) et le relance, avec l'image ouverte."""

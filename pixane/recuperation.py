@@ -66,6 +66,13 @@ class Recuperation(QObject):
         if minutes > 0:
             self.minuterie.start()
 
+    def definir_minutes(self, minutes: float):
+        """Préférences > Enregistrement : fréquence de la copie (0 : jamais)."""
+        self.minuterie.stop()
+        if minutes > 0:
+            self.minuterie.setInterval(max(10, int(minutes * 60 * 1000)))
+            self.minuterie.start()
+
     def _ident(self, doc) -> str:
         if id(doc) not in self._vus:
             self._vus[id(doc)] = (f"{os.getpid()}-{uuid.uuid4().hex[:8]}", None)

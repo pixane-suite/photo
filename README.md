@@ -177,6 +177,19 @@ Windows : sur un petit écran de portable, choisissez 85 % ou 75 % pour gagner d
 **Affichage > Taille des icônes des outils** (*Petites*, *Normales*, *Grandes*, *Très grandes*) change seulement la
 barre des outils à gauche, tout de suite.
 
+**Préférences** (menu **Édition > Préférences…**, Ctrl+,) : tous les réglages durables au même endroit, en
+onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les mêmes réglages restent dans les menus.
+- **Affichage** : thème, langue, taille de l'interface, taille des icônes des outils, barre d'accès rapide, écart de
+  la grille. La langue et la taille de l'interface changent au prochain démarrage (Pixane Photo propose de
+  redémarrer) ; le reste tout de suite.
+- **Fonctions installées** : *Recherche de police semblable*, *Orthographe et césure* et ses langues : les options
+  choisies à l'installation, modifiables ici.
+- **Intelligence artificielle** : *Mettre les résultats dans un nouveau calque*, *Agrandir l'image en pleine
+  définition* ; le dossier du moteur IA et le bouton *Installer ou compléter le moteur IA…*.
+- **Enregistrement** : fréquence de la **copie de récupération** (toutes les 1, 3, 5 ou 10 minutes, ou jamais) et
+  **dossier des images** proposé pour ouvrir et enregistrer.
+- **Mises à jour** : *Vérifier les mises à jour au démarrage*, et un bouton pour chercher tout de suite.
+
 **Moteur IA** : au démarrage, Pixane Photo lance l'IA (ComfyUI) en arrière-plan, sans fenêtre. Comptez environ
 20 secondes. Le point en bas à gauche passe au vert quand le moteur est prêt ; les actions IA sont grisées avant.
 

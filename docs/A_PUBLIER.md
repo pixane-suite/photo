@@ -9,7 +9,9 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 
 ## Nouveautés
 
-- (rien pour l'instant)
+- **Édition > Préférences…** (Ctrl+,), comme Pixane Video : tous les réglages durables en onglets
+  (Affichage, Fonctions installées, Intelligence artificielle, Enregistrement, Mises à jour), appliqués à OK ; les
+  menus restent. Nouveaux réglages visibles : fréquence de la copie de récupération (ou jamais), dossier des images.
 
 ## Corrections
 

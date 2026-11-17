@@ -81,6 +81,18 @@ screen, choose 85 % or 75 % to save space; on a 4K screen, 125 % to 200 %. Pixan
 it (the open image is reopened). **View > Tool icon size** (*Small*, *Normal*, *Large*, *Very large*) changes only
 the tool bar on the left, right away.
 
+**Preferences** (**Edit > Preferences…** menu, Ctrl+,): all lasting settings in one place, in tabs. Nothing changes
+before **OK**; **Cancel** leaves everything as it was. The same settings stay in the menus.
+- **Display**: theme, language, interface size, tool icon size, quick access bar, grid spacing. The language and the
+  interface size change at the next start (Pixane Photo offers to restart); the rest right away.
+- **Installed features**: *Similar font search*, *Spelling and hyphenation* and its languages: the options chosen at
+  installation, which can be changed here.
+- **Artificial intelligence**: *Put results in a new layer*, *Expand the image in full definition*; the AI engine
+  folder and the *Install or complete the AI engine…* button.
+- **Saving**: how often the **recovery copy** is made (every 1, 3, 5 or 10 minutes, or never) and the **images
+  folder** offered to open and save.
+- **Updates**: *Check for updates at startup*, and a button to check right now.
+
 **AI engine**: when it starts, Pixane Photo launches the AI (ComfyUI) in the background, without a window. Allow about
 20 seconds. The dot at the bottom left turns green when the engine is ready; AI actions are greyed out before that.
 
