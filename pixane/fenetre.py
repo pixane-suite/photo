@@ -2035,6 +2035,10 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             self.reglages.setValue("pas_grille", v["grille"])
             self.canevas.update()
         self.reglages.setValue("recuperation_minutes", v["recuperation"])
+        self.reglages.setValue("annulations", v["annulations"])
+        for pile in self._piles.values():          # Qt ne change la limite que d'une pile vide
+            if pile.count() == 0:
+                pile.setUndoLimit(v["annulations"])
         self._recuperation.definir_minutes(v["recuperation"])
         if v["dossier"] and Path(v["dossier"]).is_dir():
             self.reglages.setValue("dossier", v["dossier"])

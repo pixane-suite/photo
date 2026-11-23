@@ -187,7 +187,8 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
 - **Intelligence artificielle** : *Mettre les résultats dans un nouveau calque*, *Agrandir l'image en pleine
   définition* ; le dossier du moteur IA et le bouton *Installer ou compléter le moteur IA…*.
 - **Enregistrement** : fréquence de la **copie de récupération** (toutes les 1, 3, 5 ou 10 minutes, ou jamais) et
-  **dossier des images** proposé pour ouvrir et enregistrer.
+  **dossier des images** proposé pour ouvrir et enregistrer ; **Annuler (Ctrl+Z)** : nombre d'étapes que l'on peut
+  annuler par image (**100** au départ, de 10 à 1000 ; plus il y en a, plus Pixane garde de mémoire).
 - **Mises à jour** : *Vérifier les mises à jour au démarrage*, et un bouton pour chercher tout de suite.
 
 **Moteur IA** : au démarrage, Pixane Photo lance l'IA (ComfyUI) en arrière-plan, sans fenêtre. Comptez environ
@@ -1471,6 +1472,20 @@ redresse les lignes courbées en tonneau ou en coussin, l'image est agrandie jus
 vide ; *Vignetage* : éclaircit les coins sombres ; *Franges de couleur* : enlève les liserés rouges ou cyan sur les
 bords ; réglage à la main, sans profil d'appareil). Même fonctionnement que les réglages : aperçu en
 direct, calque choisi, dans la sélection s'il y en a une, une étape dans Annuler. Ils marchent aussi sur un masque.
+
+**Effets créatifs** (en bas du menu Filtres, même fonctionnement) :
+- **Rétro** : **Demi-teinte (pop art)** (points d'imprimerie, en noir et blanc ou en quatre encres CMJN ; taille des
+  points, angle), **Cassette VHS** (couleurs décalées, lignes de balayage, bruit), **Pellicule ancienne** (couleurs
+  passées vers le sépia, grain, rayures et poussières), **Pixel art** (taille des pixels, nombre de couleurs).
+- **Peinture** : **Aquarelle** (aplats doux, grain du papier), **Peinture à l'huile** (taille de la touche, relief),
+  **Croquis au crayon** (gris ou crayons de couleur), **Bande dessinée** (quelques teintes et contours noirs).
+- **Lumière** : **Reflet d'objectif** (place de la source en %, taille, force), **Rayons de soleil** (les parties
+  claires sont étirées depuis la source ; seuil, longueur), **Fuites de lumière** (taches de couleur venues d'un bord ;
+  couleur, côté, variante).
+- **Effet miniature** : une bande nette (hauteur et largeur réglables), le reste flou et les couleurs plus vives : la
+  scène ressemble à une maquette.
+- **Bordure et cadre** : Polaroid, cadre simple, coins arrondis (transparents), bords déchirés, passe-partout,
+  pellicule ; épaisseur et couleur (blanc, noir, crème). La taille de l'image ne change pas.
 
 ### Actions (panneau ACTIONS)
 Comme dans Photoshop : **enregistrer** une suite d'opérations, puis la **rejouer** d'un clic sur d'autres photos.

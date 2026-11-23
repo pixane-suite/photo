@@ -49,13 +49,21 @@ class Onglets:
     def documents(self) -> list:
         return list(self._docs)
 
+    def nombre_annulations(self) -> int:
+        """Étapes d'annulation par image (Préférences > Enregistrement ; 100 au départ)."""
+        from .preferences import ANNULATIONS
+        try:
+            return max(10, min(1000, int(float(self.reglages.value("annulations", ANNULATIONS)))))
+        except (TypeError, ValueError):
+            return ANNULATIONS
+
     def _installer_document(self, doc):
         """Nouvelle photo : un nouvel onglet (ou retour à son onglet si elle est déjà ouverte)."""
         if doc in self._docs:
             self.barre_onglets.setCurrentIndex(self._docs.index(doc))
             return
         pile = QUndoStack(self)
-        pile.setUndoLimit(30)
+        pile.setUndoLimit(self.nombre_annulations())
         self.groupe_historique.addStack(pile)
         self._piles[id(doc)] = pile
         self._docs.append(doc)

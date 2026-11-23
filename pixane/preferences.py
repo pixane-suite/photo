@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
 from . import langue, theme
 from .langue import tr
 
+ANNULATIONS = 100                    # étapes d'annulation par image, au départ
+
 MINUTES_RECUPERATION = (1, 3, 5, 10, 0)          # 0 : jamais
 TAILLES_ICONES = (18, 22, 28, 36)
 
@@ -164,6 +166,18 @@ class DialoguePreferences(QDialog):
         self.recuperation = _liste([(m, tr("Toutes les {n} min", n=m)) for m in MINUTES_RECUPERATION if m]
                                    + [(0, tr("Jamais"))], minutes)
         form.addRow(tr("Copie de récupération"), self.recuperation)
+        self.annulations = QSpinBox()
+        self.annulations.setRange(10, 1000)
+        self.annulations.setSingleStep(10)
+        try:
+            self.annulations.setValue(int(float(r.value("annulations", ANNULATIONS))))
+        except (TypeError, ValueError):
+            self.annulations.setValue(ANNULATIONS)
+        self.annulations.setSuffix(" " + tr("étapes"))
+        form.addRow(tr("Annuler (Ctrl+Z)"), self.annulations)
+        form.addRow("", _note(tr("Nombre d'étapes que l'on peut annuler, par image (100 au départ). Plus il est grand, "
+                                 "plus Pixane garde de mémoire. Compte pour les images ouvertes ensuite, et pour "
+                                 "celles qui n'ont encore rien à annuler.")))
         ligne = QHBoxLayout()
         self.dossier = QLineEdit(str(r.value("dossier", str(Path.home() / "Pictures"))))
         b = QPushButton(tr("Parcourir…"))
@@ -215,4 +229,5 @@ class DialoguePreferences(QDialog):
                 "nouveau_calque": self.nouveau_calque.isChecked(), "pleine": self.pleine.isChecked(),
                 "analyse": self.analyse.isChecked(),
                 "recuperation": self.recuperation.currentData(), "dossier": self.dossier.text().strip(),
+                "annulations": self.annulations.value(),
                 "maj": self.maj.isChecked()}

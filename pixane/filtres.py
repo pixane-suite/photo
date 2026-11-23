@@ -14,6 +14,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 from PySide6.QtGui import QImage
 
+from . import effets
 from .langue import tr
 
 # type -> liste de (clé, libellé, min, max, défaut, unité)
@@ -41,7 +42,8 @@ FILTRES = {
 def noms() -> dict:
     return {"flou": tr("Flou gaussien"), "mouvement": tr("Flou de mouvement"), "radial": tr("Flou radial"),
             "objectif": tr("Flou de l'objectif"), "surface": tr("Flou de surface"), "bruit": tr("Réduction du bruit"),
-            "nettete": tr("Netteté"), "vignette": tr("Vignette"), "correction": tr("Correction de l'objectif")}
+            "nettete": tr("Netteté"), "vignette": tr("Vignette"), "correction": tr("Correction de l'objectif"),
+            **effets.noms()}
 
 
 def libelles() -> dict:
@@ -58,14 +60,15 @@ def libelles() -> dict:
             "Déformation (− corrige un coussin, + corrige un tonneau)":
                 tr("Déformation (− corrige un coussin, + corrige un tonneau)"),
             "Vignetage (+ éclaircit les coins sombres)": tr("Vignetage (+ éclaircit les coins sombres)"),
-            "Franges de couleur (rouge / cyan sur les bords)": tr("Franges de couleur (rouge / cyan sur les bords)")}
+            "Franges de couleur (rouge / cyan sur les bords)": tr("Franges de couleur (rouge / cyan sur les bords)"),
+            **effets.libelles()}
 
 
 def choix(type_: str, cle: str) -> list[str] | None:
     """Réglages à choisir dans une liste (valeur = place dans la liste) plutôt qu'avec un curseur."""
     if (type_, cle) == ("radial", "zoom"):
         return [tr("Rotation"), tr("Zoom")]
-    return None
+    return effets.choix(type_, cle)
 
 
 def defauts(type_: str) -> dict:
@@ -411,6 +414,9 @@ def garder_teinte(original: np.ndarray, resultat: np.ndarray) -> np.ndarray:
 FONCTIONS = {"flou": flou_gaussien, "mouvement": flou_mouvement, "radial": flou_radial, "objectif": flou_objectif,
              "surface": flou_surface, "bruit": reduire_bruit, "nettete": nettete,
              "vignette": vignette, "correction": correction_objectif}
+BASE = tuple(FILTRES)                     # filtres du haut du menu ; les effets sont rangés dans des sous-menus
+FILTRES.update(effets.EFFETS)
+FONCTIONS.update(effets.FONCTIONS)
 
 
 def appliquer_calque(img: QImage, calcul, selection: QImage | None, seize: str | None = None) -> QImage:

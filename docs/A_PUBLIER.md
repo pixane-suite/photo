@@ -56,6 +56,11 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   peinture, couleurs principales de l'image ouverte, groupes repliables ; clic droit pour ranger une couleur dans
   *Mes couleurs*.
 
+- **Effets créatifs** (menu Filtres) : Rétro (demi-teinte, cassette VHS, pellicule ancienne, pixel art), Peinture
+  (aquarelle, peinture à l'huile, croquis au crayon, bande dessinée), Lumière (reflet d'objectif, rayons de soleil,
+  fuites de lumière), Effet miniature, Bordure et cadre (Polaroid, coins arrondis, bords déchirés, passe-partout…).
+- **Annuler** : 100 étapes au lieu de 30, et le nombre se choisit dans Préférences > Enregistrement (10 à 1000).
+
 ## Corrections
 
 - **Outil Déplacer** : il ne déplace plus d'autres calques choisis plus tôt dans le panneau quand le calque actif a changé depuis.

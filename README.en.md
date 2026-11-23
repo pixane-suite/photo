@@ -185,7 +185,8 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
 - **Artificial intelligence**: *Put results in a new layer*, *Expand the image in full definition*; the AI engine
   folder and the *Install or complete the AI engine…* button.
 - **Saving**: how often the **recovery copy** is made (every 1, 3, 5 or 10 minutes, or never) and the **images
-  folder** offered to open and save.
+  folder** offered to open and save; **Undo (Ctrl+Z)**: number of steps that can be undone per image (**100** at
+  first, from 10 to 1000; the more there are, the more memory Pixane keeps).
 - **Updates**: *Check for updates at startup*, and a button to check right now.
 
 **AI engine**: when it starts, Pixane Photo launches the AI (ComfyUI) in the background, without a window. Allow about
@@ -1413,6 +1414,19 @@ barrel or a pincushion, the image is enlarged just enough to leave no empty corn
 corners; *Colour fringes*: removes red or cyan edges; set by hand, no camera profile). Same behaviour as
 adjustments: live preview, selected layer, inside the
 selection if there is one, one step in Undo. They also work on a mask.
+
+**Creative effects** (at the bottom of the Filters menu, same behaviour):
+- **Retro**: **Halftone (pop art)** (printing dots, black and white or four CMYK inks; dot size, angle), **VHS tape**
+  (shifted colours, scan lines, noise), **Old film** (colours faded towards sepia, grain, scratches and dust),
+  **Pixel art** (pixel size, number of colours).
+- **Painting**: **Watercolour** (soft flat areas, paper grain), **Oil painting** (brush stroke size, relief),
+  **Pencil sketch** (graphite or coloured pencils), **Comic book** (a few tones and black outlines).
+- **Light**: **Lens flare** (source position in %, size, strength), **Sun rays** (bright areas are stretched from the
+  source; threshold, length), **Light leaks** (colour patches coming from an edge; colour, side, variant).
+- **Miniature effect**: a sharp band (adjustable height and width), the rest blurred and the colours more vivid: the
+  scene looks like a scale model.
+- **Border and frame**: Polaroid, simple frame, rounded corners (transparent), torn edges, mat, film strip;
+  thickness and colour (white, black, cream). The image size does not change.
 
 ### Actions (ACTIONS panel)
 As in Photoshop: **record** a series of operations, then **replay** it in one click on other photos.

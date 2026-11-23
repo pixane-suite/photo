@@ -8,7 +8,7 @@ from dataclasses import replace
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
-from . import ajustements, filtres
+from . import ajustements, effets, filtres
 from .dialogues_reglage import PANNEAUX, DialogueReglage, PanneauFiltre, histogramme
 from .document import FORMAT_IMAGE, masque, tableau
 from .langue import tr
@@ -95,8 +95,14 @@ class ActionsCalques:
         noms = filtres.noms()
         self._action(m, tr("Fluidité…"), "Ctrl+Shift+X", self.fluidite, "a_fluidite")
         m.addSeparator()
-        for t in filtres.FILTRES:
+        for t in filtres.BASE:
             self._action(m, noms[t] + "…", None, lambda *_, t=t: self.filtre(t), f"a_filtre_{t}")
+        m.addSeparator()
+        groupes = effets.noms_groupes()
+        for g, types in effets.GROUPES:
+            sous = m.addMenu(groupes[g]) if g else m
+            for t in types:
+                self._action(sous, noms[t] + "…", None, lambda *_, t=t: self.filtre(t), f"a_filtre_{t}")
         return m
 
     def _actions_calques_doc(self) -> list:
