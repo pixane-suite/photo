@@ -1394,7 +1394,41 @@ Everything can be undone with Ctrl+Z.
 
 ---
 
-## 11. Shortcuts
+## 11. Tips
+
+Advice for better results. This chapter also opens from **Help > Tips**.
+
+### Artificial intelligence
+- **Remove tool (AI)**: use a **very good quality** image and work in **small areas**, one after another. The
+  better the image quality, the more the removal respects the original image.
+- **Erase**: paint **a little wider** than the object, shadow included. The analysis before erasing offers to add
+  it when it finds it.
+- **Large object**: use *Erase* (Shift+E), which offers several results; *Remove* (J) is meant for small flaws
+  (wire, stain, dust).
+- **Disappointing result**: run it again, or pick another suggestion in the results window; the AI never gives the
+  same thing twice.
+- **The AI is bad at writing text**: add text afterwards with the Text tool.
+
+### Selection
+- **Magic wand**: after clicking, drag the mouse right or left to adjust the tolerance live.
+- **Polygonal lasso** (Lasso bar): handy for objects with straight edges (window, sign, screen).
+- **Shift** adds to the selection, **Alt** removes from it, while drawing.
+
+### Text
+- **Double-click** a text on the photo or its layer: it opens for editing.
+- **Dragging over the letters** on the photo chooses them; **Ctrl + drag** (or the frame's edge) moves the text.
+- **Find a similar font**: draw tightly around the text on the photo; tick *Free Google Fonts* to also search among
+  nearly 2,000 free fonts.
+
+### Layers and retouching
+- **Paint or retouch without damaging the photo**: add an empty layer above and work on it; you can erase or delete
+  it at any time.
+- **Move several layers together**: group them (Ctrl+G), choose the group, then the Move tool (V).
+- **Drop shadow** (layer style): drag the round point on the photo to place the end of the shadow.
+- **Fine work** (gradients, strong adjustments): switch the image to **16 bits** (Image > Mode) or create it in
+  16 bits directly.
+
+## 12. Shortcuts
 
 | Key | Action |
 |---|---|
@@ -1440,7 +1474,7 @@ Everything can be undone with Ctrl+Z.
 
 ---
 
-## 12. Hardware and licences
+## 13. Hardware and licences
 
 **Installation**: run `Pixane-Photo-Setup-<version>-64bits.exe`.
 1. Installation language (it will also be Pixane Photo's language, which can be changed later in View > Language).

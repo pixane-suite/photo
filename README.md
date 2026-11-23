@@ -1552,7 +1552,41 @@ Tout s'annule par Ctrl+Z.
 
 ---
 
-## 11. Raccourcis
+## 11. Astuces
+
+Des conseils pour obtenir de meilleurs résultats. Ce chapitre s'ouvre aussi par **Aide > Astuces**.
+
+### Intelligence artificielle
+- **Outil Supprimer (IA)** : utilisez une image de **très bonne qualité** et travaillez par **petites zones**, l'une
+  après l'autre. Plus l'image est de bonne qualité, plus la suppression respecte l'image d'origine.
+- **Effacer** : peignez **un peu plus large** que l'objet, ombre comprise. L'analyse avant d'effacer propose de
+  l'ajouter quand elle la trouve.
+- **Gros objet** : préférez *Effacer* (Maj+E), qui propose plusieurs résultats ; *Supprimer* (J) est fait pour les
+  petits défauts (fil, tache, poussière).
+- **Résultat décevant** : relancez, ou choisissez une autre proposition dans la fenêtre des résultats ; l'IA ne
+  donne jamais deux fois la même chose.
+- **L'IA écrit mal les textes** : ajoutez-les ensuite avec l'outil Texte.
+
+### Sélection
+- **Baguette magique** : après le clic, glissez la souris à droite ou à gauche pour régler la tolérance en direct.
+- **Lasso par points** (barre du Lasso) : pratique pour les objets aux bords droits (fenêtre, panneau, écran).
+- **Maj** ajoute à la sélection, **Alt** en retire, pendant le tracé.
+
+### Texte
+- **Double-clic** sur un texte de la photo ou sur son calque : il s'ouvre pour être modifié.
+- **Glisser sur les lettres** de la photo les choisit ; **Ctrl + glisser** (ou le bord du cadre) déplace le texte.
+- **Trouver une police semblable** : entourez le texte de la photo bien serré ; cochez *Polices gratuites Google
+  Fonts* pour chercher aussi parmi près de 2 000 polices gratuites.
+
+### Calques et retouche
+- **Peindre ou retoucher sans abîmer la photo** : ajoutez un calque vide au-dessus et travaillez dessus ; vous
+  pourrez le gommer ou le supprimer à tout moment.
+- **Déplacer plusieurs calques ensemble** : groupez-les (Ctrl+G), choisissez le groupe, puis l'outil Déplacer (V).
+- **Ombre portée** (style de calque) : tirez le point rond sur la photo pour placer le bout de l'ombre.
+- **Travail fin** (dégradés, réglages poussés) : passez l'image en **16 bits** (Image > Mode) ou créez-la
+  directement en 16 bits.
+
+## 12. Raccourcis
 
 | Touche | Action |
 |---|---|
@@ -1598,7 +1632,7 @@ Tout s'annule par Ctrl+Z.
 
 ---
 
-## 12. Matériel et licences
+## 13. Matériel et licences
 
 **Installation** : lancer `Pixane-Photo-Setup-<version>-64bits.exe`.
 1. Langue de l'installation (ce sera aussi la langue de Pixane Photo, modifiable ensuite dans Affichage > Langue).

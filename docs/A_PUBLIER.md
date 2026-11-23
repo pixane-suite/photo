@@ -38,7 +38,7 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   (désactivable dans les Préférences).
 - **Onglets Calques / Historique / Nuancier / Actions** : l'onglet ouvert se voit (gras, trait de couleur).
 
-- **Astuce pour l'outil Supprimer (IA)** (message du bas et guide) : image de très bonne qualité, petites zones.
+- **Astuces** : nouveau chapitre du guide, ouvert par **Aide > Astuces** (IA, sélection, texte, calques), dont l'astuce de l'outil Supprimer (IA) : image de très bonne qualité, petites zones (aussi dans le message du bas).
 
 ## Corrections
 

@@ -810,6 +810,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         m = self.menuBar().addMenu(tr("&Aide"))
         self._action(m, tr("Guide de Pixane Photo"), None, lambda: self.guide(), "a_guide")
         self._action(m, tr("Raccourcis"), "F1", lambda: self.guide(tr("Raccourcis")), "a_raccourcis")
+        self._action(m, tr("Astuces"), None, lambda: self.guide(tr("Astuces")), "a_astuces")
         m.addSeparator()
         self._action(m, tr("Rechercher une mise à jour…"), None, lambda: self.verifier_maj(False))
         a = self._action(m, tr("Vérifier les mises à jour au démarrage"), None, None, "a_maj_auto")
