@@ -1270,7 +1270,6 @@
  "Recherche arrêtée.": "Search stopped.",
  "Recherche de police semblable": "Similar font search",
  "Recherche…": "Searching…",
- "Respecte les majuscules et les minuscules, et les retours à la ligne s'il y en a (Maj+Entrée n'existe pas ici : sépare les lignes par « / »).": "Keep capitals and small letters, and line breaks if any (Shift+Enter does not work here: separate lines with \"/\").",
  "Rien trouvé : vérifie les lettres tapées et la sélection (les lettres seules).": "Nothing found: check the typed letters and the selection (the letters only).",
  "Sélectionne d'abord les lettres du texte : outil Sélection de texte (Y), un cadre autour du texte.": "First select the letters of the text: Text selection tool (Y), a frame around the text.",
  "Tape d'abord les lettres que tu vois dans l'image.": "First type the letters you see in the image.",
@@ -1829,5 +1828,13 @@
  "La description automatique a besoin du modèle Qwen3.5 2B ({taille}, licence Apache-2.0, Hugging Face), qui n'est pas installé.\n\nOuvrir l'installation du moteur IA maintenant ? (case « description automatique d'Agrandir l'image »)": "The automatic description needs the Qwen3.5 2B model ({taille}, Apache-2.0 licence, Hugging Face), which is not installed.\n\nOpen the AI engine installation now? (\"automatic description of Expand image\" box)",
  "Qwen3.5 2B (Agrandir : description automatique, facultatif)": "Qwen3.5 2B (Expand: automatic description, optional)",
  "Qwen3.5 2B (description automatique d'Agrandir) : déjà installé": "Qwen3.5 2B (automatic description for Expand): already installed",
- "Agrandir : description automatique (facultatif)": "Expand: automatic description (optional)"
+ "Agrandir : description automatique (facultatif)": "Expand: automatic description (optional)",
+ "Ci-dessus, en noir : les lettres que Pixane Photo a prises (vérifie qu'elles sont complètes). Tape exactement ces lettres, dans le même ordre, avec les majuscules et les minuscules ; sépare les lignes par « / ».": "Above, in black: the letters Pixane Photo picked up (check that they are complete). Type exactly these letters, in the same order, with upper and lower case; separate lines with \"/\".",
+ "L'image semble avoir {n} lettres, tu en as tapé {m} (sans les espaces) : vérifie les lettres tapées, la comparaison est moins précise.": "The image seems to have {n} letters, you typed {m} (without spaces): check the typed letters, the comparison is less precise.",
+ "L'image semble avoir {n} ligne(s), tu en as tapé {m}.": "The image seems to have {n} line(s), you typed {m}.",
+ "Lecture des lettres…": "Reading the letters…",
+ "Les lettres de l'image semblent en majuscules : recherche faite avec « {t} ».": "The letters in the image seem to be upper case: searched with \"{t}\".",
+ "Lettres lues par Windows : vérifie-les (et corrige si besoin), puis Chercher.": "Letters read by Windows: check them (and correct if needed), then Search.",
+ "Windows lit les lettres de l'image…": "Windows is reading the letters in the image…",
+ "Windows n'a pas pu lire les lettres : tape-les.": "Windows could not read the letters: type them."
 }

@@ -64,8 +64,9 @@ class FenetrePolices(QDialog):
         self.b_chercher.clicked.connect(self.chercher)
         ligne.addWidget(self.b_chercher)
         lay.addLayout(ligne)
-        aide = QLabel(tr("Respecte les majuscules et les minuscules, et les retours à la ligne s'il y en a "
-                         "(Maj+Entrée n'existe pas ici : sépare les lignes par « / »)."))
+        aide = QLabel(tr("Ci-dessus, en noir : les lettres que Pixane Photo a prises (vérifie qu'elles sont "
+                         "complètes). Tape exactement ces lettres, dans le même ordre, avec les majuscules et les "
+                         "minuscules ; sépare les lignes par « / »."))
         aide.setObjectName("discret")
         aide.setWordWrap(True)
         lay.addWidget(aide)
@@ -73,6 +74,7 @@ class FenetrePolices(QDialog):
         self.progres.setVisible(False)
         lay.addWidget(self.progres)
         self.etat = QLabel()
+        self.etat.setWordWrap(True)
         self.etat.setObjectName("discret")
         lay.addWidget(self.etat)
         self.liste = QListWidget()
@@ -100,6 +102,28 @@ class FenetrePolices(QDialog):
         lay.addLayout(bas)
         self._maj_boutons()
         self.resize(760, 640)
+        # case vide : Windows lit les lettres de l'image (OCR intégré, sans téléchargement) ; l'utilisateur vérifie
+        self._lecteur = None
+        from . import lecture_texte
+        if not texte_depart.strip() and lecture_texte.disponible():
+            self._lecteur = lecture_texte.Lecteur(self)
+            self._lecteur.fini.connect(self._lu)
+            if self._lecteur.lire(masque):
+                self.texte.setPlaceholderText(tr("Lecture des lettres…"))
+                self.etat.setText(tr("Windows lit les lettres de l'image…"))
+
+    def _lu(self, texte: str) -> None:
+        self.texte.setPlaceholderText(tr("ex. DISCO"))
+        if texte and not self.texte.text().strip():
+            self.texte.setText(texte)
+            self.etat.setText(tr("Lettres lues par Windows : vérifie-les (et corrige si besoin), puis Chercher."))
+        elif not self.texte.text().strip():
+            self.etat.setText(tr("Windows n'a pas pu lire les lettres : tape-les."))
+
+    def done(self, r: int) -> None:
+        if self._lecteur is not None:
+            self._lecteur.arreter()
+        super().done(r)
 
     def lettres(self) -> str:
         return "\n".join(l.strip() for l in self.texte.text().split("/") if l.strip())
@@ -116,6 +140,16 @@ class FenetrePolices(QDialog):
         self.b_chercher.setText(tr("Arrêter"))
         self.texte.setEnabled(False)
         self.liste.clear()
+        vues = ps.compter_lettres(self.masque)
+        tapees = [len(l) for l in ps.sans_espaces(texte)]
+        avertir = []
+        if vues and vues != tapees:
+            if len(vues) != len(tapees):
+                avertir.append(tr("L'image semble avoir {n} ligne(s), tu en as tapé {m}.", n=len(vues), m=len(tapees)))
+            else:
+                avertir.append(tr("L'image semble avoir {n} lettres, tu en as tapé {m} (sans les espaces) : "
+                                  "vérifie les lettres tapées, la comparaison est moins précise.",
+                                  n=sum(vues), m=sum(tapees)))
         self.progres.setVisible(True)
         self.progres.setValue(0)
         manquantes = sum(1 for f in ps.familles() if f not in ps.memoire())
@@ -128,8 +162,9 @@ class FenetrePolices(QDialog):
             self.progres.setValue(fait)
             QApplication.processEvents()
             return not self._arret
+        infos = {}
         try:
-            self.resultats = ps.chercher(self.masque, texte, 12, progres)
+            self.resultats = ps.chercher(self.masque, texte, 12, progres, infos=infos)
         finally:
             self.b_chercher.setText(tr("Chercher"))
             self.texte.setEnabled(True)
@@ -137,17 +172,23 @@ class FenetrePolices(QDialog):
         if self._arret:
             self.etat.setText(tr("Recherche arrêtée."))
             return
+        compare = infos.get("texte", texte)
+        if compare != texte:
+            avertir.append(tr("Les lettres de l'image semblent en majuscules : recherche faite avec « {t} ».",
+                              t=compare.replace("\n", " / ")))
+            self.texte.setText(compare.replace("\n", " / "))     # « Créer un texte » écrira ces lettres
         for r in self.resultats:
             style = " ".join(x for x in (tr("gras") if r.gras else "", tr("italique") if r.italique else "") if x)
-            it = QListWidgetItem(QIcon(echantillon(texte, r)), f"{r.famille}{'  ·  ' + style if style else ''}\n"
+            it = QListWidgetItem(QIcon(echantillon(compare, r)), f"{r.famille}{'  ·  ' + style if style else ''}\n"
                                  + tr("ressemblance : {n} %", n=round(r.score)))
             it.setData(Qt.UserRole, r)
             self.liste.addItem(it)
         if self.resultats:
             self.liste.setCurrentRow(0)
-            self.etat.setText(tr("Les plus proches d'abord. Double-clic pour l'utiliser."))
+            self.etat.setText(" ".join(avertir + [tr("Les plus proches d'abord. Double-clic pour l'utiliser.")]))
         else:
-            self.etat.setText(tr("Rien trouvé : vérifie les lettres tapées et la sélection (les lettres seules)."))
+            self.etat.setText(" ".join(avertir + [tr("Rien trouvé : vérifie les lettres tapées et la sélection "
+                                                     "(les lettres seules).")]))
 
     def _maj_boutons(self, *_a) -> None:
         it = self.liste.currentItem()

@@ -427,21 +427,15 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                 "(Y) : il ne garde que les lettres."))
             return
         a = tableau(self.doc.image.copy(rect).convertToFormat(FORMAT_IMAGE)).copy()
-        a[:, :, 3] = np.minimum(a[:, :, 3], zone)          # seulement les lettres, sur fond blanc
-        lettres = QImage(rect.width(), rect.height(), QImage.Format_ARGB32_Premultiplied)
-        lettres.fill(Qt.white)
-        p = QPainter(lettres)
-        from .document import qimage_rgba
-        p.drawImage(0, 0, qimage_rgba(a))
-        p.end()
+        # les lettres prises, en noir sur blanc (quelle que soit leur couleur : un texte blanc se voit aussi)
+        gris = np.ascontiguousarray(255 - zone.astype(np.uint8))
+        lettres = QImage(gris.data, gris.shape[1], gris.shape[0], gris.shape[1], QImage.Format_Grayscale8).copy()
         c = self.doc.calque_actif
-        depart = c.texte.texte.replace("\n", " / ") if c.texte is not None else \
-            self.reglages.value("police_lettres", "", type=str)
+        # pas le mot de la recherche d'avant (une autre image) : la case part vide, sauf pour un calque de texte
+        depart = c.texte.texte.replace("\n", " / ") if c.texte is not None else ""
         d = FenetrePolices(lettres, zone, depart, c.texte is not None, self)
         if not d.exec() or d.choisi is None:
-            self.reglages.setValue("police_lettres", d.texte.text())
             return
-        self.reglages.setValue("police_lettres", d.texte.text())
         r = d.choisi
         if d.action == "appliquer" and c.texte is not None:
             t = remplacer(c.texte, police=r.famille, gras=r.gras, italique=r.italique)

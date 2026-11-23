@@ -19,6 +19,15 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 
 ## Corrections
 
+- **Trouver une police semblable** donnait des polices sans rapport :
+  - comparaison **lettre par lettre** : les lettres espacées (« C O L D P L A Y ») et les textes gras retrouvent leur
+    police (essai sur 92 textes : 1re dans 46 cas sur 92 au lieu de 26, dans les 3 premières 59 fois au lieu de 28) ;
+  - la mémoire des polices rangeait, pour certaines polices, des morceaux d'autres lettres à la place des bonnes
+    (refaite une fois, automatiquement) ;
+  - les lettres prises sont montrées en noir sur blanc (un texte blanc était invisible) ;
+  - la case ne reprend plus le mot de la recherche d'avant ; **Windows lit les lettres** et la remplit (OCR intégré
+    à Windows, rien à télécharger) ; Pixane prévient si le nombre de lettres ne correspond pas, et essaie les
+    majuscules quand l'image l'est.
 - **Souris invisible à l'ouverture** : sans image ouverte, la flèche disparaissait au-dessus de la fenêtre (le
   pinceau, choisi d'office, cache la flèche pour dessiner son rond, qui n'existe pas sans image). La flèche reste
   visible tant qu'aucune image n'est ouverte.

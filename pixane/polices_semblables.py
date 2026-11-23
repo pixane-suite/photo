@@ -7,6 +7,10 @@ Comparaison, sur des images ramenées à la même hauteur :
 - la forme générale du bloc de texte (largeur / hauteur : polices étroites ou larges) ;
 - le recouvrement des lettres (adouci, pour pardonner les petits décalages) ;
 - l'épaisseur des traits (part d'encre).
+Quand les lettres de l'image sont bien séparées (le cas courant), la comparaison se fait **lettre par lettre** : chaque
+lettre de l'image avec la même lettre de la police, à la même hauteur de ligne. L'espacement entre les lettres
+(souvent agrandi sur les pochettes : « C O L D P L A Y ») ne compte donc pas. Sinon (lettres collées, nombre de
+lettres différent du texte tapé), le bloc entier est comparé.
 Trois passes : un tri rapide de toutes les polices (style normal, petite taille), puis les 4 styles des meilleures,
 puis une comparaison plus fine des toutes meilleures.
 
@@ -99,20 +103,245 @@ def masque_texte(texte: str, police: QFont) -> np.ndarray | None:
     return _recadrer(a.astype(np.float32) / 255)
 
 
-def _comparer(cible: np.ndarray, essai: np.ndarray, h: int) -> float:
-    """Ressemblance 0..1 entre deux masques recadrés."""
+def _comparer(cible: np.ndarray, essai: np.ndarray, h: int, epaisseur: bool = True) -> float:
+    """Ressemblance 0..1 entre deux masques recadrés. epaisseur=False : seule la forme compte (tri rapide, fait
+    avec le style normal : une lettre grasse de l'image doit quand même retrouver sa police) ; les traits de l'essai
+    sont alors épaissis ou amincis jusqu'à avoir autant d'encre que la cible."""
     rc = cible.shape[1] / cible.shape[0]
     re = essai.shape[1] / essai.shape[0]
     forme = min(rc, re) / max(rc, re)                       # même allure générale (étroite, large)
     w = max(1, round(h * rc))
     a = _vers_hauteur(cible, h, w)
     b = _vers_hauteur(essai, h, w)
+    ea, eb = float(a.mean()), float(b.mean())
+    if not epaisseur and 0.01 < ea < 0.95 and eb > 0.005:
+        bs = _adoucir(b, max(1, h // 16))
+        b = (bs > np.quantile(bs, 1 - ea)).astype(np.float32)
     r = max(1, h // 24)
     fa, fb = _adoucir(a, r), _adoucir(b, r)
     recouvrement = float((fa * fb).sum() / max(1e-6, np.sqrt((fa * fa).sum() * (fb * fb).sum())))
-    ea, eb = a.mean(), b.mean()                              # épaisseur des traits
-    epaisseur = min(ea, eb) / max(ea, eb, 1e-6)
-    return recouvrement ** 2 * forme ** 0.5 * epaisseur ** 0.5
+    if not epaisseur:
+        return recouvrement ** 2 * forme ** 0.5
+    ressemblance_traits = min(ea, eb) / max(ea, eb, 1e-6)    # épaisseur des traits
+    return recouvrement ** 2 * forme ** 0.5 * ressemblance_traits ** 0.5
+
+
+# ------------------------------------------------------------------ lettre par lettre
+SEUIL_ENCRE = 0.35
+
+
+def _plages(profil: np.ndarray) -> list[tuple[int, int]]:
+    """Plages [début, fin) où le profil est non nul."""
+    v = np.concatenate(([0], (profil > 0).astype(np.int8), [0]))
+    d = np.diff(v)
+    return list(zip(np.nonzero(d == 1)[0], np.nonzero(d == -1)[0]))
+
+
+def _lignes(m: np.ndarray) -> list[tuple[int, int]]:
+    """Lignes de texte du masque (plages de rangées) ; les petits morceaux (points, accents) vont à la ligne la plus
+    proche."""
+    pl = _plages((m > SEUIL_ENCRE).sum(axis=1))
+    if not pl:
+        return []
+    grande = max(b - a for a, b in pl)
+    lignes = [list(x) for x in pl if x[1] - x[0] >= 0.35 * grande]
+    for a, b in pl:
+        if b - a < 0.35 * grande:
+            j = min(range(len(lignes)), key=lambda i: min(abs(a - lignes[i][1]), abs(lignes[i][0] - b)))
+            lignes[j] = [min(lignes[j][0], a), max(lignes[j][1], b)]
+    return [tuple(x) for x in lignes]
+
+
+def _lettres_ligne(bloc: np.ndarray, attendu: int | None = None, avec_x: bool = False):
+    """Lettres d'une ligne : morceaux d'un seul tenant, regroupés (point du i, lettre en deux morceaux) ; les taches
+    à l'écart (restes du fond) sont oubliées. attendu : nombre de lettres du texte tapé ; deux lettres collées (ex.
+    empattements de « ll ») sont alors séparées, une lettre coupée en deux est recollée. Chaque lettre : sa partie
+    du masque, sur toute la hauteur des lettres de la ligne."""
+    from .selection_auto import etiquettes
+    lab, tailles = etiquettes(bloc > SEUIL_ENCRE)
+    n = len(tailles)
+    if not n:
+        return ([], []) if avec_x else []
+    ys, xs = np.nonzero(lab >= 0)
+    l = lab[ys, xs]
+    x0 = np.full(n, 1 << 30)
+    np.minimum.at(x0, l, xs)
+    x1 = np.zeros(n, int)
+    np.maximum.at(x1, l, xs + 1)
+    y0 = np.full(n, 1 << 30)
+    np.minimum.at(y0, l, ys)
+    y1 = np.zeros(n, int)
+    np.maximum.at(y1, l, ys + 1)
+    t = np.asarray(tailles, float)
+    ref = float(np.median(t[t >= 0.05 * t.max()]))
+    grands = [i for i in np.argsort(x0) if t[i] >= 0.12 * ref]
+    bas, haut = (float(np.median(y0[grands])), float(np.median(y1[grands]))) if grands else (0.0, bloc.shape[0])
+    if len(grands) >= 3:                         # à l'écart de la bande des lettres (au-dessus, en dessous) : du fond
+        dans = [i for i in grands if min(y1[i], haut) - max(y0[i], bas) > 0.3 * min(y1[i] - y0[i], haut - bas)]
+        ecartes = set(grands) - set(dans)
+        grands = dans
+        t = np.where(np.isin(np.arange(n), list(ecartes)), 0, t)    # ni lettre, ni petit morceau rattaché
+    groupes: list[list] = []                     # [x0, x1, [morceaux], y0, y1]
+    for i in grands:
+        if groupes:
+            # regroupés seulement s'ils sont l'un au-dessus de l'autre (lettre en deux morceaux, accent) ; côte à
+            # côte (une lettre et une tache, ou deux lettres crénées comme « To »), ils restent séparés
+            g = groupes[-1]
+            recouvre = min(g[1], x1[i]) - max(g[0], x0[i])
+            vertical = min(g[4], y1[i]) - max(g[3], y0[i])
+            if recouvre > 0.6 * min(g[1] - g[0], x1[i] - x0[i]) and vertical < 0.3 * min(g[4] - g[3], y1[i] - y0[i]):
+                g[0], g[1] = min(g[0], x0[i]), max(g[1], x1[i])
+                g[3], g[4] = min(g[3], y0[i]), max(g[4], y1[i])
+                g[2].append(i)
+                continue
+        groupes.append([int(x0[i]), int(x1[i]), [i], int(y0[i]), int(y1[i])])
+    for i in range(n):                           # petits morceaux : au groupe qu'ils touchent en largeur, sinon oubliés
+        if t[i] >= 0.12 * ref or t[i] == 0:
+            continue
+        rec = [min(g[1], x1[i]) - max(g[0], x0[i]) for g in groupes]
+        j = int(np.argmax(rec))
+        marge = 0.4 * (haut - bas)
+        if rec[j] >= 0.5 * (x1[i] - x0[i]) and y0[i] >= bas - marge and y1[i] <= haut + marge:
+            groupes[j][2].append(i)              # juste au-dessus ou au-dessous de la lettre (point, accent)
+    if attendu:
+        for _ in range(max(2, attendu // 5)):
+            if len(groupes) == attendu:
+                break
+            larg = [g[1] - g[0] for g in groupes]
+            med = float(np.median(larg))
+            if len(groupes) < attendu:           # la plus large, coupée là où il y a le moins d'encre
+                j = int(np.argmax(larg))
+                if larg[j] < 1.35 * med:
+                    break
+                g = groupes[j]
+                dedans = np.isin(lab, g[2])
+                encre = (np.where(dedans, bloc, 0)).sum(axis=0)[g[0]:g[1]]
+                a_, b_ = int(len(encre) * 0.25), int(len(encre) * 0.75)
+                c = g[0] + a_ + int(np.argmin(encre[a_:b_]))
+                groupes[j:j + 1] = [[g[0], c, g[2], g[3], g[4]], [c, g[1], g[2], g[3], g[4]]]
+            else:
+                encres = [float(t[g[2]].sum()) for g in groupes]
+                hauts = [g[4] - g[3] for g in groupes]
+                k = int(np.argmin(hauts))
+                if hauts[k] < 0.5 * float(np.median(hauts)):     # bien trop bas pour une lettre : tache, tiret
+                    del groupes[k]
+                    continue
+                k = int(np.argmin(encres))
+                if encres[k] < 0.3 * float(np.median(encres)):    # bien trop petit pour une lettre : du fond
+                    del groupes[k]
+                    continue
+                # sinon une lettre coupée en deux : les deux voisines les plus proches, recollées
+                ecarts = [groupes[k + 1][0] - groupes[k][1] for k in range(len(groupes) - 1)]
+                k = int(np.argmin(ecarts))
+                g, h = groupes[k], groupes[k + 1]
+                groupes[k:k + 2] = [[g[0], h[1], g[2] + h[2], min(g[3], h[3]), max(g[4], h[4])]]
+    res = []
+    rangs = np.zeros(bloc.shape[0], bool)
+    for g in groupes:
+        dedans = np.isin(lab, g[2])
+        dedans = _adoucir(dedans.astype(np.float32), 1) > 0           # avec le bord adouci des lettres
+        part = np.where(dedans, bloc, 0)[:, g[0]:g[1]]
+        rangs |= (part > SEUIL_ENCRE).any(axis=1)
+        res.append(part)
+    if not rangs.any():
+        return ([], []) if avec_x else []
+    yy = np.nonzero(rangs)[0]
+    res = [r[yy[0]:yy[-1] + 1] for r in res]
+    return (res, [(g[0], g[1]) for g in groupes]) if avec_x else res
+
+
+def lettres_image(m: np.ndarray, attendu: list[int] | None = None) -> list[list[np.ndarray]]:
+    """Les lettres du masque (0..1), ligne par ligne (attendu : nombre de lettres tapées par ligne)."""
+    lignes = _lignes(m)
+    if attendu is not None and len(attendu) != len(lignes):
+        attendu = None
+    return [_lettres_ligne(m[y0:y1], attendu[k] if attendu else None) for k, (y0, y1) in enumerate(lignes)]
+
+
+def compter_lettres(masque: np.ndarray) -> list[int]:
+    """Nombre de lettres vues dans chaque ligne du masque (0..1 ou 0..255)."""
+    m = masque.astype(np.float32)
+    if m.max() > 1:
+        m /= 255
+    c = _recadrer(m)
+    return [] if c is None else [len(l) for l in lettres_image(c)]
+
+
+def sans_espaces(texte: str) -> list[str]:
+    """Les lignes du texte, en lettres et chiffres seulement (ce qui se compare lettre par lettre)."""
+    return ["".join(c for c in l if _lettre(c) in CARACTERES) for l in texte.split("\n")]
+
+
+def _recadrer_ligne(glyphes: list[np.ndarray]) -> list[np.ndarray] | None:
+    """Lettres d'une ligne écrites séparément (même hauteur, même ligne de base) : coupées à la hauteur de l'encre
+    de toute la ligne, et à la largeur de l'encre de chacune."""
+    rangs = np.zeros(glyphes[0].shape[0], bool)
+    for g in glyphes:
+        rangs |= (g > SEUIL_ENCRE).any(axis=1)
+    if not rangs.any():
+        return None
+    ys = np.nonzero(rangs)[0]
+    res = []
+    for g in glyphes:
+        g = g[ys[0]:ys[-1] + 1]
+        xs = np.nonzero((g > SEUIL_ENCRE).any(axis=0))[0]
+        if not len(xs):
+            return None                          # lettre absente de la police
+        res.append(g[:, xs[0]:xs[-1] + 1])
+    return res
+
+
+def glyphes_memoire(texte: str, fam: str) -> list[list[np.ndarray]] | None:
+    """Les lettres du texte (sans les espaces), d'après la mémoire des polices."""
+    lettres = memoire()[fam][2]
+    res = []
+    for l in sans_espaces(texte):
+        gs = []
+        for c in l:
+            c = _lettre(c)
+            if c not in lettres:
+                return None
+            gs.append(lettres[c][2].astype(np.float32) / 255)
+        r = _recadrer_ligne(gs) if gs else None
+        if r is None:
+            return None
+        res.append(r)
+    return res
+
+
+def glyphes_police(texte: str, police: QFont) -> list[list[np.ndarray]] | None:
+    """Les lettres du texte (sans les espaces), écrites une à une avec cette police."""
+    fm = QFontMetrics(police)
+    haut = fm.ascent() + fm.descent() + 2
+    res = []
+    for l in sans_espaces(texte):
+        gs = []
+        for c in l:
+            larg = fm.horizontalAdvance(c) + 2 * fm.height()
+            if larg <= 0 or haut <= 0 or larg * haut > 4_000_000:
+                return None
+            img = QImage(larg, haut, QImage.Format_Grayscale8)
+            img.fill(0)
+            p = QPainter(img)
+            p.setRenderHint(QPainter.TextAntialiasing)
+            p.setFont(police)
+            p.setPen(Qt.white)
+            p.drawText(fm.height(), fm.ascent() + 1, c)
+            p.end()
+            a = np.frombuffer(img.constBits(), np.uint8).reshape(haut, img.bytesPerLine())[:, :larg]
+            gs.append(a.astype(np.float32) / 255)
+        r = _recadrer_ligne(gs) if gs else None
+        if r is None:
+            return None
+        res.append(r)
+    return res
+
+
+def _comparer_lettres(cible: list[list[np.ndarray]], essai: list[list[np.ndarray]], h: int,
+                      epaisseur: bool = True) -> float:
+    """Ressemblance 0..1, moyenne des lettres comparées une à une."""
+    notes = [_comparer(a, b, h, epaisseur) for la, lb in zip(cible, essai) for a, b in zip(la, lb)]
+    return float(np.mean(notes)) if notes else 0.0
 
 
 def familles() -> list[str]:
@@ -132,7 +361,7 @@ def familles() -> list[str]:
 
 # ------------------------------------------------------------------ mémoire des polices
 CARACTERES = string.ascii_letters + string.digits
-VERSION_MEMOIRE = 3
+VERSION_MEMOIRE = 4             # 4 : lettres écrites une par une (mémoire refaite)
 LENTE = 1.0                     # s : police très décorée (ex. St. Andrew, 30 s) : jamais réécrite pendant une recherche
 _memoire: dict | None = None
 _date_memoire = None
@@ -186,32 +415,33 @@ def enregistrer_memoire() -> None:
 
 
 def mettre_en_memoire(fam: str) -> None:
-    """Écrit l'alphabet de la police d'un seul coup, puis découpe chaque lettre (avec de la marge : les lettres
-    penchées ou qui débordent restent entières)."""
+    """Écrit chaque lettre de l'alphabet à sa place (une par une : écrit d'un seul trait, l'alphabet se décalait
+    peu à peu dans certaines polices, et des lettres voisines étaient rangées à la place des bonnes), avec de la
+    marge : les lettres penchées ou qui débordent restent entières."""
     debut = time.time()
     f = QFont(fam)
     f.setPixelSize(TAILLE_TRI)
     fm = QFontMetrics(f)
-    sep = "   "
-    chaine = sep.join(CARACTERES)
-    marge = max(4, fm.horizontalAdvance(sep) // 2)
-    larg, haut = fm.horizontalAdvance(chaine) + 2 * marge, fm.ascent() + fm.descent() + 2
+    marge = max(4, fm.horizontalAdvance("   ") // 2, fm.height() // 2)
+    avances = [fm.horizontalAdvance(c) for c in CARACTERES]
+    larg, haut = sum(avances) + 2 * marge * len(CARACTERES), fm.ascent() + fm.descent() + 2
     lettres = {}
-    if 0 < larg < 30000 and haut > 0:
+    if 0 < larg < 60000 and haut > 0:
         img = QImage(larg, haut, QImage.Format_Grayscale8)
         img.fill(0)
         p = QPainter(img)
         p.setFont(f)
         p.setPen(Qt.white)
-        p.drawText(marge, fm.ascent() + 1, chaine)
+        x = 0
+        for c, av in zip(CARACTERES, avances):
+            p.drawText(x + marge, fm.ascent() + 1, c)
+            x += av + 2 * marge
         p.end()
         a = np.frombuffer(img.constBits(), np.uint8).reshape(haut, img.bytesPerLine())[:, :larg]
-        x, pas_sep = marge, fm.horizontalAdvance(sep)
-        for c in CARACTERES:
-            av = fm.horizontalAdvance(c)
-            g, d = max(0, x - marge), min(larg, x + av + marge)
-            lettres[c] = (av, g - x, a[:, g:d].copy())
-            x += av + pas_sep
+        x = 0
+        for c, av in zip(CARACTERES, avances):
+            lettres[c] = (av, -marge, a[:, x:x + av + 2 * marge].copy())
+            x += av + 2 * marge
     memoire()[fam] = (fm.lineSpacing(), fm.ascent() + 1, lettres, fm.horizontalAdvance(" "), time.time() - debut)
 
 
@@ -248,9 +478,11 @@ def assembler(texte: str, fam: str) -> np.ndarray | None:
     return _recadrer(toile.astype(np.float32) / 255)
 
 
-def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, liste: list | None = None) -> list[Resultat]:
+def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, liste: list | None = None,
+             infos: dict | None = None) -> list[Resultat]:
     """Les `nombre` polices les plus proches des lettres du masque (0..1 ou 0..255). progres(fait, total) peut
-    renvoyer False pour arrêter."""
+    renvoyer False pour arrêter. infos (dict) reçoit : "texte" (le texte vraiment comparé : en majuscules si l'image
+    semble l'être), "lettre_par_lettre" (bool)."""
     texte = texte.strip()
     m = masque.astype(np.float32)
     if m.max() > 1:
@@ -258,11 +490,36 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
     cible = _recadrer(m)
     if cible is None or not texte:
         return []
+    infos = {} if infos is None else infos
+    tapees = [len(l) for l in sans_espaces(texte)]
+    lettres_cible = lettres_image(cible, tapees)
+    par_lettre = [len(l) for l in lettres_cible] == tapees and sum(tapees) > 0
+    infos["lettre_par_lettre"] = par_lettre
+    variantes = [texte] + ([texte.upper()] if texte.upper() != texte else [])
+
+    def note_memoire(t: str, fam: str) -> float | None:
+        if par_lettre:
+            e = glyphes_memoire(t, fam)
+            return None if e is None else _comparer_lettres(lettres_cible, e, HAUT_TRI, epaisseur=False)
+        e = assembler(t, fam)
+        return None if e is None else _comparer(cible, e, HAUT_TRI, epaisseur=False)
+
+    def note_police(t: str, f: QFont, h: int):
+        """(note, empreinte du rendu) : deux styles au même rendu (style absent de la police) ont la même."""
+        if par_lettre:
+            e = glyphes_police(t, f)
+            if e is None:
+                return None
+            return _comparer_lettres(lettres_cible, e, h), tuple((g.shape, round(float(g.sum()), 1))
+                                                                 for l in e for g in l)
+        e = masque_texte(t, f)
+        return None if e is None else (_comparer(cible, e, h), (e.shape, float(e.sum())))
+
     liste = familles() if liste is None else liste
     total = len(liste) + PREMIERS * (len(STYLES) - 1)
     fait = 0
-    # passe 1 : toutes les polices, style normal, petite taille
-    tri = []
+    # passe 1 : toutes les polices, style normal, petite taille (le texte tapé, et aussi en majuscules)
+    tris = {t: [] for t in variantes}
     mem = memoire()
     nouvelles = False
     for fam in liste:
@@ -270,16 +527,25 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
         if fam not in mem:                              # première fois : la police est mise en mémoire
             mettre_en_memoire(fam)
             nouvelles = True
-        e = assembler(texte, fam)
-        if e is not None:
-            tri.append((_comparer(cible, e, HAUT_TRI), fam))
+        for t in variantes:
+            n = note_memoire(t, fam)
+            if n is not None:
+                tris[t].append((n, fam))
         if progres is not None and fait % 20 == 0 and progres(fait, total) is False:
             if nouvelles:
                 enregistrer_memoire()
             return []
     if nouvelles:
         enregistrer_memoire()
-    tri.sort(reverse=True)
+
+    def niveau(t: str) -> float:                        # note moyenne des 20 meilleures polices
+        tris[t].sort(reverse=True)
+        return float(np.mean([n for n, _f in tris[t][:20]])) if tris[t] else 0.0
+    # en majuscules seulement si les lettres de l'image le sont nettement plus que le texte tapé
+    texte = max(variantes, key=lambda t: niveau(t) * (1.0 if t == variantes[0] else 0.95))
+    infos["texte"] = texte
+    tri = tris[texte]
+    infos["tri"] = [f for _n, f in tri]
     # passe 2 : les meilleures, avec gras, italique, gras italique
     notes, lentes = [], []
     for n_tri, fam in tri[:PREMIERS]:
@@ -293,23 +559,20 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
             f.setPixelSize(HAUT_RAPIDE * 2)
             f.setWeight(poids)
             f.setItalic(ital)
-            e = masque_texte(texte, f)
-            if e is None:
+            r = note_police(texte, f, HAUT_RAPIDE)
+            if r is None or r[1] in vus:
                 continue
-            cle = (e.shape, float(e.sum()))      # style absent : même rendu que « normal », sauté
-            if cle in vus:
-                continue
-            vus.add(cle)
-            notes.append((_comparer(cible, e, HAUT_RAPIDE), fam, poids == QFont.Bold, ital))
+            vus.add(r[1])
+            notes.append((r[0], fam, poids == QFont.Bold, ital))
         if progres is not None and progres(fait, total) is False:
             return []
     notes.sort(reverse=True)
     fins = []
     for _n, fam, gras, ital in notes[:GARDER]:
         r = Resultat(fam, gras, ital, 0)
-        e = masque_texte(texte, r.police(HAUT_FIN * 2))
-        if e is not None:
-            fins.append((_comparer(cible, e, HAUT_FIN), r))
+        x = note_police(texte, r.police(HAUT_FIN * 2), HAUT_FIN)
+        if x is not None:
+            fins.append((x[0], r))
     fins += lentes
     fins.sort(key=lambda t: -t[0])
     res, familles_vues = [], set()

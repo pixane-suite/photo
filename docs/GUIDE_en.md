@@ -300,9 +300,18 @@ Which font was used for this title? Pixane Photo searches **the fonts installed 
 alike (no Internet, nothing is downloaded).
 1. Select the letters with **Text selection (Y)** (a solid block does not work: only the letters are needed).
 2. **Selection > Find a similar font…**, or the **Similar font…** button in the tool bar.
-3. **Type the same letters** as in the image, keeping capitals (separate lines with "/"), then **Search**. A few
+3. At the top of the window, **the letters picked up** are shown **in black on white**, whatever their colour (white
+   text shows too): check that they are complete.
+4. **The letters**: Windows **reads them by itself** (text reading built into Windows 10 and 11, nothing is
+   downloaded) and fills the box in a few seconds. **Check them**: they must be exactly those of the image, in the
+   same order, with capitals (separate lines with "/"); correct or type them if needed. Then **Search**. A few
    seconds (the more fonts are installed, the longer it takes).
-4. The closest fonts are shown first, written with your letters, with their likeness in %.
+   - If the number of typed letters does not match the image, Pixane Photo says so (the comparison is then less
+     precise);
+   - if the image is in capitals and you typed lower case, it also searches in capitals and says so.
+5. The closest fonts are shown first, written with your letters, with their likeness in %. The comparison is made
+   **letter by letter**: the spacing between letters (often widened on covers, "C O L D P L A Y") does not count,
+   and bold text also finds its font.
    - **Apply to the chosen text**: if the chosen layer is a Pixane Photo text, it takes this font;
    - **Create a text with this font**: new text layer in place of the letters, with their colour (the letters in
      the image stay: erase them afterwards if needed);

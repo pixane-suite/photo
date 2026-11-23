@@ -313,9 +313,18 @@ ressemblent le plus (sans Internet, rien n'est téléchargé).
 1. Sélectionnez les lettres avec la **Sélection de texte (Y)** (un bloc plein ne marche pas : il faut les lettres
    seules).
 2. **Sélection > Trouver une police semblable…**, ou le bouton **Police semblable…** dans la barre de l'outil.
-3. **Tapez les mêmes lettres** que dans l'image, en respectant les majuscules (séparez les lignes par « / »), puis
-   **Chercher**. Quelques secondes (plus il y a de polices installées, plus c'est long).
-4. Les polices les plus proches s'affichent d'abord, écrites avec vos lettres, avec leur ressemblance en %.
+3. En haut de la fenêtre, **les lettres prises** sont montrées **en noir sur blanc**, quelle que soit leur couleur
+   (un texte blanc se voit aussi) : vérifiez qu'elles sont complètes.
+4. **Les lettres** : Windows les **lit tout seul** (lecture de texte intégrée à Windows 10 et 11, rien n'est
+   téléchargé) et remplit la case en quelques secondes. **Vérifiez-les** : elles doivent être exactement celles de
+   l'image, dans le même ordre, avec les majuscules (séparez les lignes par « / ») ; corrigez ou tapez-les si besoin.
+   Puis **Chercher**. Quelques secondes (plus il y a de polices installées, plus c'est long).
+   - Si le nombre de lettres tapées ne correspond pas à l'image, Pixane Photo le dit (la comparaison est alors moins
+     précise) ;
+   - si l'image est en majuscules et que vous avez tapé des minuscules, il cherche aussi en majuscules et le dit.
+5. Les polices les plus proches s'affichent d'abord, écrites avec vos lettres, avec leur ressemblance en %.
+   La comparaison se fait **lettre par lettre** : l'espacement entre les lettres (souvent agrandi sur les pochettes,
+   « C O L D P L A Y ») ne compte pas, et un texte gras retrouve aussi sa police.
    - **Appliquer au texte choisi** : si le calque choisi est un texte de Pixane Photo, il prend cette police ;
    - **Créer un texte avec cette police** : nouveau calque de texte à la place des lettres, avec leur couleur (les
      lettres de l'image restent : effacez-les ensuite si besoin) ;
