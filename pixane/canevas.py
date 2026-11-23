@@ -76,6 +76,7 @@ class Canevas(PlumeMixin, QWidget):
     cadre_annule = Signal()                     # Échap pendant Agrandir
     texte_nouveau = Signal(object)              # outil Texte : clic hors des textes -> point (image)
     texte_choisi = Signal(int)                  # outil Texte : clic sur un calque de texte -> son index
+    texte_edition = Signal(int)                 # double-clic sur un texte de l'image (autre outil) -> son index
     trace_dessine = Signal(list)                # outil Texte, « Dessiner un tracé » : points (image) du tracé
     degrade_masque = Signal()                   # dégradé commencé sur un masque (il rend transparent, ne colore pas)
     couleur_prise = Signal(str)                 # pinceau de couleur : Alt+clic (pipette) -> couleur « #rrggbb »
@@ -124,6 +125,7 @@ class Canevas(PlumeMixin, QWidget):
         self.couleur_fond = QColor(40, 40, 40)
         self.couleur_texte = QColor(150, 150, 150)
         self.couleur_accent = QColor(0, 120, 215)
+        self.selection_lettres = (0, 0)   # outil Texte : lettres sélectionnées dans la saisie (début, fin)
         self.cadre = None            # Agrandir : px ajoutés [haut, bas, gauche, droite], sinon None
         self.abime = [0, 0, 0, 0]    # Agrandir : px de bord abîmé à refaire [haut, bas, gauche, droite]
         self.base_cadre = None       # Agrandir : (x0, y0, x1, y1) d'où part le cadre (la photo, sans le vide)
@@ -717,6 +719,15 @@ class Canevas(PlumeMixin, QWidget):
         ecran, haut, poignee = self._cadre_texte_ecran(t)
         p.save()
         p.setRenderHint(QPainter.Antialiasing)
+        a, b = self.selection_lettres
+        if b > a:                                   # lettres sélectionnées dans la saisie : surlignées
+            from .texte import zones_lettres
+            fond = QColor(self.couleur_accent)
+            fond.setAlpha(90)
+            p.setPen(Qt.NoPen)
+            p.setBrush(fond)
+            for z in zones_lettres(t, a, b):
+                p.drawPolygon(QPolygonF([self.vers_ecran(q) for q in z]))
         if t.trace and not self._trace_points:      # le tracé du texte, en pointillés
             tr_ = transformation(t)
             ligne = QPolygonF([self.vers_ecran(tr_.map(QPointF(x, y))) for x, y in t.trace])
@@ -2203,6 +2214,12 @@ class Canevas(PlumeMixin, QWidget):
                 and self.recadre.contains(self.vers_image(e.position()))):
             self.recadre_valide.emit()
             return
+        if (self.doc is not None and e.button() == Qt.LeftButton and self.outil != PLUME
+                and self.cadre is None):
+            index = self._texte_sous(self.vers_image(e.position()))
+            if index is not None:                     # double-clic sur un texte : on l'édite (outil Texte)
+                self.texte_edition.emit(index)
+                return
         super().mouseDoubleClickEvent(e)
 
     def leaveEvent(self, e):

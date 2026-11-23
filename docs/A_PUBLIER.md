@@ -21,7 +21,16 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   arrière-plan (environ 100 Mo, depuis Fontsource), comparées comme les polices installées. Une police Google pas
   installée est marquée comme telle ; **Télécharger et installer** l'installe dans Windows pour l'utilisateur.
 
+- **Outil Texte plus pratique** : double-clic sur un texte de la photo ou sur un calque de texte pour l'éditer ;
+  lettres sélectionnées surlignées sur la photo ; couleur (texte, contour, ombre, fond) montrée sur la photo pendant
+  le choix ; liste des polices filtrée par **style** (avec / sans empattements, manuscrites, fantaisie, chasse fixe)
+  et de **taille** réglable (petite, moyenne, grande).
+- **Nouvelle image en 16 ou 32 bits par couche** (choix retenu).
+
 ## Corrections
+
+- Outil Texte : **Ctrl+Z** ne retirait pas un texte posé par erreur d'un clic (la case de saisie gardait le
+  raccourci).
 
 - **Trouver une police semblable** donnait des polices sans rapport :
   - comparaison **lettre par lettre** : les lettres espacées (« C O L D P L A Y ») et les textes gras retrouvent leur

@@ -1853,5 +1853,19 @@
  "Mettre à jour les polices Google maintenant": "Update Google fonts now",
  "Sinon, c'est fait tout seul tous les 30 jours : nouvelles polices et polices modifiées téléchargées, polices retirées de Google Fonts effacées.": "Otherwise it is done by itself every 30 days: new and changed fonts downloaded, fonts removed from Google Fonts deleted.",
  "Les polices Google sont déjà en cours de mise à jour, en arrière-plan.": "The Google fonts are already being updated, in the background.",
- "Mise à jour lancée en arrière-plan : liste des polices, nouvelles polices et polices modifiées. Tu peux continuer à travailler ; la recherche les comparera dès qu'elles seront prêtes.": "Update started in the background: font list, new fonts and changed fonts. You can keep working; the search will compare them as soon as they are ready."
+ "Mise à jour lancée en arrière-plan : liste des polices, nouvelles polices et polices modifiées. Tu peux continuer à travailler ; la recherche les comparera dès qu'elles seront prêtes.": "Update started in the background: font list, new fonts and changed fonts. You can keep working; the search will compare them as soon as they are ready.",
+ "8 bits : 256 nuances par couleur, comme le JPEG, le PNG et le web.\n16 bits : 65 536 nuances (dégradés et réglages sans cassures).\n32 bits (HDR) : les couleurs peuvent être plus claires que le blanc.\nModifiable ensuite : Image > Mode.": "8 bits: 256 shades per colour, like JPEG, PNG and the web.\n16 bits: 65,536 shades (gradients and adjustments without banding).\n32 bits (HDR): colours can be brighter than white.\nCan be changed later: Image > Mode.",
+ "Avec empattements": "Serif",
+ "Chasse fixe": "Monospaced",
+ "Fantaisie": "Decorative",
+ "Grande": "Large",
+ "Liste :": "List:",
+ "Manuscrites": "Handwriting",
+ "Moyenne": "Medium",
+ "Ne montrer dans la liste des polices que celles de ce style (lu dans chaque police ; quelques polices de fantaisie peuvent être mal rangées)": "Only show fonts of this style in the font list (read from each font; a few decorative fonts may be misfiled)",
+ "Petite": "Small",
+ "Sans empattements": "Sans serif",
+ "Taille de la liste des polices et de leur aperçu": "Size of the font list and its preview",
+ "Toutes": "All",
+ "{n} bits par couche": "{n} bits per channel"
 }

@@ -183,9 +183,9 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
   - **Orientation**: Portrait or Landscape swaps width and height.
   - **Resolution** (dpi, dots per inch): **300** for print, **72** for screen. It is **kept in the file** (.piximg,
     PSD, JPEG, PNG, TIFF): a printer will see the right size.
-  - **Mode**: RGB colour or **greyscale** (see *Image > Mode*). A new image is in **8 bits per channel** (16.7 million
-    colours, like JPEG, PNG and the web); for fine work, switch it to **16 bits** afterwards (*Image > Mode >
-    16 bits per channel*).
+  - **Mode**: RGB colour or **greyscale** (see *Image > Mode*), and **8, 16 or 32 bits per channel**: 8 bits
+    (16.7 million colours, like JPEG, PNG and the web), 16 bits (gradients and adjustments without banding), 32 bits
+    (HDR: colours brighter than white). The last choice is remembered; can be changed later with *Image > Mode*.
   - **Background**: white, transparent, black or a colour of your choice.
   - **Bleed** (print): band added all around, trimmed off by the printer (usually 3 mm): the background must run to
     the edge of the image. **Safe area**: margin inside the finished size where nothing important goes (text,
@@ -884,6 +884,10 @@ All layer actions can be undone with Ctrl+Z (changing the selected layer does no
   Just type: the suggested word is replaced. The panel's box accepts several lines (Enter).
 - **Click on an existing text**: it is selected and its settings are shown; it can be edited at any time,
   even after saving as **.piximg** and reopening.
+- **Double-click** a text on the photo (with any tool) or a **text layer** (outside its name): the Text tool opens on
+  that text, ready to type. The style (fx) of a text layer stays on the **fx** button of the Layers panel.
+- **Click by mistake**: **Ctrl+Z** removes the new text (as long as nothing was typed; otherwise it first undoes the
+  typing).
 - The text is applied **as you go**: nothing to confirm.
 - **Drag the text**: move it (also with the Move tool, V). A dashed frame surrounds the selected text.
 - **Round handle** above the frame: rotate the text (**Shift**: in 15° steps), or the *Rotation* box.
@@ -894,9 +898,9 @@ All layer actions can be undone with Ctrl+Z (changing the selected layer does no
 ### Panel settings
 | Setting | Effect |
 |---|---|
-| **Font** | All fonts installed in Windows. The list shows each font **with the beginning of your text** (or of the part selected in the box), otherwise "Aa Bb Cc 123". Hovering over a font **applies it at once to the text on the photo** so you can see the result; closing the list without choosing puts it back as before |
+| **Font** | All fonts installed in Windows. The list shows each font **with the beginning of your text** (or of the part selected in the box), otherwise "Aa Bb Cc 123". Hovering over a font **applies it at once to the text on the photo** so you can see the result; closing the list without choosing puts it back as before. Above it: **Style** (All, Serif, Sans serif, Handwriting, Decorative, Monospaced: only fonts of that style, read from each font; a few decorative fonts may be misfiled) and **List** (Small, Medium, Large: size of the list and preview), remembered |
 | **Size** | Letter height, in pixels of the photo |
-| **Colour** (swatch) | Letter colour, with transparency (alpha channel) |
+| **Colour** (swatch) | Letter colour, with transparency (alpha channel). While choosing, **the text on the photo shows the colour**; Cancel puts it back (same for outline, shadow and background) |
 | **B / I / U / S** | Bold, italic, underline, strikethrough |
 | **Alignment** | Left, centred, right (for several lines), **justified** (text in a box: lines stretched to both edges) |
 | **Letters** | Space added between letters, as a % of the size (negative = tighter letters) |
@@ -924,7 +928,8 @@ they stay in proportion when you change the text size.
 **Transparency** of the whole text: **Opacity** slider in the Layers panel.
 
 ### Change only some letters
-**Select letters in the panel's text box** (with the mouse or Shift+arrows): font, size, colour, bold, italic,
+**Select letters in the panel's text box** (with the mouse or Shift+arrows): they are **highlighted on the
+photo**, and font, size, colour, bold, italic,
 underline, strikethrough, letters, width, height, case, position and baseline change **only for them** (a line under
 the box reminds you). Example: one word in red, a "2" as subscript.
 Without a selection, a setting changes **the whole text**, letters with their own style included. Letters typed

@@ -191,9 +191,10 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
   - **Orientation** : Portrait ou Paysage échange largeur et hauteur.
   - **Résolution** (ppp, points par pouce) : **300** pour l'impression, **72** pour l'écran. Elle est **gardée dans
     le fichier** (.piximg, PSD, JPEG, PNG, TIFF) : un imprimeur verra la bonne taille.
-  - **Mode** : couleurs RVB ou **niveaux de gris** (voir *Image > Mode*). Une image neuve est en **8 bits par
-    couche** (16,7 millions de couleurs, comme le JPEG, le PNG et le web) ; pour un travail fin, passez-la ensuite en
-    **16 bits** (*Image > Mode > 16 bits par couche*).
+  - **Mode** : couleurs RVB ou **niveaux de gris** (voir *Image > Mode*), et **8, 16 ou 32 bits par couche** :
+    8 bits (16,7 millions de couleurs, comme le JPEG, le PNG et le web), 16 bits (dégradés et réglages sans
+    cassures), 32 bits (HDR : couleurs plus claires que le blanc). Le dernier choix est retenu ; modifiable ensuite
+    avec *Image > Mode*.
   - **Fond** : blanc, transparent, noir ou une couleur au choix.
   - **Fond perdu** (impression) : bande ajoutée tout autour, coupée par l'imprimeur (en général 3 mm) : le fond doit
     aller jusqu'au bord de l'image. **Zone de sécurité** : marge à l'intérieur du format fini où ne mettre rien
@@ -922,6 +923,11 @@ Outil **Texte** (touche **T**, icône « T » dans la barre d'outils). Le pannea
   Tapez directement : le mot proposé est remplacé. La case du panneau accepte plusieurs lignes (Entrée).
 - **Cliquer sur un texte existant** : il est choisi et ses réglages s'affichent ; on peut le modifier à tout
   moment, même après avoir enregistré en **.piximg** et rouvert.
+- **Double-clic** sur un texte de la photo (avec n'importe quel outil) ou sur un **calque de texte** (hors de son
+  nom) : l'outil Texte s'ouvre sur ce texte, prêt à être tapé. Le style (fx) d'un calque de texte reste au bouton
+  **fx** du panneau Calques.
+- **Clic posé par erreur** : **Ctrl+Z** retire le nouveau texte (tant qu'on n'a rien tapé ; sinon il annule d'abord
+  la frappe).
 - Le texte s'applique **au fur et à mesure** : rien à valider.
 - **Glisser le texte** : le déplacer (aussi avec l'outil Déplacer, V). Un cadre en pointillés entoure le texte choisi.
 - **Poignée ronde** au-dessus du cadre : tourner le texte (**Maj** : par pas de 15°), ou case *Rotation*.
@@ -932,9 +938,9 @@ Outil **Texte** (touche **T**, icône « T » dans la barre d'outils). Le pannea
 ### Réglages du panneau
 | Réglage | Effet |
 |---|---|
-| **Police** | Toutes les polices installées dans Windows. La liste montre chaque police **avec le début de votre texte** (ou de la partie sélectionnée dans la case), sinon « Aa Bb Cc 123 ». En passant la souris sur une police, **le texte de la photo la prend tout de suite** pour voir le résultat ; liste fermée sans choisir : il revient comme avant |
+| **Police** | Toutes les polices installées dans Windows. La liste montre chaque police **avec le début de votre texte** (ou de la partie sélectionnée dans la case), sinon « Aa Bb Cc 123 ». En passant la souris sur une police, **le texte de la photo la prend tout de suite** pour voir le résultat ; liste fermée sans choisir : il revient comme avant. Au-dessus : **Style** (Toutes, Avec empattements, Sans empattements, Manuscrites, Fantaisie, Chasse fixe : seulement les polices de ce style, lu dans chaque police ; quelques polices de fantaisie peuvent être mal rangées) et **Liste** (Petite, Moyenne, Grande : taille de la liste et de l'aperçu), retenus |
 | **Taille** | Hauteur des lettres, en pixels de la photo |
-| **Couleur** (pastille) | Couleur des lettres, avec la transparence (canal alpha) |
+| **Couleur** (pastille) | Couleur des lettres, avec la transparence (canal alpha). Pendant le choix, **le texte de la photo montre la couleur** ; Annuler la remet comme avant (de même pour le contour, l'ombre et le fond) |
 | **G / I / S / B** | Gras, italique, souligné, barré |
 | **Alignement** | À gauche, centré, à droite (pour plusieurs lignes), **justifié** (texte en cadre : lignes étirées jusqu'aux deux bords) |
 | **Lettres** | Espace ajouté entre les lettres, en % de la taille (négatif = lettres serrées) |
@@ -962,7 +968,8 @@ ils restent proportionnés quand on change la taille du texte.
 **Transparence** du texte entier : curseur **Opacité** du panneau Calques.
 
 ### Changer seulement certaines lettres
-**Sélectionnez des lettres dans la case du panneau** (à la souris ou Maj+flèches) : police, taille, couleur, gras,
+**Sélectionnez des lettres dans la case du panneau** (à la souris ou Maj+flèches) : elles sont **surlignées sur
+la photo**, et police, taille, couleur, gras,
 italique, souligné, barré, lettres, largeur, hauteur, casse, position et ligne de base ne changent **que pour elles**
 (une phrase sous la case le rappelle). Exemple : un mot en rouge, un « 2 » en indice.
 Sans sélection, un réglage change **tout le texte**, lettres à style propre comprises. Les lettres tapées ensuite

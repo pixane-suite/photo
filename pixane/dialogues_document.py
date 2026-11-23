@@ -252,12 +252,20 @@ class NouvelleImage(QDialog):
         self.mode = QComboBox()
         self.mode.addItem(tr("Couleurs RVB"), "rvb")
         self.mode.addItem(tr("Niveaux de gris"), "gris")
-        bits = QLabel(tr("8 bits par couche"))
-        bits.setToolTip(tr("Pixane Photo travaille en 8 bits par couche (16,7 millions de couleurs), comme le JPEG, le PNG "
-                           "et le web. Le 16 et le 32 bits sont prévus plus tard."))
+        self.bits = QComboBox()
+        for b in (8, 16, 32):
+            self.bits.addItem(tr("{n} bits par couche", n=b), b)
+        self.bits.setToolTip(tr(
+            "8 bits : 256 nuances par couleur, comme le JPEG, le PNG et le web.\n"
+            "16 bits : 65 536 nuances (dégradés et réglages sans cassures).\n"
+            "32 bits (HDR) : les couleurs peuvent être plus claires que le blanc.\n"
+            "Modifiable ensuite : Image > Mode."))
+        if reglages is not None:
+            i = self.bits.findData(int(reglages.value("nouvelle_bits", 8)))
+            self.bits.setCurrentIndex(max(0, i))
         lm = QHBoxLayout()
         lm.addWidget(self.mode, 1)
-        lm.addWidget(bits)
+        lm.addWidget(self.bits)
         f.addRow(tr("Mode"), lm)
         self.fond = ChoixFond()
         f.addRow(tr("Fond"), self.fond)
@@ -463,9 +471,13 @@ class NouvelleImage(QDialog):
         img.fill(self.couleur())
         return img
 
+    def bits_choisis(self) -> int:
+        return int(self.bits.currentData())
+
     def accept(self):
         if self.reglages is not None:
             fmt.retenir_dernier(self.reglages, replace(self.format_choisi(), nom=tr("Dernier format utilisé")))
+            self.reglages.setValue("nouvelle_bits", self.bits_choisis())
         super().accept()
 
 

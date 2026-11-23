@@ -291,6 +291,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.canevas.cadre_annule.connect(self._fin_agrandir)
         self.canevas.texte_nouveau.connect(self._nouveau_texte)
         self.canevas.texte_choisi.connect(self._texte_choisi)
+        self.canevas.texte_edition.connect(self.editer_texte)
         self.canevas.trace_dessine.connect(self._trace_dessine)
         self.canevas.message.connect(lambda m: self.statusBar().showMessage(m, 6000))
         self.canevas.recadre_change.connect(self._recadre_change)
@@ -1522,6 +1523,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.calques = PanneauCalques(lambda nom: icone(nom, self.couleurs.texte, self.couleurs.accent, 20))
         self.calques.demande.connect(self._commande_calques)
         self.calques.style_demande.connect(self.style_calque)
+        self.calques.texte_demande.connect(lambda: self.doc and self.editer_texte(self.doc.actif))
         self.calques.refus.connect(lambda m: self.statusBar().showMessage(m, 6000))
         self.calques.reglage_demande.connect(
             lambda t: self.nouveau_calque_remplissage(t.split(":", 1)[1]) if t.startswith("remplissage:")
@@ -1650,6 +1652,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             pass
         self.panneau_texte.modifie.connect(self._texte_modifie)
         self.panneau_texte.apercu_police.connect(self._apercu_police)
+        self.panneau_texte.selection_lettres.connect(self._selection_lettres)
+        self.panneau_texte.apercu_texte.connect(self._apercu_texte)
         self.panneau_texte.tracer.connect(self._mode_trace)
         self.dock_texte.setWidget(self.panneau_texte)
         self.dock_texte.setFixedWidth(290)
@@ -1684,6 +1688,43 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.historique.push(CommandeEtat(self.doc, self.doc.etat(), self.doc.etat_nouveau_texte(t),
                                           tr("Nouveau texte")))
         self.panneau_texte.commencer_saisie()
+
+    def _apercu_texte(self, essai):
+        """Couleur en train d'être choisie : le texte de la photo la montre (pas dans Annuler) ; None : fenêtre de
+        couleur fermée, le texte revient tel qu'il est (OK le change ensuite pour de bon)."""
+        from .texte import rendre
+        doc = self.doc
+        if not doc:
+            return
+        avant = getattr(self, "_texte_avant", None)
+        if essai is None:
+            self._texte_avant = None
+            if avant is not None and avant[0] is doc and avant[1] < len(doc.calques):
+                c = doc.calques[avant[1]]
+                if c.texte is avant[2]:
+                    doc.apercu_calque(avant[1], rendre(c.texte, *doc.taille()), texte=c.texte)
+            return
+        c = doc.calque_actif
+        if c.texte is None or c.verrou:
+            return
+        if avant is None or avant[0] is not doc or avant[1] != doc.actif:
+            self._texte_avant = (doc, doc.actif, c.texte)
+        doc.apercu_calque(doc.actif, rendre(essai, *doc.taille()), texte=self._texte_avant[2])
+
+    def _selection_lettres(self, a: int, b: int):
+        if self.canevas.selection_lettres != (a, b):
+            self.canevas.selection_lettres = (a, b)
+            self.canevas.update()
+
+    def editer_texte(self, index: int):
+        """Double-clic sur un calque de texte ou sur le texte dans l'image : outil Texte, ce texte prêt à être
+        modifié (tout le texte sélectionné dans la saisie)."""
+        if not self.doc or not (0 <= index < len(self.doc.calques)) or self.doc.calques[index].texte is None:
+            return
+        self._texte_choisi(index)
+        if self.canevas.outil != TEXTE:
+            self._choisir_outil(TEXTE)
+        QTimer.singleShot(0, self.panneau_texte.commencer_saisie)
 
     def _texte_choisi(self, index: int):
         if self.doc and index != self.doc.actif:
@@ -2470,6 +2511,11 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             doc.nom = d.nom_document()
             doc.reperes = d.reperes()
             self._installer_document(doc)
+            if d.bits_choisis() != 8:                     # 16 ou 32 bits dès le départ (pas dans Annuler)
+                etat = doc.etat_profondeur(d.bits_choisis())
+                doc.profondeur = d.bits_choisis()
+                doc._ref16 = []
+                doc.appliquer_etat(etat)
             self.doc.modifie = True
             if doc.reperes:
                 self.canevas.reperes_visibles = True      # fond perdu et zone de sécurité visibles tout de suite

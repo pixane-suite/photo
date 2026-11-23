@@ -10,7 +10,7 @@ from dataclasses import replace
 from PySide6.QtCore import QEvent, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction as QAction_
 from PySide6.QtGui import (QColor, QCursor, QFont, QFontMetrics, QPainter, QPixmap, QSyntaxHighlighter,
-                           QTextCharFormat, QTextCursor)
+                           QKeySequence, QTextCharFormat, QTextCursor)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
                                QFontComboBox, QFormLayout, QFrame, QHBoxLayout, QInputDialog, QLabel, QMessageBox,
                                QPlainTextEdit, QPushButton, QScrollArea, QSpinBox, QStyle, QStyledItemDelegate,
@@ -22,8 +22,11 @@ from .texte import CENTRE, CHAMPS_LETTRE, DROITE, GAUCHE, JUSTIFIE, Texte, avec_
 
 
 class BoutonCouleur(QToolButton):
-    """Pastille de couleur ; un clic ouvre le choix de couleur (avec la transparence)."""
+    """Pastille de couleur ; un clic ouvre le choix de couleur (avec la transparence). Pendant le choix, apercu
+    donne chaque couleur essayée (pour la montrer tout de suite sur la photo), puis "" quand la fenêtre se ferme ;
+    change seulement à OK."""
     change = Signal(str)
+    apercu = Signal(str)
 
     def __init__(self, titre: str):
         super().__init__()
@@ -46,10 +49,22 @@ class BoutonCouleur(QToolButton):
         self.setIcon(pm)
 
     def _choisir(self):
-        c = QColorDialog.getColor(QColor(self.couleur), self, self.titre, QColorDialog.ShowAlphaChannel)
-        if c.isValid():
+        d = QColorDialog(QColor(self.couleur), self)
+        d.setWindowTitle(self.titre)
+        d.setOption(QColorDialog.ShowAlphaChannel)
+        d.currentColorChanged.connect(lambda c: c.isValid() and self.apercu.emit(c.name(QColor.HexArgb)))
+        ok = d.exec()
+        c = d.currentColor()
+        self.apercu.emit("")
+        if ok and c.isValid():
             self.definir(c.name(QColor.HexArgb))
             self.change.emit(self.couleur)
+
+
+def _reglages():
+    import os
+    from PySide6.QtCore import QSettings
+    return QSettings("Pixane", os.environ.get("PIXANE_REGLAGES", "Pixane"))
 
 
 EXEMPLE_MAX = 24          # caractères de l'exemple montré dans la liste des polices
@@ -62,9 +77,10 @@ class ApercuPolices(QStyledItemDelegate):
     def __init__(self, exemple, parent=None):
         super().__init__(parent)
         self.exemple = exemple            # fonction -> texte de l'exemple
+        self.echelle = 1.0                # taille de la liste : petite 1, moyenne 1,5, grande 2,2
 
     def sizeHint(self, option, index):
-        return QSize(420, max(30, option.fontMetrics.height() + 14))
+        return QSize(int(420 * self.echelle), int(max(30, option.fontMetrics.height() + 14) * self.echelle))
 
     def paint(self, p: QPainter, option, index):
         p.save()
@@ -75,13 +91,16 @@ class ApercuPolices(QStyledItemDelegate):
             couleur = option.palette.text().color()
         famille = index.data(Qt.DisplayRole) or ""
         r = option.rect.adjusted(8, 0, -8, 0)
-        largeur_nom = min(190, r.width() // 2)
+        largeur_nom = min(int(190 * min(self.echelle, 1.4)), r.width() // 2)
         p.setPen(couleur)
-        p.setFont(option.font)
-        nom = QFontMetrics(option.font).elidedText(famille, Qt.ElideRight, largeur_nom - 10)
+        f_nom = QFont(option.font)
+        if self.echelle > 1 and f_nom.pointSizeF() > 0:
+            f_nom.setPointSizeF(f_nom.pointSizeF() * min(self.echelle, 1.4))
+        p.setFont(f_nom)
+        nom = QFontMetrics(f_nom).elidedText(famille, Qt.ElideRight, largeur_nom - 10)
         p.drawText(QRect(r.x(), r.y(), largeur_nom, r.height()), Qt.AlignVCenter | Qt.AlignLeft, nom)
         police = QFont(famille)
-        police.setPixelSize(max(14, option.fontMetrics.height() + 4))
+        police.setPixelSize(int(max(14, option.fontMetrics.height() + 4) * self.echelle))
         p.setFont(police)
         zone = QRect(r.x() + largeur_nom, r.y(), r.width() - largeur_nom, r.height())
         texte = QFontMetrics(police).elidedText(self.exemple(), Qt.ElideRight, zone.width())
@@ -135,9 +154,35 @@ class Soulignement(QSyntaxHighlighter):
             self.rehighlight()
 
 
+TAILLES_LISTE = {"petite": (1.0, 460, 10), "moyenne": (1.5, 640, 14), "grande": (2.2, 880, 16)}
+
+
 class ChoixPolice(QFontComboBox):
-    """Liste des polices qui prévient quand elle se referme (fin de l'aperçu sur la photo)."""
+    """Liste des polices qui prévient quand elle se referme (fin de l'aperçu sur la photo) ; filtre par style
+    (styles_polices) et taille de la liste, appliqués à l'ouverture."""
     fermee = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.style_filtre = ""            # "" : toutes
+        self.taille_liste = "petite"
+
+    def showPopup(self):
+        echelle, largeur, lignes = TAILLES_LISTE.get(self.taille_liste, TAILLES_LISTE["petite"])
+        d = self.itemDelegate()
+        if isinstance(d, ApercuPolices):
+            d.echelle = echelle
+        self.view().setMinimumWidth(largeur)
+        self.setMaxVisibleItems(lignes)
+        vue = self.view()
+        if self.style_filtre:
+            from .styles_polices import oublier, style_de
+            if self.count() != getattr(self, "_nb_vu", self.count()):
+                oublier()                 # police ajoutée ou retirée pendant que Pixane tourne : relire leur style
+            self._nb_vu = self.count()
+        for i in range(self.count()):
+            vue.setRowHidden(i, bool(self.style_filtre) and style_de(self.itemText(i)) != self.style_filtre)
+        super().showPopup()
 
     def hidePopup(self):
         super().hidePopup()
@@ -152,6 +197,8 @@ def _titre(texte: str) -> QLabel:
 
 class PanneauTexte(QScrollArea):
     modifie = Signal(object, str)        # (nouveau Texte, nom du réglage changé)
+    apercu_texte = Signal(object)        # texte essayé (couleur en train d'être choisie) ; None : fin de l'essai
+    selection_lettres = Signal(int, int)  # lettres sélectionnées dans la saisie (début, fin), à montrer sur la photo
     apercu_police = Signal(str)          # police survolée dans la liste ("" : liste fermée, retour au texte)
     tracer = Signal(bool)                # « Dessiner un tracé » enfoncé / relâché
 
@@ -198,6 +245,38 @@ class PanneauTexte(QScrollArea):
         # ---- caractères
         lay.addWidget(_titre(tr("Caractères")))
         self.police = ChoixPolice()
+        ligne = QHBoxLayout()
+        ligne.addWidget(QLabel(tr("Style :")))
+        self.style_police = QComboBox()
+        for cle, nom in (("", tr("Toutes")), ("serif", tr("Avec empattements")), ("sans", tr("Sans empattements")),
+                         ("manuscrite", tr("Manuscrites")), ("fantaisie", tr("Fantaisie")),
+                         ("fixe", tr("Chasse fixe"))):
+            self.style_police.addItem(nom, cle)
+        self.style_police.setToolTip(tr("Ne montrer dans la liste des polices que celles de ce style (lu dans "
+                                        "chaque police ; quelques polices de fantaisie peuvent être mal rangées)"))
+        ligne.addWidget(self.style_police, 1)
+        ligne.addWidget(QLabel(tr("Liste :")))
+        self.taille_liste = QComboBox()
+        for cle, nom in (("petite", tr("Petite")), ("moyenne", tr("Moyenne")), ("grande", tr("Grande"))):
+            self.taille_liste.addItem(nom, cle)
+        self.taille_liste.setToolTip(tr("Taille de la liste des polices et de leur aperçu"))
+        ligne.addWidget(self.taille_liste)
+        lay.addLayout(ligne)
+        reg = _reglages()
+        self._choisir_liste(self.style_police, reg.value("police_style_filtre", "", type=str))
+        self._choisir_liste(self.taille_liste, reg.value("police_taille_liste", "petite", type=str))
+        self.police.style_filtre = self.style_police.currentData()
+        self.police.taille_liste = self.taille_liste.currentData()
+
+        def _style(_i):
+            self.police.style_filtre = self.style_police.currentData()
+            _reglages().setValue("police_style_filtre", self.police.style_filtre)
+
+        def _taille(_i):
+            self.police.taille_liste = self.taille_liste.currentData()
+            _reglages().setValue("police_taille_liste", self.police.taille_liste)
+        self.style_police.currentIndexChanged.connect(_style)
+        self.taille_liste.currentIndexChanged.connect(_taille)
         self.police.setItemDelegate(ApercuPolices(self.exemple_police, self.police))
         # survoler une police dans la liste la montre tout de suite sur le texte de la photo (sans rien changer)
         # (seulement liste ouverte, et pas quand le panneau se remplit : en changeant de calque de texte, l'ancienne
@@ -206,7 +285,6 @@ class PanneauTexte(QScrollArea):
             lambda i: None if self._remplissage or not self.police.view().isVisible()
             else self.apercu_police.emit(self.police.itemText(i)))
         self.police.fermee.connect(lambda: self.apercu_police.emit(""))
-        self.police.view().setMinimumWidth(460)
         self.police.setToolTip(tr("La liste montre chaque police avec le début de ton texte (ou de la partie "
                                   "sélectionnée)"))
         self.police.currentFontChanged.connect(lambda f: self._changer("police", f.family()))
@@ -216,6 +294,7 @@ class PanneauTexte(QScrollArea):
         self.taille.setToolTip(tr("Taille des lettres, en pixels de la photo"))
         self.couleur = BoutonCouleur(tr("Couleur du texte"))
         self.couleur.change.connect(lambda c: self._changer("couleur", c))
+        self.couleur.apercu.connect(lambda c: self._apercu("couleur", c))
         self.bouton_glyphes = QToolButton()
         self.bouton_glyphes.setText("Ω")
         self.bouton_glyphes.setFixedSize(30, 28)
@@ -422,6 +501,7 @@ class PanneauTexte(QScrollArea):
             case.toggled.connect(lambda oui, c=cle: self._changer(c, oui))
             couleur = BoutonCouleur(tr("Couleur : {effet}", effet=titre))
             couleur.change.connect(lambda c, ch=cle + "_couleur": self._changer(ch, c))
+            couleur.apercu.connect(lambda c, ch=cle + "_couleur": self._apercu(ch, c))
             ligne.addWidget(case, 1)
             ligne.addWidget(couleur)
             lay.addSpacing(6)
@@ -616,6 +696,7 @@ class PanneauTexte(QScrollArea):
         """Réglages de caractère montrés : ceux des lettres sélectionnées, sinon ceux du texte entier."""
         t = self.t
         a, b = self._selection()
+        self.selection_lettres.emit(a, b)
         st = t.style_de(a) if b > a else t.style_de(-1)
         pos = self.saisie.textCursor().position()
         avant = self._remplissage
@@ -676,6 +757,23 @@ class PanneauTexte(QScrollArea):
             self._montrer_lettres()
         if self.lie:
             self.modifie.emit(self.t, champ)
+
+    def _apercu(self, champ: str, valeur: str):
+        """Couleur essayée dans la fenêtre de couleur : le texte de la photo la montre (sans rien changer)."""
+        if not self.lie:
+            return
+        if not valeur:
+            self.apercu_texte.emit(None)
+            return
+        t = self.t
+        a, b = self._selection()
+        if champ in CHAMPS_LETTRE and b > a:
+            essai = t.avec_style(a, b, **{champ: valeur})
+        elif champ in CHAMPS_LETTRE:
+            essai = replace(t, **{champ: valeur}).avec_style(0, len(t.texte), **{champ: valeur})
+        else:
+            essai = replace(t, **{champ: valeur})
+        self.apercu_texte.emit(essai)
 
     def _cadre_coche(self, oui: bool):
         """Texte en cadre : le cadre prend la largeur actuelle du texte (on la change ensuite)."""
@@ -865,7 +963,14 @@ class PanneauTexte(QScrollArea):
         self._remplir_styles()
 
     def eventFilter(self, objet, ev):
-        """Alt+flèches dans la saisie : crénage à la main entre les deux lettres autour du curseur."""
+        """Alt+flèches dans la saisie : crénage à la main entre les deux lettres autour du curseur.
+        Ctrl+Z / Ctrl+Y dans la saisie, quand elle n'a rien à annuler (ex. un texte posé par erreur d'un clic) : ils
+        vont à l'historique de l'image (le texte posé est retiré), au lieu de ne rien faire."""
+        if objet is self.saisie and ev.type() == QEvent.ShortcutOverride:
+            doc = self.saisie.document()
+            if (ev.matches(QKeySequence.Undo) and not doc.isUndoAvailable()) or \
+                    (ev.matches(QKeySequence.Redo) and not doc.isRedoAvailable()):
+                return True                      # pas accepté : le raccourci de la fenêtre (Annuler) s'en charge
         if objet is self.saisie and ev.type() == QEvent.KeyPress and ev.modifiers() & Qt.AltModifier \
                 and ev.key() in (Qt.Key_Left, Qt.Key_Right) and self.lie and self.saisie.isEnabled():
             pas = 20.0 * (5 if ev.modifiers() & Qt.ControlModifier else 1)

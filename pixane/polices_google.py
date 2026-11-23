@@ -317,6 +317,8 @@ def installer(ident: str, progres=None) -> tuple[str, list[str]]:
         ctypes.windll.user32.SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, 0x0002, 1000, None)
     except (AttributeError, OSError):
         pass
+    from . import styles_polices
+    styles_polices.oublier()                      # le filtre par style relira les polices
     return famille_qt, faits
 
 

@@ -172,6 +172,7 @@ class LigneCalque(QWidget):
 class PanneauCalques(QWidget):
     demande = Signal(object, str)      # (nouvel état, texte pour Annuler)
     style_demande = Signal()           # double-clic sur un calque (hors du nom) ou bouton fx
+    texte_demande = Signal()           # double-clic sur un calque de texte (hors du nom) : éditer le texte
     reglage_demande = Signal(str)      # nouveau calque de réglage (type) ; "" = modifier celui choisi
     refus = Signal(str)                # action impossible : message dans la barre d'état
 
@@ -750,12 +751,15 @@ class PanneauCalques(QWidget):
             self.demande.emit(etat, tr("Supprimer les calques") if len(self.choisis) > 1 else tr("Supprimer le calque"))
 
     def _double_clic(self, item):
-        """Comme Photoshop : double-clic sur le nom = renommer ; ailleurs : réglage (calque de réglage) ou style."""
+        """Comme Photoshop : double-clic sur le nom = renommer ; ailleurs : éditer le texte (calque de texte), réglage
+        (calque de réglage) ou style (le style d'un texte reste au bouton fx)."""
         ligne = self.liste.itemWidget(item)
         p = ligne.nom.mapFromGlobal(QCursor.pos()) if ligne is not None else None
         largeur = ligne.nom.fontMetrics().horizontalAdvance(ligne.nom.text()) + 10 if ligne is not None else 0
         if p is not None and 0 <= p.y() < ligne.nom.height() and p.x() < largeur:
             self.renommer()
+        elif self.doc and self.doc.calque_actif.texte is not None:
+            self.texte_demande.emit()
         elif self.doc and (self.doc.calque_actif.reglage is not None
                            or calque_remplissage.valide(self.doc.calque_actif) is not None):
             self.reglage_demande.emit("")             # calque de réglage ou de remplissage : sa fenêtre

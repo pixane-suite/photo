@@ -809,6 +809,37 @@ def transformation(t: Texte) -> QTransform:
     return tr
 
 
+MARQUE = "#fe010203"          # couleur improbable : repère les lettres sélectionnées dans la mise en place
+
+
+def zones_lettres(t: Texte, debut: int, fin: int) -> list[QPolygonF]:
+    """Lettres t.texte[debut:fin] : un rectangle par morceau de lettre (tourné), en coordonnées de l'image, pour
+    montrer la sélection de la saisie sur la photo."""
+    if fin <= debut or not t.texte:
+        return []
+    m = mise(t.avec_style(max(0, debut), min(len(t.texte), fin), couleur=MARQUE))
+    chemin = next((c for c, k in m.morceaux if k.lower() == MARQUE), None)
+    if chemin is None:
+        return []
+    rects = [poly.boundingRect() for poly in chemin.toSubpathPolygons()]
+    rects = sorted((r for r in rects if r.width() * r.height() > 0), key=lambda r: r.center().y())
+    lignes: list[QRectF] = []                # une bande par ligne : les morceaux qui se chevauchent en hauteur
+    for r in rects:
+        if lignes and r.top() < lignes[-1].bottom() - min(r.height(), lignes[-1].height()) * 0.3:
+            lignes[-1] = lignes[-1].united(r)
+        else:
+            lignes.append(QRectF(r))
+    tr = transformation(t)
+    marge = t.taille * 0.08
+    zones = []
+    for r in lignes:
+        haut = max(r.height(), t.taille * 0.9) / 2
+        c = r.center()
+        zones.append(tr.map(QPolygonF(QRectF(r.left() - marge, c.y() - haut - marge, r.width() + 2 * marge,
+                                             2 * (haut + marge)))))
+    return zones
+
+
 def contour_bloc(t: Texte) -> QPolygonF:
     """Rectangle du bloc (fond compris), tourné, en coordonnées de l'image : pour le cadre et les clics."""
     m = mise(t)
