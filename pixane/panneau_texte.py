@@ -672,6 +672,17 @@ class PanneauTexte(QScrollArea):
             self.aide.setText(tr("Clique sur la photo pour écrire un texte, ou sur un texte existant pour le "
                                  "modifier. Les réglages ci-dessous serviront pour le prochain texte."))
 
+    def choisir_lettres(self, a: int, b: int):
+        """Lettres choisies à la souris sur la photo : la même sélection dans la case (et la case prend la main)."""
+        if not self.lie:
+            return
+        n = len(self.saisie.toPlainText())
+        c = self.saisie.textCursor()
+        c.setPosition(max(0, min(a, n)))
+        c.setPosition(max(0, min(b, n)), QTextCursor.KeepAnchor)
+        self.saisie.setTextCursor(c)
+        self.saisie.setFocus()
+
     def commencer_saisie(self):
         """Nouveau texte : on peut taper tout de suite (le texte proposé est sélectionné)."""
         self.saisie.setFocus()

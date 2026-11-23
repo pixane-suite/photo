@@ -103,9 +103,12 @@ f.historique.redo()
 # 4. déplacer et tourner à la souris
 c.repaint()
 t0 = doc.calque_actif.texte
-souris([(t0.x, t0.y), (t0.x + 50, t0.y + 20), (t0.x + 100, t0.y + 40)])
+souris([(t0.x, t0.y), (t0.x + 20, t0.y)])            # sans Ctrl, sur les lettres : elles sont choisies
+verifier(doc.calque_actif.texte.x == t0.x and pt_.saisie.textCursor().hasSelection(),
+         "glisser sur les lettres -> lettres choisies, texte pas déplacé")
+souris([(t0.x, t0.y), (t0.x + 50, t0.y + 20), (t0.x + 100, t0.y + 40)], Qt.ControlModifier)
 t1 = doc.calque_actif.texte
-verifier(abs(t1.x - t0.x - 100) < 1 and abs(t1.y - t0.y - 40) < 1, "glisser -> texte déplacé")
+verifier(abs(t1.x - t0.x - 100) < 1 and abs(t1.y - t0.y - 40) < 1, "Ctrl + glisser -> texte déplacé")
 verifier(f.historique.undoText() == "Déplacer le texte", "déplacement annulable")
 _, _, poignee = c._cadre_texte_ecran(t1)
 p_img = c.vers_image(poignee)

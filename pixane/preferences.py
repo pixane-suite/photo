@@ -139,6 +139,11 @@ class DialoguePreferences(QDialog):
         self.pleine = QCheckBox(tr("Agrandir l'image : en pleine définition"))
         self.pleine.setChecked(fenetre.barre_agrandir.pleine.isChecked())
         form.addRow("", self.pleine)
+        self.analyse = QCheckBox(tr("Effacer : analyser d'abord la zone (ombre, bord oublié)"))
+        self.analyse.setChecked(fenetre.reglages.value("analyse_effacer", True, type=bool))
+        self.analyse.setToolTip(tr("Avant Effacer, Pixane Photo cherche l'ombre de l'objet et un bord de l'objet "
+                                   "resté hors de la zone peinte, les montre en couleur et propose de les ajouter."))
+        form.addRow("", self.analyse)
         d = dossier_moteur()
         moteur = QLabel(d or tr("pas trouvé"))
         moteur.setWordWrap(True)
@@ -208,5 +213,6 @@ class DialoguePreferences(QDialog):
                 "polices": self.polices.isChecked(), "orthographe": self.orthographe.isChecked(),
                 "google": self.google.isChecked(),
                 "nouveau_calque": self.nouveau_calque.isChecked(), "pleine": self.pleine.isChecked(),
+                "analyse": self.analyse.isChecked(),
                 "recuperation": self.recuperation.currentData(), "dossier": self.dossier.text().strip(),
                 "maj": self.maj.isChecked()}

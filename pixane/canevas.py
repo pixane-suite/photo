@@ -66,6 +66,15 @@ OUTILS_SELECTION = (RECTANGLE, LASSO, PINCEAU, BAGUETTE, RAPIDE, OBJET, SEL_TEXT
 FLECHES = {Qt.Key_Left: (-1, 0), Qt.Key_Right: (1, 0), Qt.Key_Up: (0, -1), Qt.Key_Down: (0, 1)}
 
 
+def _distance_segment(p: QPointF, a: QPointF, b: QPointF) -> float:
+    """Distance du point p au segment ab (écran)."""
+    ab = b - a
+    long2 = ab.x() ** 2 + ab.y() ** 2
+    k = 0.0 if long2 == 0 else max(0.0, min(1.0, ((p - a).x() * ab.x() + (p - a).y() * ab.y()) / long2))
+    q = a + ab * k
+    return ((p - q).x() ** 2 + (p - q).y() ** 2) ** 0.5
+
+
 class Canevas(PlumeMixin, QWidget):
     selection_modifiee = Signal(object, str)   # (état avant, nom de l'action) -> pour annuler (sélection ou calque)
     infos = Signal(int, int, float)             # largeur, hauteur, zoom
@@ -76,6 +85,7 @@ class Canevas(PlumeMixin, QWidget):
     cadre_annule = Signal()                     # Échap pendant Agrandir
     texte_nouveau = Signal(object)              # outil Texte : clic hors des textes -> point (image)
     texte_choisi = Signal(int)                  # outil Texte : clic sur un calque de texte -> son index
+    lettres_choisies = Signal(int, int)         # outil Texte : lettres choisies à la souris sur la photo (début, fin)
     texte_edition = Signal(int)                 # double-clic sur un texte de l'image (autre outil) -> son index
     trace_dessine = Signal(list)                # outil Texte, « Dessiner un tracé » : points (image) du tracé
     degrade_masque = Signal()                   # dégradé commencé sur un masque (il rend transparent, ne colore pas)
@@ -120,6 +130,9 @@ class Canevas(PlumeMixin, QWidget):
         self._cache = None           # (clé, pixmap réduite)
         self._ajuste = True          # l'image suit la taille de la fenêtre
         self.mode_retirer = False    # pinceau de sélection : pastilles Ajouter / Retirer
+        self.lasso_points = False    # Lasso « Par points » : un clic par point (comme le lasso polygonal)
+        self._poly = None            # lasso par points en cours : points posés (image)
+        self._poly_souris = None     # lasso par points : position de la souris (image), pour le segment suivant
         self.mode_forme = "nouvelle" # rectangle et lasso : « nouvelle » (remplace), « ajouter » ou « retirer »
         self._nouvelle = False       # tracé en cours qui remplacera la sélection
         self.couleur_fond = QColor(40, 40, 40)
@@ -138,6 +151,9 @@ class Canevas(PlumeMixin, QWidget):
         self._trace_points = None    # tracé en cours (points image)
         self._fleches = None         # outil Déplacer aux flèches : (genre, index, origine, état d'avant, [dx, dy])
         self._calque_glisse = None   # outil Déplacer : (index, départ, image d'origine, état d'avant)
+        self._lettres_glisse = None  # outil Texte : (index, texte, boîtes des lettres, ancre) pendant un glisser
+        self._lot_glisse = None      # outil Déplacer, groupe ou plusieurs calques : (lot, départ, état d'avant)
+        self.calques_choisis = lambda: set()   # calques choisis dans le panneau (Ctrl+clic), donné par la fenêtre
         # pinceau de couleur et tampon
         self.couleur_peinture = QColor(0, 0, 0)
         self.opacite = 1.0           # 0..1
@@ -198,6 +214,7 @@ class Canevas(PlumeMixin, QWidget):
         self._transfo_index = 0
         self._transfo_glisse = False
         # sélections calculées
+        self.indice_effacer: QImage | None = None   # analyse avant Effacer : ombre / bord proposés, en couleur
         self.apercu_selection: QImage | None = None  # baguette pendant le glisser (petite image, étirée)
         self.apercu_plein: QImage | None = None      # aperçu qui cache la photo (Améliorer le contour)
         self.points_ia: list = []                    # sélection rapide : (point image, garder ?)
@@ -330,6 +347,8 @@ class Canevas(PlumeMixin, QWidget):
         elif not (self._trace and self._nouvelle):   # nouvelle sélection en cours : l'ancienne va disparaître
             p.drawImage(QPointF(0, 0), self.doc.selection)
         p.setOpacity(1)
+        if self.indice_effacer is not None:
+            p.drawImage(QPointF(0, 0), self.indice_effacer)
         self._dessiner_auto(p)
         # tracé en cours
         if self._trace and self.outil in (RECTANGLE, LASSO):
@@ -344,6 +363,7 @@ class Canevas(PlumeMixin, QWidget):
                     chemin.lineTo(pt)
                 p.drawPath(chemin)
         p.restore()
+        self._dessiner_poly(p)
         regles.dessiner(p, self)
         if self.cadre is not None:
             self._dessiner_cadre(p)
@@ -359,6 +379,7 @@ class Canevas(PlumeMixin, QWidget):
         if self.transfo is not None:
             self._dessiner_transfo(p)
             return
+        self._dessiner_cadre_hors(p)
         if self.persp is not None:
             self._dessiner_persp(p)
             return
@@ -746,25 +767,92 @@ class Canevas(PlumeMixin, QWidget):
             p.drawEllipse(poignee, 6, 6)
         p.restore()
 
+    def _etendue_calque(self, c):
+        """Polygone (image) autour du contenu du calque, s'il dépasse de la feuille ; sinon None. Gardé en mémoire
+        tant que le calque ne change pas."""
+        if c.texte is not None:
+            poly = contour_bloc(c.texte)
+        elif c.hors is not None and not c.groupe and c.reglage is None:
+            cle = (id(c.image), id(c.hors), c.hors_x, c.hors_y)
+            if getattr(self, "_etendue_cle", None) != cle:
+                import numpy as np
+                img, x, y = image_entiere(c)
+                a = tableau(img)[..., 3]
+                lignes, colonnes = np.where(a.any(axis=1))[0], np.where(a.any(axis=0))[0]
+                self._etendue = (None if len(lignes) == 0 else
+                                 QRectF(x + colonnes[0], y + lignes[0], colonnes[-1] - colonnes[0] + 1,
+                                        lignes[-1] - lignes[0] + 1))
+                self._etendue_cle = cle
+            if self._etendue is None:
+                return None
+            poly = QPolygonF(self._etendue)
+        else:
+            return None
+        feuille = QRectF(0, 0, self.doc.image.width(), self.doc.image.height())
+        return None if feuille.contains(poly.boundingRect()) else poly
+
+    def _dessiner_cadre_hors(self, p: QPainter):
+        """Calque choisi qui dépasse de la feuille (texte, image, forme…) : cadre en pointillés autour de lui, avec
+        tous les outils (l'outil Texte a déjà le sien), pour voir où il est."""
+        if self.doc is None or self.cadre is not None or (self.outil == TEXTE and self.doc.calque_actif.texte):
+            return
+        c = self.doc.calque_actif
+        if not c.visible:
+            return
+        try:
+            poly = self._etendue_calque(c)
+        except Exception:
+            return
+        if poly is None:
+            return
+        ecran = QPolygonF([self.vers_ecran(q) for q in poly])
+        p.save()
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QPen(QColor(0, 0, 0, 150), 1))
+        p.drawPolygon(ecran)
+        p.setPen(QPen(self.couleur_accent, 1.5, Qt.DashLine))
+        p.drawPolygon(ecran)
+        p.restore()
+
     def _sur_poignee_texte(self, pos: QPointF) -> bool:
         t = self._texte_actif()
         if t is None or self.doc.calque_actif.verrou:
             return False
         return QLineF(pos, self._cadre_texte_ecran(t)[2]).length() <= 10
 
-    def _presser_texte(self, pos: QPointF):
+    def _sur_bord_texte(self, pos: QPointF) -> bool:
+        """Souris sur le bord en pointillés du texte choisi (à 8 px près) : on le déplace en glissant."""
+        t = self._texte_actif()
+        if t is None:
+            return False
+        ecran = self._cadre_texte_ecran(t)[0]
+        n = ecran.size()
+        return any(_distance_segment(pos, ecran[k], ecran[(k + 1) % n]) <= 8 for k in range(n))
+
+    def _presser_texte(self, pos: QPointF, ctrl: bool = False):
         pt = self.vers_image(pos)
         if self.trace_texte and self._texte_actif() is not None and not self.doc.calque_actif.verrou:
             self._trace_points = [pt]               # dessiner le tracé du texte
             return
         if self._sur_poignee_texte(pos):
             index, mode = self.doc.actif, "tourner"
+        elif self._sur_bord_texte(pos):
+            index, mode = self.doc.actif, "deplacer"
         else:
             index, mode = self._texte_sous(pt), "deplacer"
             if index is None:
                 self.texte_nouveau.emit(pt)
                 return
             self.texte_choisi.emit(index)
+            if not ctrl:                            # sur les lettres : choisir des lettres (Ctrl : déplacer)
+                from .texte import boites_lettres, index_lettre
+                t = self.doc.calques[index].texte
+                boites = boites_lettres(t)
+                ancre = index_lettre(t, pt, boites)
+                self._lettres_glisse = (index, t, boites, ancre)
+                self.lettres_choisies.emit(ancre, ancre)
+                return
         c = self.doc.calques[index]
         if c.verrou:
             self.refus.emit(tr("Le calque « {nom} » est verrouillé : clique sur son cadenas pour pouvoir le "
@@ -794,7 +882,75 @@ class Canevas(PlumeMixin, QWidget):
                                          else tr("Tourner le texte"))
 
     # ---------------------------------------------------------- outil Déplacer
+    # ---------------------------------------------------------- déplacer un groupe ou plusieurs calques
+    def _a_deplacer(self) -> list[int]:
+        """Calques que l'outil Déplacer bouge : le calque choisi ; un groupe -> tout son contenu ; plusieurs calques
+        choisis dans le panneau -> tous (groupes compris)."""
+        doc = self.doc
+        depart = set(self.calques_choisis()) | {doc.actif}
+        depart = {i for i in depart if 0 <= i < len(doc.calques)}
+        idents, changement = set(), True
+        for i in depart:
+            if doc.calques[i].groupe:
+                idents.add(doc.calques[i].ident)
+        while changement:                                  # groupes dans les groupes
+            changement = False
+            for c in doc.calques:
+                if c.groupe and c.dans in idents and c.ident not in idents:
+                    idents.add(c.ident)
+                    changement = True
+        return sorted(i for i, c in enumerate(doc.calques)
+                      if (i in depart or c.dans in idents) and not c.groupe and c.reglage is None)
+
+    def _lot_debut(self, indexes: list[int]):
+        lot = []
+        for i in indexes:
+            c = self.doc.calques[i]
+            lot.append((i, "texte", c.texte) if c.texte is not None else (i, "calque", image_entiere(c)))
+        return lot
+
+    def _lot_apercu(self, lot, dx: int, dy: int):
+        w, h = self.doc.taille()
+        for i, genre, origine in lot:
+            if genre == "texte":
+                t = origine.deplace(dx, dy)
+                self.doc.apercu_calque(i, rendre(t, w, h), texte=t)
+            else:
+                image, x, y = origine
+                nouvelle = QImage(w, h, image.format())
+                nouvelle.fill(Qt.transparent)
+                p = QPainter(nouvelle)
+                p.drawImage(x + dx, y + dy, image)
+                p.end()
+                self.doc.apercu_calque(i, nouvelle)
+
+    def _lot_fin(self, lot, dx: int, dy: int, avant):
+        if (dx, dy) == (0, 0):
+            return
+        for i, genre, origine in lot:
+            if genre == "calque":
+                image, x, y = origine
+                self.doc.apercu_calque_entier(i, image, x + dx, y + dy, avant=avant[0][i], decalage=(dx, dy))
+        self.selection_modifiee.emit(avant, tr("Déplacer les calques"))
+
+    def _lot_verrou(self, indexes) -> bool:
+        for i in indexes:
+            c = self.doc.calques[i]
+            if c.verrou:
+                self.refus.emit(tr("Le calque « {nom} » est verrouillé : clique sur son cadenas pour pouvoir le "
+                                   "modifier.", nom=c.nom))
+                return True
+        return False
+
     def _presser_deplacer(self, pos: QPointF):
+        lot = self._a_deplacer()
+        if len(lot) > 1 or (lot and self.doc.calque_actif.groupe):
+            if not self._lot_verrou(lot):
+                self._lot_glisse = (self._lot_debut(lot), self.vers_image(pos), self.doc.etat())
+                self._decalage_calque = (0, 0)
+            return
+        if self.doc.calque_actif.groupe:
+            return
         c = self.doc.calque_actif
         if c.verrou:
             self.refus.emit(tr("Le calque « {nom} » est verrouillé : clique sur son cadenas pour pouvoir le "
@@ -837,6 +993,14 @@ class Canevas(PlumeMixin, QWidget):
         if self._fleches is not None and self._fleches[1] != self.doc.actif:
             self.finir_fleches()
         if self._fleches is None:
+            lot = self._a_deplacer()
+            if len(lot) > 1 or (lot and c.groupe):
+                if self._lot_verrou(lot):
+                    return
+                self._fleches = ("lot", self.doc.actif, self._lot_debut(lot), self.doc.etat(), [0, 0])
+            elif c.groupe:
+                return
+        if self._fleches is None:
             if c.verrou:
                 self.refus.emit(tr("Le calque « {nom} » est verrouillé : clique sur son cadenas pour pouvoir le "
                                    "modifier.", nom=c.nom))
@@ -849,7 +1013,9 @@ class Canevas(PlumeMixin, QWidget):
         dec[0] += dx
         dec[1] += dy
         w, h = self.doc.taille()
-        if genre == "texte":
+        if genre == "lot":
+            self._lot_apercu(origine, dec[0], dec[1])
+        elif genre == "texte":
             t = origine.deplace(dec[0], dec[1])
             self.doc.apercu_calque(index, rendre(t, w, h), texte=t)
         else:
@@ -869,7 +1035,9 @@ class Canevas(PlumeMixin, QWidget):
         self._fleches = None
         if index >= len(self.doc.calques):
             return
-        if genre == "texte":
+        if genre == "lot":
+            self._lot_fin(origine, dx, dy, avant)
+        elif genre == "texte":
             if self.doc.calques[index].texte != origine:
                 self.selection_modifiee.emit(avant, tr("Déplacer le texte"))
         elif (dx, dy) != (0, 0):
@@ -1790,6 +1958,74 @@ class Canevas(PlumeMixin, QWidget):
             self.objet_ia.emit(quoi, d["mode"])
         self.update()
 
+    # ---------------------------------------------------------- lasso par points
+    def _presser_poly(self, e, pos: QPointF):
+        """Un clic = un point. Clic sur le premier point (ou double-clic, Entrée) : la sélection se ferme."""
+        pt = self.vers_image(pos)
+        if self._poly is None:
+            mods = e.modifiers()
+            mode = ("retirer" if mods & Qt.AltModifier else "ajouter" if mods & Qt.ShiftModifier
+                    else self.mode_forme)
+            self._soustraire = mode == "retirer"
+            self._nouvelle = mode == "nouvelle"
+            self._avant = self.doc.etat()
+            self._poly = [pt]
+        elif len(self._poly) >= 3 and QLineF(self.vers_ecran(self._poly[0]), pos).length() <= 8:
+            self.finir_poly()
+            return
+        else:
+            self._poly.append(pt)
+        self._poly_souris = pt
+        self.update()
+
+    def finir_poly(self):
+        """Ferme le lasso par points : la sélection est faite (une étape dans Annuler)."""
+        if self._poly is None:
+            return
+        points, self._poly, self._poly_souris = self._poly, None, None
+        if len(points) < 3:
+            self._avant = None
+            self.update()
+            return
+        if self._nouvelle:
+            self.doc.selection.fill(0)
+        outil, self.outil = self.outil, LASSO
+        self._trace = points
+        self._remplir_forme()
+        self._trace = None
+        self.outil = outil
+        self._nouvelle = False
+        self.selection_modifiee.emit(self._avant, tr("Lasso par points"))
+        self._avant = None
+        self.update()
+
+    def annuler_poly(self):
+        if self._poly is not None:
+            self._poly, self._poly_souris, self._avant = None, None, None
+            self.update()
+
+    def _dessiner_poly(self, p: QPainter):
+        if self._poly is None:
+            return
+        p.save()
+        p.setRenderHint(QPainter.Antialiasing)
+        ecran = [self.vers_ecran(q) for q in self._poly]
+        if self._poly_souris is not None:
+            ecran_s = ecran + [self.vers_ecran(self._poly_souris)]
+        else:
+            ecran_s = ecran
+        for couleur, epaisseur, style in ((QColor(0, 0, 0, 160), 3, Qt.SolidLine), (QColor(255, 255, 255), 1, Qt.DashLine)):
+            p.setPen(QPen(couleur, epaisseur, style))
+            p.drawPolyline(QPolygonF(ecran_s))
+        pres = (len(self._poly) >= 3 and self._poly_souris is not None
+                and QLineF(ecran[0], self.vers_ecran(self._poly_souris)).length() <= 8)
+        p.setPen(QPen(QColor(0, 0, 0), 1))
+        for k, q in enumerate(ecran):
+            p.setBrush(self.couleur_accent if (k == 0 and pres) else QColor(255, 255, 255))
+            r = 6 if (k == 0 and pres) else 3.5
+            p.drawRect(QRectF(q.x() - r, q.y() - r, 2 * r, 2 * r))
+        p.restore()
+
     def _remplir_forme(self):
         chemin = QPainterPath()
         if self.outil == RECTANGLE:
@@ -1926,7 +2162,7 @@ class Canevas(PlumeMixin, QWidget):
             self._transfo_glisse = True
             return
         if self.outil == TEXTE:
-            self._presser_texte(pos)
+            self._presser_texte(pos, bool(e.modifiers() & Qt.ControlModifier))
             self.update()
             return
         if self.outil == DEPLACER and self._repere_sous(pos):
@@ -1965,6 +2201,9 @@ class Canevas(PlumeMixin, QWidget):
                                "gommer.", nom=self.doc.calque_actif.nom))
             return
         if self.outil == GOMME_CALQUE and self.refus_special():
+            return
+        if self.outil == LASSO and (self.lasso_points or self._poly is not None):
+            self._presser_poly(e, pos)
             return
         mods = e.modifiers()
         self._nouvelle = False
@@ -2059,11 +2298,22 @@ class Canevas(PlumeMixin, QWidget):
             return
         if self.outil == PLUME and self.doc is not None and self._glisser_plume(pos, e.modifiers()):
             return
+        if self._lettres_glisse is not None:
+            from .texte import index_lettre
+            _i, t, boites, ancre = self._lettres_glisse
+            self.lettres_choisies.emit(ancre, index_lettre(t, self.vers_image(pos), boites))
+            return
         if self._texte_glisse is not None:
             self._glisser_texte(pos, bool(e.modifiers() & Qt.ShiftModifier))
             return
         if self._calque_glisse is not None:
             self._glisser_calque(pos)
+            return
+        if self._lot_glisse is not None:
+            lot, depart, _avant = self._lot_glisse
+            pt = self.vers_image(pos)
+            self._decalage_calque = (round(pt.x() - depart.x()), round(pt.y() - depart.y()))
+            self._lot_apercu(lot, *self._decalage_calque)
             return
         if self._recadre_glisse is not None:
             self._glisser_recadre(pos)
@@ -2089,10 +2339,11 @@ class Canevas(PlumeMixin, QWidget):
         if self.outil == TEXTE and self.doc and not self._espace:
             if self._sur_poignee_texte(pos):
                 self.setCursor(Qt.PointingHandCursor)
-            elif self._texte_sous(self.vers_image(pos)) is not None:
-                self.setCursor(Qt.SizeAllCursor)
+            elif self._sur_bord_texte(pos) or (e.modifiers() & Qt.ControlModifier
+                                               and self._texte_sous(self.vers_image(pos)) is not None):
+                self.setCursor(Qt.SizeAllCursor)        # bord du cadre ou Ctrl : déplacer
             else:
-                self.setCursor(Qt.IBeamCursor)
+                self.setCursor(Qt.IBeamCursor)          # sur les lettres : les choisir
         if self.repere_tire is not None:
             self.bouger_repere(pos)
             self.setCursor(Qt.SplitVCursor if self.repere_tire[0] == "h" else Qt.SplitHCursor)
@@ -2110,6 +2361,8 @@ class Canevas(PlumeMixin, QWidget):
             self._glisse_dessin[2] = bool(e.modifiers() & Qt.ShiftModifier)
             if self.outil == DEGRADE and not self._minuteur_degrade.isActive():
                 self._minuteur_degrade.start()
+        if self._poly is not None:
+            self._poly_souris = self.vers_image(pos)
         if self._trace is not None:
             pt = self.vers_image(pos)
             if self.outil == GOMME_CALQUE:
@@ -2155,11 +2408,20 @@ class Canevas(PlumeMixin, QWidget):
         if self._plume_prise is not None:
             self._lacher_plume()
             return
+        if self._lettres_glisse is not None:
+            self._lettres_glisse = None
+            return
         if self._texte_glisse is not None:
             self._lacher_texte()
             return
         if self._calque_glisse is not None:
             self._lacher_calque()
+            return
+        if self._lot_glisse is not None:
+            lot, _depart, avant = self._lot_glisse
+            self._lot_glisse = None
+            self._lot_fin(lot, *getattr(self, "_decalage_calque", (0, 0)), avant)
+            self._decalage_calque = (0, 0)
             return
         if self._recadre_glisse is not None:
             self._lacher_recadre()
@@ -2198,6 +2460,9 @@ class Canevas(PlumeMixin, QWidget):
     def mouseDoubleClickEvent(self, e):
         if self.style_ouvert:
             return
+        if self._poly is not None and e.button() == Qt.LeftButton:
+            self.finir_poly()                         # double-clic : le lasso par points se ferme
+            return
         if self.transfo is not None and e.button() == Qt.LeftButton:
             if self.transfo.dedans(self.vers_image(e.position())):
                 self.transfo_valide.emit()
@@ -2214,6 +2479,13 @@ class Canevas(PlumeMixin, QWidget):
                 and self.recadre.contains(self.vers_image(e.position()))):
             self.recadre_valide.emit()
             return
+        if self.outil == TEXTE and self.doc is not None and e.button() == Qt.LeftButton and self.cadre is None:
+            index = self._texte_sous(self.vers_image(e.position()))
+            if index is not None and index == self.doc.actif:   # double-clic sur un mot : il est choisi
+                from .texte import index_lettre, mot_autour
+                t = self.doc.calques[index].texte
+                self.lettres_choisies.emit(*mot_autour(t.texte, index_lettre(t, self.vers_image(e.position()))))
+                return
         if (self.doc is not None and e.button() == Qt.LeftButton and self.outil != PLUME
                 and self.cadre is None):
             index = self._texte_sous(self.vers_image(e.position()))
@@ -2236,6 +2508,19 @@ class Canevas(PlumeMixin, QWidget):
     def keyPressEvent(self, e):
         if self.outil == PLUME and self.touche_plume(e):
             return
+        if self._poly is not None:                   # lasso par points : Entrée ferme, Échap annule, Retour arrière
+            if e.key() in (Qt.Key_Return, Qt.Key_Enter):
+                self.finir_poly()
+                return
+            if e.key() == Qt.Key_Escape:
+                self.annuler_poly()
+                return
+            if e.key() == Qt.Key_Backspace:
+                self._poly.pop()
+                if not self._poly:
+                    self.annuler_poly()
+                self.update()
+                return
         if self.persp is not None and e.key() in (Qt.Key_Return, Qt.Key_Enter):
             self.persp_valide.emit()
             return

@@ -27,6 +27,17 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   et de **taille** réglable (petite, moyenne, grande) ; **panneau Texte élargissable** à la souris (largeur retenue).
 - **Nouvelle image en 16 ou 32 bits par couche** (choix retenu).
 
+- **Calques** : l'outil Déplacer bouge un **groupe entier** (ou plusieurs calques choisis) ; **cadre en pointillés**
+  autour du calque choisi quand il dépasse de l'image ; **Calque > Pixelliser** (texte, forme, style, objet
+  dynamique, tout), aussi au clic droit.
+- **Lasso par points** (choix « Libre / Par points » dans la barre du Lasso).
+- **Outil Texte** : choisir des lettres en glissant sur le texte de la photo, double-clic = un mot ; déplacer par le
+  bord du cadre ou Ctrl + glisser.
+- **Polices installées pendant que Pixane est ouvert** : visibles tout de suite.
+- **Effacer : analyse de la zone** avant de lancer (ombre de l'objet, bord oublié), montrés en couleur et proposés
+  (désactivable dans les Préférences).
+- **Onglets Calques / Historique / Nuancier / Actions** : l'onglet ouvert se voit (gras, trait de couleur).
+
 ## Corrections
 
 - Outil Texte : **Ctrl+Z** ne retirait pas un texte posé par erreur d'un clic (la case de saisie gardait le

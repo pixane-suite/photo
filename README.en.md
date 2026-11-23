@@ -336,7 +336,7 @@ The selection tools share **two buttons** in the left bar (small triangle): the 
 | Tool | Key | Use |
 |---|---|---|
 | **Rectangle** | M | Rectangular selection |
-| **Lasso** | L | Draw an outline freehand, button held down; the shape is closed automatically |
+| **Lasso** | L | **Freehand**: draw an outline freehand, button held down; the shape is closed automatically. **Polygonal** (choice in the bar, remembered): one click per point; click the first point, double-click or Enter to close, Backspace removes the last point, Esc cancels |
 | **Selection brush** | B | Paint the area. Ideal for an object, some text, a wire… |
 | **Selection eraser** | E | Remove from the selection by painting |
 | **Object selection** (AI) | O | Drag a frame around an object, or click on it: the AI cuts it out |
@@ -415,6 +415,8 @@ alike (no Internet, nothing is downloaded).
   your fonts **once only**, in the background, one minute after starting. The time depends on the **number of
   installed fonts**: about 1 min 20 (and 15 MB) for 1,200 fonts. Unchecked: the feature is
   hidden, nothing runs in the background, and this list is deleted.
+- **Font installed while Pixane Photo is open**: it appears right away in the font list (message in the bottom
+  bar), without restarting.
 - **Free Google Fonts** (option, unchecked by default: box in the installer, or **View > Free Google Fonts**, or
   Edit > Preferences): the search also compares the **free fonts of Google Fonts** (about 1,960 families, free
   licences, mostly OFL: commercial use included).
@@ -569,6 +571,10 @@ Removes what is painted in red and rebuilds the background.
 - Also works on a thin selection (letters picked with the magic wand): every pixel touched by the selection is
   erased, even on a soft edge.
 - Typical time: about 2 minutes (8 GB graphics card).
+- **Analysis before erasing**: Pixane Photo looks around the painted area. If it finds **the object's shadow** (shown
+  in purple: otherwise a dark patch would remain) or a **missed edge of the object** (in orange: the AI would redraw
+  it), it offers them, ticked; untick what you don't want, then **Erase**. The enlarged area is one Undo step.
+  "Don't analyse any more": can be changed in Edit > Preferences > Artificial intelligence.
 
 ### Fill (Shift+R)
 Redraws the area painted in red.
@@ -872,6 +878,13 @@ group an opacity, a blend mode and a mask that apply to everything inside.
 - **Ctrl+G** (Layer > Group layers): puts the chosen layers (Ctrl+click or Shift+click in the panel) in one new
   group, placed where the topmost one was; they keep their order. A chosen group goes in with everything inside it.
   With a single chosen layer: that layer alone. **Ctrl+Shift+G**: ungroups (the layers stay).
+- **Move a group**: choose the group, then the Move tool (V), with the mouse or the arrows: all its layers move
+  together (a single Undo step). Same for several chosen layers (Ctrl+click).
+- **Layer sticking out of the image** (text, image, shape…): when it is chosen, a **dashed frame** shows where it is,
+  with any tool.
+- **Layer > Rasterize** (also on right-click): *Text*, *Shape, brush, fill*, *Layer style* (the effects become
+  pixels), *Smart object* (its best version is forgotten) or *Entire layer* (all at once). The layer becomes an
+  ordinary image; Undo goes back.
 - The arrow left of the group **collapses** or **expands** it. Layers inside a group are indented.
 - Move up / down takes a layer into an open group, or out of it.
 
@@ -985,7 +998,9 @@ All layer actions can be undone with Ctrl+Z (changing the selected layer does no
 - **Click by mistake**: **Ctrl+Z** removes the new text (as long as nothing was typed; otherwise it first undoes the
   typing).
 - The text is applied **as you go**: nothing to confirm.
-- **Drag the text**: move it (also with the Move tool, V). A dashed frame surrounds the selected text.
+- **Choose letters on the photo**: drag over the text's letters (as in the panel's box); **double-click** a word:
+  the whole word. The chosen letters are highlighted and are set as in the box.
+- **Move the text**: drag its **dashed edge**, or **Ctrl + drag** anywhere on the text (also with the Move tool, V).
 - **Round handle** above the frame: rotate the text (**Shift**: in 15° steps), or the *Rotation* box.
 - The layer name follows the first line of the text (as long as you have not renamed it yourself).
 - With no text selected, the panel settings are used for the **next** text; Pixane Photo also remembers the last

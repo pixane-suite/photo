@@ -840,6 +840,55 @@ def zones_lettres(t: Texte, debut: int, fin: int) -> list[QPolygonF]:
     return zones
 
 
+def boites_lettres(t: Texte) -> dict[int, QRectF]:
+    """{index du caractère: rectangle de sa lettre} (repère du texte, avant rotation), en une seule mise en place :
+    chaque caractère prend une couleur à lui, improbable, qui le repère. Les espaces n'ont pas de rectangle."""
+    if not t.texte:
+        return {}
+    marque = t
+    for i in range(len(t.texte)):
+        marque = marque.avec_style(i, i + 1, couleur=f"#fe01{(i >> 8) & 255:02x}{i & 255:02x}")
+    boites = {}
+    for chemin, k in mise(marque).morceaux:
+        k = k.lower()
+        if len(k) == 9 and k.startswith("#fe01"):
+            r = chemin.boundingRect()
+            if not r.isEmpty():
+                boites[int(k[5:7], 16) * 256 + int(k[7:9], 16)] = r
+    return boites
+
+
+def index_lettre(t: Texte, pt: QPointF, boites: dict | None = None) -> int:
+    """Position du curseur (0..len) la plus proche du point pt (image) : avant ou après la lettre la plus proche,
+    sur la ligne la plus proche."""
+    boites = boites_lettres(t) if boites is None else boites
+    if not boites:
+        return len(t.texte)
+    inv, _ok = transformation(t).inverted()
+    q = inv.map(QPointF(pt))
+
+    def distance(r: QRectF) -> float:
+        dx = max(r.left() - q.x(), 0.0, q.x() - r.right())
+        dy = max(r.top() - q.y(), 0.0, q.y() - r.bottom())
+        return dy * 4 + dx                             # la bonne ligne d'abord
+    i, r = min(boites.items(), key=lambda kv: distance(kv[1]))
+    return i if q.x() < r.center().x() else i + 1
+
+
+def mot_autour(texte: str, i: int) -> tuple[int, int]:
+    """(début, fin) du mot autour de la position i."""
+    def est(c):
+        return c.isalnum() or c in "'’-_"
+    a = b = max(0, min(i, len(texte)))
+    if (a >= len(texte) or not est(texte[a])) and a > 0 and est(texte[a - 1]):
+        a = b = a - 1
+    while a > 0 and est(texte[a - 1]):
+        a -= 1
+    while b < len(texte) and est(texte[b]):
+        b += 1
+    return a, b
+
+
 def contour_bloc(t: Texte) -> QPolygonF:
     """Rectangle du bloc (fond compris), tourné, en coordonnées de l'image : pour le cadre et les clics."""
     m = mise(t)

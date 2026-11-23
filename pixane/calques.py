@@ -172,6 +172,7 @@ class LigneCalque(QWidget):
 class PanneauCalques(QWidget):
     demande = Signal(object, str)      # (nouvel état, texte pour Annuler)
     style_demande = Signal()           # double-clic sur un calque (hors du nom) ou bouton fx
+    pixelliser_demande = Signal(str)   # clic droit > Pixelliser : "texte", "forme", "style", "dynamique", "tout"
     texte_demande = Signal()           # double-clic sur un calque de texte (hors du nom) : éditer le texte
     reglage_demande = Signal(str)      # nouveau calque de réglage (type) ; "" = modifier celui choisi
     refus = Signal(str)                # action impossible : message dans la barre d'état
@@ -570,6 +571,17 @@ class PanneauCalques(QWidget):
                         and not c.verrou:
                     menu.addAction(tr("Convertir en image"), lambda: self.demande.emit(
                         doc.etat_en_pixels(doc.actif), tr("Convertir en image")))
+                if not c.verrou and not c.groupe and c.reglage is None:
+                    sous = menu.addMenu(tr("Pixelliser"))
+                    for quoi, texte, ok in (
+                            ("texte", tr("Texte"), c.texte is not None),
+                            ("forme", tr("Forme, pinceau, remplissage"),
+                             c.forme is not None or c.pinceau is not None or c.remplissage is not None),
+                            ("style", tr("Style du calque"), c.style is not None and not c.style.vide()),
+                            ("dynamique", tr("Objet dynamique"), c.origine is not None)):
+                        sous.addAction(texte, lambda q=quoi: self.pixelliser_demande.emit(q)).setEnabled(ok)
+                    sous.addSeparator()
+                    sous.addAction(tr("Calque entier"), lambda: self.pixelliser_demande.emit("tout"))
                 menu.addSeparator()
                 menu.addAction(tr("Masquer le calque") if c.visible else tr("Afficher le calque"),
                                lambda: self._visibles(not c.visible))

@@ -141,6 +141,13 @@ QToolButton:disabled {{ color: {c.discret}; }}
 /* panneaux et cartes */
 QDockWidget {{ color: {c.discret}; font-weight: 600; }}
 QDockWidget::title {{ background: {c.fond}; padding: 8px 10px 4px 10px; text-align: left; }}
+/* onglets des panneaux (Calques, Historique, Nuancier, Actions) : celui qui est ouvert se voit */
+QMainWindow > QTabBar {{ background: {c.fond}; }}
+QMainWindow > QTabBar::tab {{ background: {c.fond}; color: {c.discret}; padding: 5px 8px 4px 8px;
+    border: none; border-top: 3px solid transparent; }}
+QMainWindow > QTabBar::tab:hover {{ background: {c.survol}; color: {c.texte}; }}
+QMainWindow > QTabBar::tab:selected {{ background: {c.panneau}; color: {c.texte}; font-weight: 700;
+    border-top: 3px solid {c.accent}; }}
 QFrame#panneau {{ background: {c.panneau}; border: 1px solid {c.bordure}; border-radius: 8px; }}
 QLabel#discret {{ color: {c.discret}; }}
 QLabel#titre_section {{ color: {c.discret}; font-size: 9pt; font-weight: 600; }}

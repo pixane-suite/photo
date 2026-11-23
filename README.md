@@ -344,7 +344,7 @@ directement leur touche.
 | Outil | Touche | Usage |
 |---|---|---|
 | **Rectangle** | M | Sélection rectangulaire |
-| **Lasso** | L | Tracer un contour à main levée, bouton appuyé ; la forme est fermée automatiquement |
+| **Lasso** | L | **Libre** : tracer un contour à main levée, bouton appuyé ; la forme est fermée automatiquement. **Par points** (choix dans la barre, retenu) : un clic par point ; clic sur le premier point, double-clic ou Entrée pour fermer, Retour arrière enlève le dernier point, Échap annule |
 | **Pinceau de sélection** | B | Peindre la zone. Idéal pour un objet, un texte, un fil… |
 | **Gomme de sélection** | E | Retirer de la sélection en peignant |
 | **Sélection d'objet** (IA) | O | Tirer un cadre autour d'un objet, ou cliquer dessus : l'IA le détoure |
@@ -427,6 +427,8 @@ ressemblent le plus (sans Internet, rien n'est téléchargé).
   prépare **une seule fois** la liste de vos polices, en arrière-plan, une minute après le démarrage. La durée dépend
   du **nombre de polices installées** : environ 1 min 20 (et 15 Mo) pour 1 200 polices.
   Décochée : la fonction est cachée, rien ne tourne en fond, et cette liste est effacée.
+- **Police installée pendant que Pixane Photo est ouvert** : elle apparaît tout de suite dans la liste des polices
+  (message dans la barre du bas), sans redémarrer.
 - **Polices gratuites Google Fonts** (option, décochée d'office : case à l'installation, ou **Affichage > Polices
   gratuites Google Fonts**, ou Édition > Préférences) : la recherche compare aussi les **polices gratuites de Google
   Fonts** (environ 1 960 familles, licences libres, surtout OFL : usage commercial compris).
@@ -587,6 +589,10 @@ Enlève ce qui est peint en rouge et reconstruit le fond.
 - Marche aussi sur une sélection fine (lettres prises à la baguette magique) : tout pixel touché par la sélection est
   effacé, même sur un bord adouci.
 - Durée indicative : environ 2 minutes (carte graphique 8 Go).
+- **Analyse avant d'effacer** : Pixane Photo regarde autour de la zone peinte. S'il trouve **l'ombre de l'objet**
+  (montrée en violet : sinon une tache sombre resterait) ou un **bord de l'objet oublié** (en orange : l'IA le
+  redessinerait), il les propose, cochés ; décochez ce que vous ne voulez pas, puis **Effacer**. La zone agrandie
+  est une étape d'Annuler. « Ne plus analyser » : réglable dans Édition > Préférences > Intelligence artificielle.
 
 ### Remplir (Maj+R)
 Redessine la zone peinte en rouge.
@@ -907,6 +913,13 @@ supprimer d'un coup, et donner au groupe une opacité, un mode de fusion et un m
 - **Ctrl+G** (Calque > Grouper les calques) : met les calques choisis (Ctrl+clic ou Maj+clic dans le panneau) dans
   un même nouveau groupe, placé à l'endroit du plus haut ; ils gardent leur ordre. Un groupe choisi y entre avec tout
   son contenu. Avec un seul calque choisi : ce calque seul. **Ctrl+Maj+G** : défait le groupe (les calques restent).
+- **Déplacer un groupe** : choisissez le groupe, puis l'outil Déplacer (V), à la souris ou aux flèches : tous ses
+  calques bougent ensemble (une seule étape d'Annuler). De même pour plusieurs calques choisis (Ctrl+clic).
+- **Calque qui dépasse de l'image** (texte, image, forme…) : quand il est choisi, un **cadre en pointillés** montre
+  où il est, avec n'importe quel outil.
+- **Calque > Pixelliser** (aussi au clic droit) : *Texte*, *Forme, pinceau, remplissage*, *Style du calque* (les
+  effets deviennent des pixels), *Objet dynamique* (sa meilleure version est oubliée) ou *Calque entier* (tout à la
+  fois). Le calque devient une image ordinaire ; Annuler revient en arrière.
 - La flèche à gauche du groupe le **replie** ou le **déplie**. Les calques d'un groupe sont décalés vers la droite.
 - Monter / Descendre fait entrer un calque dans un groupe ouvert, ou l'en fait sortir.
 
@@ -1023,7 +1036,10 @@ Outil **Texte** (touche **T**, icône « T » dans la barre d'outils). Le pannea
 - **Clic posé par erreur** : **Ctrl+Z** retire le nouveau texte (tant qu'on n'a rien tapé ; sinon il annule d'abord
   la frappe).
 - Le texte s'applique **au fur et à mesure** : rien à valider.
-- **Glisser le texte** : le déplacer (aussi avec l'outil Déplacer, V). Un cadre en pointillés entoure le texte choisi.
+- **Choisir des lettres sur la photo** : glissez sur les lettres du texte (comme dans la case du panneau) ;
+  **double-clic** sur un mot : le mot entier. Les lettres choisies sont surlignées et se règlent comme dans la case.
+- **Déplacer le texte** : glissez son **bord en pointillés**, ou **Ctrl + glisser** n'importe où sur le texte (aussi
+  avec l'outil Déplacer, V).
 - **Poignée ronde** au-dessus du cadre : tourner le texte (**Maj** : par pas de 15°), ou case *Rotation*.
 - Le nom du calque suit la première ligne du texte (tant qu'on ne l'a pas renommé à la main).
 - Sans texte choisi, les réglages du panneau servent pour le **prochain** texte ; Pixane Photo retient aussi le

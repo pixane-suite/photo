@@ -68,6 +68,12 @@ class ActionsCalques:
         self._action(sous, tr("Symétrie verticale (haut ↔ bas)"), None, lambda: self.retourner_calques(False),
                      "a_retourner_calque_v")
         m_calque.addSeparator()
+        sous = m_calque.addMenu(tr("Pixelliser"))
+        for quoi, texte in (("texte", tr("Texte")), ("forme", tr("Forme, pinceau, remplissage")),
+                            ("style", tr("Style du calque")), ("dynamique", tr("Objet dynamique")),
+                            ("tout", tr("Calque entier"))):
+            self._action(sous, texte, None, lambda *_, q=quoi: self.pixelliser(q), f"a_pixelliser_{quoi}")
+        sous.aboutToShow.connect(self._etat_pixelliser)
         sous = m_calque.addMenu(tr("Masque de calque"))
         self._action(sous, tr("Ajouter : tout visible"), None, lambda: self.calques.ajouter_masque("blanc"),
                      "a_masque_blanc")

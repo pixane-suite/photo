@@ -18,7 +18,7 @@ from PySide6.QtGui import (QAction, QActionGroup, QColor, QDesktopServices, QIco
                            QTransform, QUndoStack)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog, QDockWidget, QFileDialog, QHBoxLayout, QLabel,
                                QLineEdit, QMainWindow, QMenu, QMessageBox, QPushButton, QSizePolicy, QSlider,
-                               QSpinBox, QToolBar, QToolButton, QUndoView, QVBoxLayout, QWidget, QInputDialog, QDoubleSpinBox)
+                               QSpinBox, QToolBar, QToolButton, QUndoView, QVBoxLayout, QWidget, QInputDialog, QDoubleSpinBox, QDialogButtonBox)
 
 from . import affinage, calque_forme, calque_pinceau, durees, langue, recettes, theme, traduction
 from .document import vectoriel
@@ -295,6 +295,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.canevas.texte_nouveau.connect(self._nouveau_texte)
         self.canevas.texte_choisi.connect(self._texte_choisi)
         self.canevas.texte_edition.connect(self.editer_texte)
+        self.canevas.lettres_choisies.connect(lambda a, b: self.panneau_texte.choisir_lettres(a, b))
         self.canevas.trace_dessine.connect(self._trace_dessine)
         self.canevas.message.connect(lambda m: self.statusBar().showMessage(m, 6000))
         self.canevas.recadre_change.connect(self._recadre_change)
@@ -323,6 +324,10 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self._panneau_nuancier()
         self._panneau_actions()
         self._panneau_texte()
+        from .polices_chaud import Surveillance      # polices installées pendant que Pixane tourne
+        self.surveillance_polices = Surveillance(self)
+        self.surveillance_polices.nouvelles.connect(lambda noms: self.statusBar().showMessage(
+            tr("Nouvelle police disponible : {noms}", noms=", ".join(noms[:5])), 8000))
         self._barre_etat()
         from .selection_ia import SelectionAuto
         self.selection_auto = SelectionAuto(self)
@@ -921,6 +926,21 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             groupe.addButton(p_)
             lay.addWidget(p_)
         self.p_nouvelle.setChecked(True)
+        self.opt_lasso = QComboBox()                  # Lasso : à main levée ou par points (retenu)
+        self.opt_lasso.addItem(tr("Libre"), False)
+        self.opt_lasso.addItem(tr("Par points"), True)
+        self.opt_lasso.setToolTip(tr("Libre : entoure la zone en gardant le bouton appuyé.\nPar points : un clic "
+                                     "par point ; clic sur le premier point, double-clic ou Entrée pour fermer, "
+                                     "Retour arrière enlève le dernier point, Échap annule."))
+        self.opt_lasso.setCurrentIndex(1 if self.reglages.value("lasso_points", False, type=bool) else 0)
+        self.canevas.lasso_points = bool(self.opt_lasso.currentData())
+
+        def _lasso(_i):
+            self.canevas.annuler_poly()
+            self.canevas.lasso_points = bool(self.opt_lasso.currentData())
+            self.reglages.setValue("lasso_points", self.canevas.lasso_points)
+        self.opt_lasso.currentIndexChanged.connect(_lasso)
+        lay.addWidget(self.opt_lasso)
         tout.addWidget(self.opt_selection)
         self.opt_transfo = QWidget()
         lay = QHBoxLayout(self.opt_transfo)
@@ -1397,6 +1417,9 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         elif outil == PINCEAU:
             (self.p_retirer if self.canevas.mode_retirer else self.p_ajouter).setChecked(True)
         self.p_nouvelle.setVisible(outil in (RECTANGLE, LASSO) + OUTILS_AUTO)
+        self.opt_lasso.setVisible(outil == LASSO)
+        if outil != LASSO:
+            self.canevas.annuler_poly()
         self.options.setEnabled(outil not in (MAIN, TEXTE))
         self.opt_taille.setVisible(outil in OUTILS_ROND or outil in (MAIN, TEXTE, RECTANGLE, LASSO))
         if outil in (BAGUETTE, OBJET, SEL_TEXTE):
@@ -1423,7 +1446,9 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.barre_haut.layout().invalidate()
         aides = {RECTANGLE: tr("Rectangle : la nouvelle sélection remplace l'ancienne. Maj : ajouter, Alt : retirer. "
                                "Un simple clic désélectionne."),
-                 LASSO: tr("Lasso : entoure la zone en gardant le bouton appuyé. Maj : ajouter, Alt : retirer."),
+                 LASSO: tr("Lasso par points : un clic par point ; clic sur le premier point, double-clic ou Entrée "
+                           "pour fermer, Retour arrière enlève le dernier point.") if self.canevas.lasso_points
+                 else tr("Lasso : entoure la zone en gardant le bouton appuyé. Maj : ajouter, Alt : retirer."),
                  BAGUETTE: tr("Baguette magique : clic sur une couleur ; garde le bouton appuyé et glisse à droite ou "
                               "à gauche pour régler la tolérance. Maj : ajouter, Alt : retirer."),
                  RAPIDE: tr("Sélection rapide (IA) : peins grossièrement sur l'objet, l'IA trouve ses contours. "
@@ -1536,6 +1561,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.calques = PanneauCalques(lambda nom: icone(nom, self.couleurs.texte, self.couleurs.accent, 20))
         self.calques.demande.connect(self._commande_calques)
         self.calques.style_demande.connect(self.style_calque)
+        self.canevas.calques_choisis = lambda: self.calques.choisis
+        self.calques.pixelliser_demande.connect(self.pixelliser)
         self.calques.texte_demande.connect(lambda: self.doc and self.editer_texte(self.doc.actif))
         self.calques.refus.connect(lambda m: self.statusBar().showMessage(m, 6000))
         self.calques.reglage_demande.connect(
@@ -1876,6 +1903,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                 action.setChecked(v[cle])
         if self.barre_agrandir.pleine.isChecked() != v["pleine"]:
             self.barre_agrandir.pleine.setChecked(v["pleine"])
+        self.reglages.setValue("analyse_effacer", v["analyse"])
         if v["grille"] != self.canevas.pas_grille:
             self.canevas.pas_grille = v["grille"]
             self.reglages.setValue("pas_grille", v["grille"])
@@ -2913,6 +2941,43 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         if self.doc and self.doc.calque_actif.style is not None:
             self._commande_calques(self.doc.etat_calque_modifie(self.doc.actif, style=None), tr("Enlever le style"))
 
+    def _a_pixelliser(self, c) -> dict:
+        """Ce que « Pixelliser » peut changer dans le calque c."""
+        return {"texte": c.texte is not None,
+                "forme": c.forme is not None or c.pinceau is not None or c.remplissage is not None,
+                "style": c.style is not None and not c.style.vide(),
+                "dynamique": c.origine is not None}
+
+    def _etat_pixelliser(self):
+        possible = self._a_pixelliser(self.doc.calque_actif) if self.doc else {}
+        for quoi in ("texte", "forme", "style", "dynamique"):
+            getattr(self, f"a_pixelliser_{quoi}").setEnabled(bool(possible.get(quoi)))
+        self.a_pixelliser_tout.setEnabled(any(possible.values()))
+
+    def pixelliser(self, quoi: str):
+        """Calque > Pixelliser (comme Photoshop) : le texte, la forme / le pinceau / le remplissage, le style (effets
+        dans les pixels), l'objet dynamique (sa meilleure version oubliée), ou tout à la fois. Annulable."""
+        if not self.doc:
+            return
+        c = self.doc.calque_actif
+        possible = self._a_pixelliser(c)
+        if not (possible.get(quoi) if quoi != "tout" else any(possible.values())):
+            self.statusBar().showMessage(tr("Rien à pixelliser dans ce calque : c'est déjà une image."), 5000)
+            return
+        if not self._verifier_verrou(tr("Pixelliser")):
+            return
+        champs = {}
+        if quoi in ("texte", "tout"):
+            champs["texte"] = None
+        if quoi in ("forme", "tout"):
+            champs.update(forme=None, pinceau=None, remplissage=None)
+        if quoi in ("dynamique", "tout"):
+            champs["origine"] = None
+        if quoi in ("style", "tout") and possible["style"]:
+            from .styles import image_rendue
+            champs.update(image=image_rendue(c), style=None, texte=None)
+        self._commande_calques(self.doc.etat_calque_modifie(self.doc.actif, **champs), tr("Pixelliser"))
+
     def figer_style(self):
         """Les effets deviennent des pixels du calque (pour le gommer, le peindre… avec ses effets)."""
         if not self.doc:
@@ -3363,8 +3428,94 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                                                  sujet=sujet, raison=raison))
         return False
 
+    def _analyser_avant_effacer(self) -> bool:
+        """Avant Effacer : ombre de l'objet et bord oublié autour de la zone peinte (analyse_effacer). S'il y en a,
+        ils sont montrés en couleur et proposés ; False : Effacer est annulé."""
+        if not self.reglages.value("analyse_effacer", True, type=bool):
+            return True
+        import numpy as np
+        from .analyse_effacer import analyser
+        from .document import _masque_vers_selection
+        from .styles import dilater
+        sel = tableau(self.doc.selection)[..., 3]
+        masque = sel > 127
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            res = analyser(self.doc.rgb_pour_ia(), masque)
+        except Exception:
+            res = None
+        finally:
+            QApplication.restoreOverrideCursor()
+        if res is None or res.vide():
+            return True
+        H, W = masque.shape
+        bord = None
+        if res.elargir:
+            ys, xs = np.nonzero(masque)
+            m = res.elargir + 4
+            y0, y1, x0, x1 = max(0, ys.min() - m), min(H, ys.max() + m + 1), max(0, xs.min() - m), min(W, xs.max() + m + 1)
+            bord = np.zeros((H, W), bool)
+            bord[y0:y1, x0:x1] = dilater(masque[y0:y1, x0:x1].astype(np.float32), float(res.elargir)) > 0.5
+            bord &= ~masque
+
+        def indice(avec_ombre: bool, avec_bord: bool):
+            img = np.zeros((H, W, 4), np.uint8)
+            if avec_ombre and res.ombre is not None:
+                img[res.ombre] = (150, 60, 230, 150)          # violet : l'ombre
+            if avec_bord and bord is not None:
+                img[bord] = (255, 150, 0, 170)                # orange : le bord oublié
+            self.canevas.indice_effacer = QImage(img.data, W, H, W * 4, QImage.Format_RGBA8888).copy()
+            self.canevas.update()
+
+        d = QDialog(self)
+        d.setWindowTitle(tr("Effacer : analyse de la zone"))
+        lay = QVBoxLayout(d)
+        lab = QLabel(tr("Avant d'effacer, Pixane Photo a trouvé autour de la zone peinte ce qui pourrait gêner un "
+                        "effacement propre (montré en couleur sur la photo) :"))
+        lab.setWordWrap(True)
+        lay.addWidget(lab)
+        c_ombre = QCheckBox(tr("Inclure l'ombre de l'objet (en violet) : sinon une tache sombre resterait"))
+        c_bord = QCheckBox(tr("Élargir la zone de {n} px (en orange) : le bord de l'objet n'est pas entièrement "
+                              "couvert, l'IA le redessinerait", n=res.elargir))
+        for c, ok in ((c_ombre, res.ombre is not None), (c_bord, bord is not None)):
+            c.setChecked(ok)
+            c.setVisible(ok)
+            c.toggled.connect(lambda _v: indice(c_ombre.isChecked(), c_bord.isChecked()))
+            lay.addWidget(c)
+        c_plus = QCheckBox(tr("Ne plus analyser avant Effacer (réglable dans Édition > Préférences)"))
+        lay.addSpacing(8)
+        lay.addWidget(c_plus)
+        boutons = QDialogButtonBox()
+        b_ok = boutons.addButton(tr("Effacer"), QDialogButtonBox.AcceptRole)
+        boutons.addButton(tr("Annuler"), QDialogButtonBox.RejectRole)
+        b_ok.setDefault(True)
+        boutons.accepted.connect(d.accept)
+        boutons.rejected.connect(d.reject)
+        lay.addWidget(boutons)
+        indice(True, True)
+        ok = d.exec() == QDialog.Accepted
+        self.canevas.indice_effacer = None
+        self.canevas.update()
+        if c_plus.isChecked():
+            self.reglages.setValue("analyse_effacer", False)
+        if not ok:
+            return False
+        ajout = np.zeros((H, W), bool)
+        if c_ombre.isChecked() and res.ombre is not None:
+            ajout |= res.ombre
+        if c_bord.isChecked() and bord is not None:
+            ajout |= bord
+        if ajout.any():
+            avant = self.doc.etat()
+            nouveau = np.maximum(sel, np.where(ajout, 255, 0).astype(np.uint8))
+            self.doc.selection = _masque_vers_selection(nouveau).convertToFormat(self.doc.selection.format())
+            self.doc.change.emit()
+            self._selection_modifiee(avant, tr("Zone agrandie (analyse avant Effacer)"))
+        return True
+
     def ia_effacer(self):
-        if self.doc and self._verifier_verrou(tr("Effacer")) and self._verifier_selection():
+        if (self.doc and self._verifier_verrou(tr("Effacer")) and self._verifier_selection()
+                and self._analyser_avant_effacer()):
             self._lancer(tr("Effacer"), True, lambda nom: recettes.effacer(nom), remplir_trous=True,
                          variante=lambda nom, force: recettes.variante(nom, force, nb=recettes.NB_EFFACER))
 
