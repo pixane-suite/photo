@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from PySide6.QtCore import QBuffer, QMimeData, QObject, QPoint, QProcess, QSettings, QSize, Qt, QTimer, Signal
-from PySide6.QtCore import QEvent, QPointF, QUrl
+from PySide6.QtCore import QEvent, QPointF, QRectF, QUrl
 from PySide6.QtGui import (QAction, QActionGroup, QColor, QDesktopServices, QIcon, QImage, QKeySequence, QPainter, QUndoCommand,
                            QTransform, QUndoStack)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog, QDockWidget, QFileDialog, QHBoxLayout, QLabel,
@@ -34,7 +34,7 @@ from .calques import PanneauCalques
 from .canevas import (DENSITE_MOINS, DENSITE_PLUS, DOIGT, EPONGE, GOUTTE, HISTORIQUE, NETTETE_PINCEAU, PLUME,
                       OUTILS_FILTRE, BAGUETTE, CORRECTEUR, DEGRADE, DEPLACER, FORMES, GOMME, GOMME_CALQUE, LASSO, MAIN, OBJET,
                       SEL_TEXTE,
-                      OUTILS_AUTO, OUTILS_ROND, PEINTURE, PINCEAU, RAPIDE, RECADRER, RECTANGLE, SEAU, SUPPRIMER,
+                      OUTILS_AUTO, OUTILS_ROND, PEINTURE, PINCEAU, RAPIDE, RECADRER, RECTANGLE, SEAU, SUPPRIMER, EFFACER_CLIC, YEUX,
                       TAILLE_MAX, TAMPON, TAMPON_MOTIF, TEXTE, Canevas)
 from .dialogues import Attente, BarreAgrandir, ChoixResultat, ReglagesUpscale
 from .document import (EXTENSIONS_CALQUES, EXTENSIONS_LECTURE, FORMAT_IMAGE, Document, image_entiere,
@@ -465,23 +465,10 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             return
         from dataclasses import replace as remplacer
         from .dialogue_polices import FenetrePolices
-        from .document import masque as masque_selection
-        rect = self.doc.rect_selection()
-        m = masque_selection(self.doc.selection)
-        if rect is None or rect.width() < 8 or rect.height() < 8:
-            QMessageBox.information(self, tr("Police semblable"), tr(
-                "Sélectionne d'abord les lettres du texte : outil Sélection de texte (Y), un cadre autour du texte."))
+        pris = self._lettres_selectionnees(tr("Police semblable"))
+        if pris is None:
             return
-        zone = m[rect.top():rect.bottom() + 1, rect.left():rect.right() + 1]
-        if (zone > 127).mean() > 0.85:
-            QMessageBox.information(self, tr("Police semblable"), tr(
-                "La sélection est un bloc plein : il faut les lettres seules. Utilise l'outil Sélection de texte "
-                "(Y) : il ne garde que les lettres."))
-            return
-        a = tableau(self.doc.image.copy(rect).convertToFormat(FORMAT_IMAGE)).copy()
-        # les lettres prises, en noir sur blanc (quelle que soit leur couleur : un texte blanc se voit aussi)
-        gris = np.ascontiguousarray(255 - zone.astype(np.uint8))
-        lettres = QImage(gris.data, gris.shape[1], gris.shape[0], gris.shape[1], QImage.Format_Grayscale8).copy()
+        rect, zone, a, lettres = pris
         c = self.doc.calque_actif
         # pas le mot de la recherche d'avant (une autre image) : la case part vide, sauf pour un calque de texte
         depart = c.texte.texte.replace("\n", " / ") if c.texte is not None else ""
@@ -502,6 +489,71 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             self.historique.push(CommandeEtat(self.doc, self.doc.etat(), self.doc.etat_nouveau_texte(t),
                                               tr("Police semblable")))
         self.statusBar().showMessage(tr("Police : {nom}", nom=r.famille), 8000)
+
+    def _lettres_selectionnees(self, titre: str):
+        """Lettres prises avec l'outil Sélection de texte : (rectangle, masque de la zone, pixels, lettres en noir
+        sur blanc), ou None avec un message."""
+        from .document import masque as masque_selection
+        rect = self.doc.rect_selection()
+        m = masque_selection(self.doc.selection)
+        if rect is None or rect.width() < 8 or rect.height() < 8:
+            QMessageBox.information(self, titre, tr(
+                "Sélectionne d'abord les lettres du texte : outil Sélection de texte (Y), un cadre autour du texte."))
+            return None
+        zone = m[rect.top():rect.bottom() + 1, rect.left():rect.right() + 1]
+        if (zone > 127).mean() > 0.85:
+            QMessageBox.information(self, titre, tr(
+                "La sélection est un bloc plein : il faut les lettres seules. Utilise l'outil Sélection de texte "
+                "(Y) : il ne garde que les lettres."))
+            return None
+        a = tableau(self.doc.image.copy(rect).convertToFormat(FORMAT_IMAGE)).copy()
+        # les lettres prises, en noir sur blanc (quelle que soit leur couleur : un texte blanc se voit aussi)
+        gris = np.ascontiguousarray(255 - zone.astype(np.uint8))
+        lettres = QImage(gris.data, gris.shape[1], gris.shape[0], gris.shape[1], QImage.Format_Grayscale8).copy()
+        return rect, zone, a, lettres
+
+    def ia_remplacer_texte(self) -> None:
+        """IA > Remplacer un texte : lettres prises (Sélection de texte), lues par Windows, police semblable ; le
+        nouveau texte tapé remplace l'ancien : Effacer (propositions au choix), puis calque Texte à la même place."""
+        titre = tr("Remplacer un texte")
+        if not self.doc or not self._verifier_verrou(titre):
+            return
+        from .dialogue_polices import FenetrePolices
+        from .texte import ajuster_a_zone
+        pris = self._lettres_selectionnees(titre)
+        if pris is None:
+            return
+        rect, zone, a, lettres = pris
+        d = FenetrePolices(lettres, zone, "", False, self, remplacer=True)
+        if not d.exec() or d.choisi is None or d.action != "remplacer":
+            return
+        r = d.choisi
+        coeur = zone > 200                         # couleur : le cœur des lettres (pas le bord mêlé au fond)
+        if not coeur.any():
+            coeur = zone > 127
+        couleur = np.median(a[:, :, :3][coeur], axis=0) if coeur.any() else (255, 255, 255)
+        t = Texte(texte=d.texte_nouveau(), police=r.famille, gras=r.gras, italique=r.italique,
+                  couleur=QColor(*(int(v) for v in couleur)).name(QColor.HexArgb), alignement="centre")
+        t = ajuster_a_zone(t, d.lettres(), QRectF(rect))
+        doc = self.doc
+
+        def poser():
+            if doc is self.doc:
+                self.historique.push(CommandeEtat(doc, doc.etat(), doc.etat_nouveau_texte(t), titre))
+                self.statusBar().showMessage(tr("Texte remplacé (police : {nom}) : il reste modifiable avec "
+                                                "l'outil Texte.", nom=r.famille), 10000)
+        # zone un peu plus large que les lettres : leur bord adouci (et un léger contour) part aussi, sinon l'IA
+        # en garde l'empreinte
+        from .choix_personnes import union
+        from .document import _masque_vers_selection, masque as masque_selection
+        avant_sel = doc.etat()
+        m = masque_selection(doc.selection) > 127
+        doc.selection = _masque_vers_selection(union([m], [True], max(3.0, rect.height() * 0.06))).convertToFormat(
+            doc.selection.format())
+        self._selection_modifiee(avant_sel, tr("Zone agrandie (Remplacer un texte)"))
+        self._lancer(tr("Effacer"), True, lambda nom: recettes.effacer(nom), remplir_trous=True,
+                     variante=lambda nom, force: recettes.variante(nom, force, nb=recettes.NB_EFFACER),
+                     ensuite=poser)
 
     def _convertir_pinceaux(self) -> None:
         """Une seule fois : les pinceaux et motifs ajoutés avant le 14/11/2026 (copies telles quelles, parfois plus
@@ -691,6 +743,13 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self._action(m, tr("Zoom arrière"), "Ctrl+-", lambda: self.canevas.zoomer(0.8), "a_zoom_moins", "zoom_moins")
         self._action(m, tr("Ajuster à la fenêtre"), "Ctrl+0", self.canevas.ajuster, "a_ajuster", "ajuster")
         self._action(m, tr("Taille réelle (100 %)"), "Ctrl+1", self.canevas.zoom_100)
+        a = self._action(m, tr("Comparer avant / après"), "Ctrl+Alt+B", None, "a_comparer")
+        a.setCheckable(True)
+        a.setToolTip(tr("Rideau sur la photo : à gauche la photo à l'ouverture, à droite la photo actuelle ; glisse "
+                        "pour le déplacer. Échap ou Ctrl+Alt+B pour finir."))
+        a.toggled.connect(self.comparer)
+        self.canevas.comparaison_finie.connect(lambda: self.a_comparer.setChecked(False))
+        self.canevas.yeux_rouges.connect(self.corriger_yeux_rouges)
         m.addSeparator()
         self.a_epreuve = self._action(m, tr("Aperçu de l'impression (CMJN)"), "Ctrl+Alt+Y", self.basculer_epreuve,
                                       "a_epreuve")
@@ -781,6 +840,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         m = self.menuBar().addMenu(tr("&IA"))
         self._action(m, tr("Effacer"), "Shift+E", self.ia_effacer, "a_effacer", "effacer")
         self._action(m, tr("Supprimer les personnes…"), None, self.ia_supprimer_personnes, "a_ia_personnes")
+        self._action(m, tr("Remplacer un texte…"), None, self.ia_remplacer_texte, "a_ia_remplacer_texte")
         self._action(m, tr("Remplir"), "Shift+R", self.ia_remplir, "a_remplir", "remplir")
         self._action(m, tr("Modifier avec une consigne…"), "Shift+M", self.ia_modifier, "a_modifier", "modifier")
         self._action(m, tr("Créer une image d'après un texte…"), None, self.ia_creer, "a_ia_creer")
@@ -1088,6 +1148,57 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.canevas.source_historique = self._source_historique
 
     # ---------------------------------------------------------------- pinceau d'historique
+    def corriger_yeux_rouges(self, quoi):
+        """Outil Yeux rouges : la pupille rouge trouvée autour du clic (ou dans le cadre) redevient sombre."""
+        titre = tr("Yeux rouges")
+        doc = self.doc
+        if doc is None or not self._verifier_verrou(titre):
+            return
+        from .document import FORMAT_CALQUE, qimage_rgba, vectoriel
+        from .yeux_rouges import corriger
+        c = doc.calque_actif
+        if c.texte is not None or c.special or vectoriel(c) or c.image.size() != doc.image.size():
+            self.statusBar().showMessage(tr("Yeux rouges : choisis le calque de la photo (pas un texte, une forme ni "
+                                            "un groupe)."), 8000)
+            return
+        W, H = doc.taille()
+        if isinstance(quoi, QRectF):
+            r = quoi.normalized()
+            x0, y0, x1, y1 = int(r.left()), int(r.top()), int(r.right()) + 1, int(r.bottom()) + 1
+            centre = None
+        else:
+            cote = max(12, round(min(W, H) / 25))
+            cx, cy = int(quoi.x()), int(quoi.y())
+            x0, y0, x1, y1 = cx - cote, cy - cote, cx + cote + 1, cy + cote + 1
+            centre = (cx, cy)
+        a = tableau(c.image.convertToFormat(FORMAT_IMAGE))
+        b, n = corriger(a, x0, y0, x1, y1, centre)
+        if n == 0:
+            self.statusBar().showMessage(tr("Pas de rouge yeux ici : clique au milieu de la pupille rouge, ou tire "
+                                            "un cadre autour de l'œil."), 8000)
+            return
+        img = qimage_rgba(np.ascontiguousarray(b)).convertToFormat(FORMAT_CALQUE)
+        self.historique.push(CommandeEtat(doc, doc.etat(), doc.etat_calque_modifie(doc.actif, image=img), titre))
+        self.statusBar().showMessage(tr("Yeux rouges corrigés ({n} pixels). Ctrl+Z pour revenir.", n=n), 6000)
+
+    def comparer(self, oui: bool):
+        """Affichage > Comparer avant / après : rideau sur la photo (rien n'est modifié)."""
+        c = self.canevas
+        if oui and (self.doc is None or getattr(self.doc, "image_ouverture", None) is None):
+            self.a_comparer.setChecked(False)
+            return
+        c.comparer = oui
+        c._rideau_glisse = False
+        if oui:
+            c.rideau = 0.5
+            c.setCursor(Qt.SplitHCursor)
+            c.setFocus()
+            self.statusBar().showMessage(tr("Avant / après : glisse sur la photo pour déplacer le rideau ; Échap "
+                                            "pour finir."), 8000)
+        else:
+            c._curseur()                         # curseur de l'outil
+        c.update()
+
     def prendre_instantane(self):
         """L'état actuel de l'image devient celui que repeint le pinceau d'historique."""
         if self.doc is None:
@@ -1325,6 +1436,10 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                                            "tampon_motif"),
                                           (SUPPRIMER, tr("Supprimer (IA) : peins sur un défaut, il disparaît au "
                                                          "lâcher"), "J", "suppression"),
+                                          (EFFACER_CLIC, tr("Effacer d'un clic (IA) : clic sur un objet (ou cadre "
+                                                            "autour), il est effacé"), "", "effacer"),
+                                          (YEUX, tr("Yeux rouges : clic sur l'œil (ou cadre autour), la pupille "
+                                                    "redevient sombre"), "", "yeux_rouges"),
                                           (CORRECTEUR, tr("Pinceau correcteur : recopie une zone en la raccordant "
                                                           "à la lumière autour (Alt+clic : endroit à copier)"),
                                            "R", "correcteur"),
@@ -1364,7 +1479,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         # famille ; le bouton montre le dernier outil choisi. Main et Déplacer restent seuls.
         self._bouton_groupe = {}
         for famille in ((MAIN,), (DEPLACER,), (RECTANGLE, LASSO, PINCEAU, GOMME), (OBJET, RAPIDE, BAGUETTE, SEL_TEXTE),
-                        (SUPPRIMER, CORRECTEUR, TAMPON, TAMPON_MOTIF, HISTORIQUE),
+                        (SUPPRIMER, EFFACER_CLIC, CORRECTEUR, YEUX, TAMPON, TAMPON_MOTIF, HISTORIQUE),
                         (PEINTURE, GOMME_CALQUE, DEGRADE, SEAU), (DENSITE_MOINS, DENSITE_PLUS, EPONGE),
                         (GOUTTE, NETTETE_PINCEAU, DOIGT), (FORMES,), (PLUME,),
                         (RECADRER,), (TEXTE,)):
@@ -1463,6 +1578,11 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                  PEINTURE: tr("Pinceau de couleur : peint sur le calque choisi. Alt+clic sur la photo : prendre une "
                               "couleur."),
                  TAMPON: tr("Tampon : Alt+clic sur l'endroit à copier, puis peins là où il doit être recopié."),
+                 YEUX: tr("Yeux rouges : clique au milieu de l'œil rouge (ou tire un cadre autour) ; la pupille "
+                          "redevient sombre, le reflet du flash reste. Dans le calque choisi."),
+                 EFFACER_CLIC: tr("Effacer d'un clic (IA) : clique sur l'objet à enlever (ou tire un cadre autour) ; "
+                                  "l'IA le détoure, propose d'ajouter son ombre, puis l'efface (propositions au "
+                                  "choix)."),
                  SUPPRIMER: tr("Supprimer (IA) : peins sur un fil, une tache, un bouton… ; au lâcher, il disparaît "
                                "(dans le calque choisi). Astuce : une image de très bonne qualité et des petites "
                                "zones, l'une après l'autre, respectent mieux l'image d'origine. Pour un gros objet, "
@@ -3902,7 +4022,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
 
     def _lancer(self, titre: str, avec_selection: bool, fabriquer, apres=None, png: bytes | None = None,
                 placer=None, nom_calque: str | None = None, suffixe: str | None = None, affiner=None,
-                remplir_trous: bool = False, vue=None, variante=None, sans_ia=None, duree: str | None = None):
+                remplir_trous: bool = False, vue=None, variante=None, sans_ia=None, duree: str | None = None,
+                ensuite=None):
         """Envoie l'image au moteur, attend, puis propose les résultats. remplir_trous (Effacer, Remplir) : les trous
         transparents de la sélection (lettres d'un texte coupé…) sont remplis, opaques. nom_calque : nom du calque du résultat
         (le titre sinon) ; suffixe : ajouté au nom proposé à l'enregistrement (ex. « _restauree »).
@@ -3923,7 +4044,9 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         if vue is not None:                      # montré tel qu'il sera posé (action qui pose elle-même)
             choix.vue = vue
         elif placer is None:                     # fond transparent : montré tel qu'il sera posé (pas en noir)
-            choix.vue = lambda img, base=original: vue_ia(img, base, trous)
+            from .document import dans_zone, poids_zone
+            poids = None if zone is None else poids_zone(zone, original.width(), original.height())
+            choix.vue = lambda img, base=original: vue_ia(dans_zone(img, base, poids), base, trous)
         annuler = threading.Event()
         nom_image = {}
         bruts: list[QImage] = []          # résultats tels que sortis du moteur (avant apres), dans l'ordre des vignettes
@@ -3976,6 +4099,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                     self._appliquer_resultat(doc, image, titre, placer, nom_calque, zone, trous)
                     if suffixe:
                         doc.suffixe_nom = suffixe
+                    if ensuite is not None:              # ex. Remplacer un texte : le nouveau texte posé
+                        ensuite()
                 annuler.set()
                 ligne = choix.vignettes.currentRow()
                 if affiner is not None and 0 <= ligne < len(bruts) and bruts[ligne] is not None:

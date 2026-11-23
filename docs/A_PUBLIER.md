@@ -40,8 +40,17 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 
 - **Astuces** : nouveau chapitre du guide, ouvert par **Aide > Astuces** (IA, sélection, texte, calques), dont l'astuce de l'outil Supprimer (IA) : image de très bonne qualité, petites zones (aussi dans le message du bas).
 
+- **IA > Remplacer un texte…** : lettres lues par Windows, police semblable, l'ancien texte effacé par l'IA et le
+  nouveau posé à la même place, à la même hauteur et dans la même couleur (calque Texte modifiable).
+- **Outil Effacer d'un clic (IA)** : un clic sur un objet, SAM le détoure, puis Effacer (analyse de l'ombre,
+  propositions).
+- **Outil Yeux rouges** (sans IA, immédiat).
+- **Filtres > Correction de l'objectif** : déformation tonneau / coussin, vignetage, franges de couleur.
+- **Affichage > Comparer avant / après** (Ctrl+Alt+B) : rideau entre la photo à l'ouverture et la photo actuelle.
+
 ## Corrections
 
+- **Fenêtre des propositions** (Effacer, Remplir…) : l'aperçu montre exactement ce qui sera posé (le résultat de l'IA dans la zone, la photo d'origine autour) ; avant, il pouvait montrer des changements hors de la zone qui n'étaient pas gardés.
 - Outil Texte : **Ctrl+Z** ne retirait pas un texte posé par erreur d'un clic (la case de saisie gardait le
   raccourci).
 

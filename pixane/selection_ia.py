@@ -48,6 +48,7 @@ class SelectionAuto(QObject):
         self.c.baguette_lache.connect(self.baguette_lache)
         self.c.trait_ia.connect(self.trait_rapide)
         self.c.objet_ia.connect(self.objet)
+        self.c.effacer_clic.connect(self.effacer_clic)
         self.c.texte_sel.connect(self.texte)
         self._t = None               # sélection de texte : dernier cadre (pour les clics de correction)
 
@@ -247,6 +248,25 @@ class SelectionAuto(QObject):
         session = {"doc": doc, "groupes": [g], "neg": []}       # demande seule, sans suite
         self._demander({"titre": titre, "doc": doc, "session": session, "mode": mode, "base": base, "seule": True})
 
+    def effacer_clic(self, quoi):
+        """Outil Effacer d'un clic : l'objet est détouré (SAM), un peu élargi (bord flou, cheveux), puis Effacer
+        (analyse de l'ombre, propositions au choix)."""
+        titre = tr("Effacer d'un clic")
+        if not self._verifier(titre) or not self.f._verifier_verrou(tr("Effacer")):
+            self.c.trait_en_attente = None
+            self.c.update()
+            return
+        doc = self.f.doc
+        if isinstance(quoi, QRectF):
+            r = quoi.normalized()
+            g = {"pos": [], "cadre": (r.x(), r.y(), r.width(), r.height())}
+        else:
+            g = {"pos": [(int(quoi.x()), int(quoi.y()))]}
+        g.update(masque=None, neg_n=0)
+        session = {"doc": doc, "groupes": [g], "neg": []}
+        self._demander({"titre": titre, "doc": doc, "session": session, "mode": "nouvelle", "base": None,
+                        "seule": True, "marge": True, "ensuite": self.f.ia_effacer})
+
     def _image(self, doc):
         """Image visible envoyée au moteur (une fois par version de l'image), réduite pour aller vite."""
         img = doc.image
@@ -340,12 +360,20 @@ class SelectionAuto(QObject):
                     session["groupes"][k]["masque"] = m
                     session["groupes"][k]["neg_n"] = neg_n
             if doc is self.f.doc and a.any():
+                if d.get("marge"):                   # Effacer d'un clic : un peu de marge autour de l'objet
+                    from .choix_personnes import union
+                    from .selection_auto import boucher_trous
+                    h, w = a.shape
+                    # l'objet entier : un détourage en anneau (contour d'un logo…) garde sinon son intérieur
+                    a = union([boucher_trous(a > 127)], [True], max(4.0, max(w, h) / 200))
                 self._historique(combiner(d["base"], a, d["mode"]), d["titre"])
                 session["empreinte"] = _empreinte(doc.selection)
                 self.f.statusBar().showMessage(tr("{titre} : fait. Ctrl+Z pour revenir.", titre=d["titre"]), 5000)
             elif doc is self.f.doc:
                 self.f.statusBar().showMessage(tr("L'IA n'a rien trouvé à cet endroit."), 6000)
             fini()
+            if d.get("ensuite") is not None and doc is self.f.doc and a.any():
+                QTimer.singleShot(0, d["ensuite"])  # ex. Effacer d'un clic : Effacer, une fois la sélection posée
 
         def echec(message):
             fini()

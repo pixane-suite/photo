@@ -311,6 +311,7 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
 | Actual size (100%) | Ctrl+1 |
 | Move the view | **Hand** tool (H), or hold **Space** and drag, or drag with the **middle button** |
 | Move **a layer** | **Move** tool (V): only the selected layer moves (the Hand only moves the view) |
+| **Compare before / after** | **View > Compare before / after** (Ctrl+Alt+B): a divider on the photo, on the left the photo as opened, on the right the current photo; drag to move it. Nothing is changed. Esc or Ctrl+Alt+B to finish |
 
 ### Rulers, guides and grid (View menu)
 - **Rulers** (Ctrl+R): in image pixels, 0 at the top-left corner of the photo; a line follows the mouse.
@@ -737,6 +738,17 @@ proposal. Example prompts in the list (abstract background, landscape, texture, 
 - In the result window, **Start from this one** gives variants of the chosen proposal.
 - The AI is bad at writing text: add text afterwards with the Text tool.
 - Flux Schnell model (Apache-2.0), installed with the AI engine (*Flux Schnell* box).
+
+### Replace a text (AI menu)
+To change a word on a cover while keeping the same style.
+1. Draw around the text with the **Text selection** tool (Y).
+2. **AI > Replace a text…**: Windows reads the letters, and Pixane Photo immediately looks for the closest font
+   (check the letters read, correct them if needed).
+3. Type the **new text** ("/" for a new line), pick the font in the list if the first one is not right, then
+   **Erase and replace**.
+4. The AI erases the old text (area slightly enlarged so the letters' edge goes too; usual suggestions window),
+   then the new text is placed **in the same place and at the same height**, in its colour, as an **editable Text
+   layer**.
 
 ### Remove people (AI menu)
 The AI (**SAM 3.1**) finds **each person** in the photo. A window shows them: **ticked** people (in red) will be
@@ -1210,6 +1222,16 @@ results.
 > **Tip**: use a **very good quality** image and work in **small areas**, one after another. The better the image
 > quality, the more the removal respects the original image.
 
+### One-click erase (AI)
+In the same group as *Remove*. **Click the object** to remove (or draw a box around it): the AI (**SAM 3.1**) cuts
+it out, the area is slightly enlarged (soft edge, hair), then **Erase** starts, with the shadow analysis and the
+suggestions window. Ctrl+Z goes back step by step.
+
+### Red eye
+In the same group as *Remove*. **Click in the middle of the red eye** (or draw a box around it): the pupil reddened
+by the flash turns dark again; the white highlight, the iris and the skin don't change. No AI, instant, in the
+chosen layer.
+
 ### Healing brush (R)
 Like the clone stamp, but the copy **takes on the surrounding light and colour**: ideal for a wrinkle, a skin
 blemish, a scratch on a graded sky.
@@ -1379,7 +1401,10 @@ small disc; very bright points become **round highlights**: set their strength a
 (smooths skin or a sky while keeping edges sharp; *Threshold*: from which colour difference an edge is kept),
 **Noise reduction** (strength, keep details, colour noise),
 **Sharpen** (amount, radius, threshold: Photoshop's unsharp mask), **Vignette** (darken or lighten the edges:
-strength, centre size, softness, round). Same behaviour as adjustments: live preview, selected layer, inside the
+strength, centre size, softness, round), **Lens correction** (*Distortion*: straightens lines curved like a
+barrel or a pincushion, the image is enlarged just enough to leave no empty corner; *Vignetting*: brightens dark
+corners; *Colour fringes*: removes red or cyan edges; set by hand, no camera profile). Same behaviour as
+adjustments: live preview, selected layer, inside the
 selection if there is one, one step in Undo. They also work on a mask.
 
 ### Actions (ACTIONS panel)

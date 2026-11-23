@@ -802,6 +802,23 @@ def trace_depuis(t: Texte, points: list[QPointF]) -> tuple:
     return tuple(lisse)
 
 
+def ajuster_a_zone(t: Texte, anciennes: str, zone: QRectF) -> Texte:
+    """Texte qui remplace des lettres de la photo : taille telle que les anciennes lettres (dans cette police)
+    auraient la hauteur de la zone, puis bloc centré sur la zone (centre de l'encre, pas du cadre)."""
+    from dataclasses import replace as _remplacer
+    lignes = max(1, anciennes.count("\n") + 1)
+    essai = _remplacer(t, texte=anciennes or t.texte, taille=100.0, angle=0.0, x=0.0, y=0.0)
+    encre = forme(essai)[0].boundingRect()
+    if encre.height() > 1:
+        taille = 100.0 * zone.height() / encre.height()
+    else:
+        taille = zone.height() / lignes
+    t = _remplacer(t, taille=max(4.0, round(taille, 1)), angle=0.0, x=0.0, y=0.0)
+    encre = forme(t)[0].boundingRect()
+    c = zone.center()
+    return _remplacer(t, x=round(c.x() - encre.center().x(), 1), y=round(c.y() - encre.center().y(), 1))
+
+
 def transformation(t: Texte) -> QTransform:
     tr = QTransform()
     tr.translate(t.x, t.y)

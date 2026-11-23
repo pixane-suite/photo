@@ -62,6 +62,9 @@ class Onglets:
         if getattr(doc, "instantane", None) is None:   # pinceau d'historique : la photo telle qu'à l'ouverture
             from PySide6.QtGui import QImage
             doc.instantane = (tuple(doc.calques), QImage(doc.image))
+        if getattr(doc, "image_ouverture", None) is None:   # Avant / après : la photo telle qu'à l'ouverture
+            from PySide6.QtGui import QImage
+            doc.image_ouverture = QImage(doc.image)
         doc.change.connect(self._titres_onglets)
         self.barre_onglets.blockSignals(True)
         k = self.barre_onglets.addTab(self._nom_onglet(doc))

@@ -37,6 +37,8 @@ RAPIDE = "rapide"                              # sélection rapide (IA) : peindr
 OBJET = "objet"                                # sélection d'objet (IA) : cadre autour, ou clic dessus
 SEL_TEXTE = "sel_texte"                        # sélection de texte : cadre autour du texte, clics pour corriger
 SUPPRIMER = "supprimer"                        # pinceau Supprimer (IA, LaMa) : le défaut peint disparaît au lâcher
+EFFACER_CLIC = "effacer_clic"                  # Effacer d'un clic (IA) : clic sur un objet (ou cadre), il est effacé
+YEUX = "yeux_rouges"                           # Yeux rouges : clic sur l'œil (ou cadre), la pupille redevient sombre
 CORRECTEUR = "correcteur"                      # pinceau correcteur : comme le tampon, raccordé à la lumière autour
 DEGRADE = "degrade"                            # dégradé : glisser du début à la fin
 SEAU = "seau"                                  # pot de peinture : remplit une zone de couleur proche
@@ -106,6 +108,9 @@ class Canevas(PlumeMixin, QWidget):
     baguette_lache = Signal()
     trait_ia = Signal(list, bool, bool)         # sélection rapide : points (image), Alt (retirer), Maj (nouvel objet)
     objet_ia = Signal(object, str)              # sélection d'objet : QRectF (cadre) ou QPointF (clic), mode
+    effacer_clic = Signal(object)               # Effacer d'un clic : QRectF (cadre) ou QPointF (clic)
+    comparaison_finie = Signal()                # Échap pendant Avant / après
+    yeux_rouges = Signal(object)                # outil Yeux rouges : QRectF (cadre) ou QPointF (clic)
     texte_sel = Signal(object, str, bool)       # sélection de texte : QRectF (cadre) ou QPointF (clic), mode, Ctrl
     fin_session_ia = Signal()                   # Échap avec la sélection rapide : l'objet suivant repart de zéro
     suppression = Signal(list, float)           # pinceau Supprimer : points (image), taille du pinceau
@@ -214,6 +219,9 @@ class Canevas(PlumeMixin, QWidget):
         self._transfo_index = 0
         self._transfo_glisse = False
         # sélections calculées
+        self.comparer = False                       # Affichage > Comparer avant / après : rideau sur la photo
+        self.rideau = 0.5                           # place du rideau (fraction de la largeur de la photo)
+        self._rideau_glisse = False
         self.indice_effacer: QImage | None = None   # analyse avant Effacer : ombre / bord proposés, en couleur
         self.apercu_selection: QImage | None = None  # baguette pendant le glisser (petite image, étirée)
         self.apercu_plein: QImage | None = None      # aperçu qui cache la photo (Améliorer le contour)
@@ -335,6 +343,9 @@ class Canevas(PlumeMixin, QWidget):
             p.setTransform(QTransform(self.zoom, 0, 0, self.zoom, self.decalage.x(), self.decalage.y()))
             p.drawImage(QPointF(0, 0), self.doc.image_affichee())
             p.restore()
+        if self.comparer:
+            self._dessiner_avant(p, photo)
+            return
         # sélection (calque rouge semi-transparent)
         p.save()
         p.setTransform(QTransform(self.zoom, 0, 0, self.zoom, self.decalage.x(), self.decalage.y()))
@@ -1873,11 +1884,74 @@ class Canevas(PlumeMixin, QWidget):
             p.drawLine(a, b)
         p.end()
 
+    def image_avant(self) -> QImage | None:
+        return getattr(self.doc, "image_ouverture", None) if self.doc is not None else None
+
+    def _rect_avant(self, photo: QRectF) -> QRectF:
+        """Où montrer la photo d'avant : sur toute la photo (même proportions, ex. Upscale), sinon centrée en gardant
+        ses proportions (recadrée ou agrandie depuis)."""
+        av = self.image_avant()
+        if av is None or av.width() == 0 or av.height() == 0:
+            return photo
+        ra, rp = av.width() / av.height(), photo.width() / max(1e-6, photo.height())
+        if abs(ra - rp) < 0.01:
+            return photo
+        if ra > rp:
+            h = photo.width() / ra
+            return QRectF(photo.left(), photo.center().y() - h / 2, photo.width(), h)
+        w = photo.height() * ra
+        return QRectF(photo.center().x() - w / 2, photo.top(), w, photo.height())
+
+    def _dessiner_avant(self, p: QPainter, photo: QRectF):
+        """Rideau Avant / après : à gauche la photo à l'ouverture, à droite la photo actuelle."""
+        av = self.image_avant()
+        x = photo.left() + photo.width() * self.rideau
+        if av is not None:
+            p.save()
+            p.setClipRect(QRectF(photo.left(), photo.top(), x - photo.left(), photo.height()))
+            p.fillRect(photo, self.couleur_fond)
+            p.setRenderHint(QPainter.SmoothPixmapTransform, self.zoom < 1)
+            p.drawImage(self._rect_avant(photo), av)
+            p.restore()
+        haut, bas = max(photo.top(), 0), min(photo.bottom(), self.height())
+        for couleur, largeur in ((QColor(0, 0, 0, 120), 4), (QColor(255, 255, 255), 2)):
+            p.setPen(QPen(couleur, largeur))
+            p.drawLine(QPointF(x, haut), QPointF(x, bas))
+        milieu = QPointF(x, (haut + bas) / 2)
+        p.setPen(QPen(QColor(0, 0, 0, 120), 1))
+        p.setBrush(QColor(255, 255, 255))
+        p.drawEllipse(milieu, 14, 14)
+        p.setBrush(QColor(60, 60, 60))
+        p.setPen(Qt.NoPen)
+        for sens in (-1, 1):
+            p.drawPolygon(QPolygonF([milieu + QPointF(sens * 3, -5), milieu + QPointF(sens * 3, 5),
+                                     milieu + QPointF(sens * 9, 0)]))
+        p.setBrush(Qt.NoBrush)
+        f = p.font()
+        f.setBold(True)
+        p.setFont(f)
+        fm = p.fontMetrics()
+        for texte, gauche in ((tr("Avant"), True), (tr("Après"), False)):
+            w = fm.horizontalAdvance(texte) + 16
+            r = QRectF(x - w - 10 if gauche else x + 10, haut + 10, w, fm.height() + 8)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(0, 0, 0, 150))
+            p.drawRoundedRect(r, 4, 4)
+            p.setPen(QColor(255, 255, 255))
+            p.drawText(r, Qt.AlignCenter, texte)
+        p.setBrush(Qt.NoBrush)
+
+    def _placer_rideau(self, pos: QPointF):
+        w = self.doc.image.width() * self.zoom
+        if w > 0:
+            self.rideau = min(1.0, max(0.0, (pos.x() - self.decalage.x()) / w))
+            self.update()
+
     def _dessiner_auto(self, p: QPainter):
         """Trait de la sélection rapide, cadre de la sélection d'objet (en cours ou en calcul), points de l'IA.
         Appelé avec la transformation de l'image (coordonnées image)."""
         trait = None
-        if self._auto is not None and self._auto[0] in (RAPIDE, OBJET, SUPPRIMER, SEL_TEXTE):
+        if self._auto is not None and self._auto[0] in (RAPIDE, OBJET, SUPPRIMER, SEL_TEXTE, EFFACER_CLIC, YEUX):
             trait = (self._auto[0], self._auto[2])
         elif self.trait_en_attente is not None:
             trait = self.trait_en_attente
@@ -1895,7 +1969,7 @@ class Canevas(PlumeMixin, QWidget):
                     p.drawPoint(d["points"][0])
                 else:
                     p.drawPolyline(QPolygonF(d["points"]))
-            elif genre in (OBJET, SEL_TEXTE) and d.get("fin") is not None:
+            elif genre in (OBJET, SEL_TEXTE, EFFACER_CLIC, YEUX) and d.get("fin") is not None:
                 r = QRectF(d["debut"], d["fin"]).normalized()
                 for couleur, style in ((QColor(0, 0, 0), Qt.SolidLine), (QColor(255, 255, 255), Qt.DashLine)):
                     stylo = QPen(couleur, 0, style)
@@ -1924,7 +1998,7 @@ class Canevas(PlumeMixin, QWidget):
         elif self.outil == SUPPRIMER:
             self._auto = (SUPPRIMER, pos, {"points": [pt], "taille": float(self.taille_pinceau)})
         else:
-            self._auto = (self.outil if self.outil == SEL_TEXTE else OBJET, pos,
+            self._auto = (self.outil if self.outil in (SEL_TEXTE, EFFACER_CLIC, YEUX) else OBJET, pos,
                           {"debut": pt, "fin": None, "mode": mode, "ctrl": bool(mods & Qt.ControlModifier)})
         self.update()
 
@@ -1952,6 +2026,12 @@ class Canevas(PlumeMixin, QWidget):
         elif outil == SEL_TEXTE:
             quoi = QRectF(d["debut"], d["fin"]).normalized() if d["fin"] is not None else d["debut"]
             self.texte_sel.emit(quoi, d["mode"], d["ctrl"])
+        elif outil == YEUX:
+            self.yeux_rouges.emit(QRectF(d["debut"], d["fin"]).normalized() if d["fin"] is not None else d["debut"])
+        elif outil == EFFACER_CLIC:
+            self.trait_en_attente = (EFFACER_CLIC, d)
+            quoi = QRectF(d["debut"], d["fin"]).normalized() if d["fin"] is not None else d["debut"]
+            self.effacer_clic.emit(quoi)
         else:
             self.trait_en_attente = (OBJET, d)
             quoi = QRectF(d["debut"], d["fin"]).normalized() if d["fin"] is not None else d["debut"]
@@ -2122,6 +2202,10 @@ class Canevas(PlumeMixin, QWidget):
     def mousePressEvent(self, e):
         if not self.doc:
             return
+        if self.comparer and e.button() == Qt.LeftButton:
+            self._rideau_glisse = True
+            self._placer_rideau(e.position())
+            return
         self.finir_fleches()
         self.noter_geste()           # valeurs tapées avant ce geste : un geste à part
         pos = e.position()
@@ -2193,7 +2277,7 @@ class Canevas(PlumeMixin, QWidget):
             self._presser_dessin(pos, e.modifiers())
             self.update()
             return
-        if self.outil in OUTILS_AUTO or self.outil == SUPPRIMER:
+        if self.outil in OUTILS_AUTO or self.outil in (SUPPRIMER, EFFACER_CLIC, YEUX):
             self._presser_auto(e, pos)
             return
         if self.outil == GOMME_CALQUE and self.doc.calque_actif.verrou:
@@ -2245,6 +2329,11 @@ class Canevas(PlumeMixin, QWidget):
 
     def mouseMoveEvent(self, e):
         pos = e.position()
+        if self.comparer:
+            if self._rideau_glisse:
+                self._placer_rideau(pos)
+            self.setCursor(Qt.SplitHCursor)
+            return
         self._souris = pos
         self._pression_evt = self._pression_de(e)
         if self.style_ouvert and self._sol_glisse:
@@ -2378,6 +2467,9 @@ class Canevas(PlumeMixin, QWidget):
         self.update()
 
     def mouseReleaseEvent(self, e):
+        if self.comparer:
+            self._rideau_glisse = False
+            return
         QTimer.singleShot(0, self.noter_geste)      # le geste fini peut être défait (retour, Ctrl+Z)
         if self.style_ouvert and self._sol_glisse:
             self._sol_glisse = False
@@ -2506,6 +2598,9 @@ class Canevas(PlumeMixin, QWidget):
 
     # ---------------------------------------------------------- clavier
     def keyPressEvent(self, e):
+        if self.comparer and e.key() == Qt.Key_Escape:
+            self.comparaison_finie.emit()
+            return
         if self.outil == PLUME and self.touche_plume(e):
             return
         if self._poly is not None:                   # lasso par points : Entrée ferme, Échap annule, Retour arrière

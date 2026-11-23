@@ -318,6 +318,7 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
 | Taille réelle (100 %) | Ctrl+1 |
 | Déplacer la vue | Outil **Main** (H), ou maintenir **Espace** et glisser, ou glisser avec le **bouton du milieu** |
 | Déplacer **un calque** | Outil **Déplacer** (V) : seul le calque choisi bouge (la Main, elle, ne déplace que la vue) |
+| **Comparer avant / après** | **Affichage > Comparer avant / après** (Ctrl+Alt+B) : un rideau sur la photo, à gauche la photo telle qu'à l'ouverture, à droite la photo actuelle ; glissez pour le déplacer. Rien n'est modifié. Échap ou Ctrl+Alt+B pour finir |
 
 ### Règles, repères et grille (menu Affichage)
 - **Règles** (Ctrl+R) : graduées en pixels de l'image, le 0 au coin haut-gauche de la photo ; un trait suit la
@@ -761,6 +762,17 @@ pour *Modifier avec une consigne*, une consigne en français peut être traduite
 - Dans la fenêtre de choix, **Partir de celle-ci** donne des variantes de la proposition choisie.
 - L'IA écrit mal les textes : ajoutez-les ensuite avec l'outil Texte.
 - Modèle Flux Schnell (Apache-2.0), installé avec le moteur IA (case *Flux Schnell*).
+
+### Remplacer un texte (menu IA)
+Pour changer un mot d'une pochette en gardant le même style.
+1. Entourez le texte avec l'outil **Sélection de texte** (Y).
+2. **IA > Remplacer un texte…** : Windows lit les lettres, et Pixane Photo cherche aussitôt la police la plus
+   proche (vérifiez les lettres lues, corrigez-les si besoin).
+3. Tapez le **nouveau texte** (« / » pour passer à la ligne), choisissez la police dans la liste si la première ne
+   convient pas, puis **Effacer et remplacer**.
+4. L'IA efface l'ancien texte (zone un peu élargie pour que le bord des lettres parte aussi ; fenêtre habituelle
+   des propositions), puis le nouveau texte est posé **à la même place et à la même hauteur**, dans sa couleur, en
+   **calque Texte modifiable**.
 
 ### Supprimer les personnes (menu IA)
 L'IA (**SAM 3.1**) trouve **chaque personne** de la photo. Une fenêtre les montre : les personnes **cochées** (en
@@ -1257,6 +1269,16 @@ résultats dans un nouveau calque », il va dans un calque « Suppressions », r
 > **Astuce** : utilisez une image de **très bonne qualité** et travaillez par **petites zones**, l'une après
 > l'autre. Plus l'image est de bonne qualité, plus la suppression respecte l'image d'origine.
 
+### Effacer d'un clic (IA)
+Dans le même groupe que *Supprimer*. **Cliquez sur l'objet** à enlever (ou tirez un cadre autour) : l'IA
+(**SAM 3.1**) le détoure, la zone est un peu élargie (bord flou, cheveux), puis **Effacer** se lance, avec
+l'analyse de l'ombre et la fenêtre des propositions. Ctrl+Z revient en arrière étape par étape.
+
+### Yeux rouges
+Dans le même groupe que *Supprimer*. **Cliquez au milieu de l'œil rouge** (ou tirez un cadre autour) : la pupille
+rougie par le flash redevient sombre ; le reflet blanc, l'iris et la peau ne changent pas. Sans IA, immédiat, dans
+le calque choisi.
+
 ### Pinceau correcteur (R)
 Comme le tampon, mais la copie **prend la lumière et la couleur d'autour** : idéal pour une ride, une tache sur la
 peau, une rayure sur un ciel dégradé.
@@ -1431,7 +1453,10 @@ chaque point devient un petit disque ; les points très clairs deviennent des **
 leur seuil), **Flou de surface** (lisse la peau ou un ciel en gardant les bords nets ; *Seuil* : à partir de quel écart
 de couleur un bord est gardé), **Réduction du bruit** (force, garder les détails, bruit
 de couleur), **Netteté** (quantité, rayon, seuil : le masque flou de Photoshop), **Vignette** (assombrir ou
-éclaircir les bords : force, taille du centre, douceur, rond). Même fonctionnement que les réglages : aperçu en
+éclaircir les bords : force, taille du centre, douceur, rond), **Correction de l'objectif** (*Déformation* :
+redresse les lignes courbées en tonneau ou en coussin, l'image est agrandie juste assez pour ne laisser aucun coin
+vide ; *Vignetage* : éclaircit les coins sombres ; *Franges de couleur* : enlève les liserés rouges ou cyan sur les
+bords ; réglage à la main, sans profil d'appareil). Même fonctionnement que les réglages : aperçu en
 direct, calque choisi, dans la sélection s'il y en a une, une étape dans Annuler. Ils marchent aussi sur un masque.
 
 ### Actions (panneau ACTIONS)

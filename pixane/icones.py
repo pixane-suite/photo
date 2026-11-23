@@ -106,6 +106,8 @@ DESSINS = {
     "formes": '<rect x="3.5" y="10" width="9" height="9" rx="1"/><circle stroke="A" cx="15.5" cy="8.5" r="5"/>',
     "plume": '<path d="M12 3 18 11l-3.5 8h-5L6 11z"/><path d="M12 3v8"/><circle stroke="A" cx="12" cy="12.5" r="1.6"/>'
              '<path stroke="A" d="M9 21h6"/>',
+    "yeux_rouges": '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>'
+                   '<circle stroke="A" cx="12" cy="12" r="3.2"/>',
     "correcteur": '<path d="M7.5 16.5 16.5 7.5a2.6 2.6 0 0 0-3.7-3.7L3.8 12.8a2.6 2.6 0 0 0 3.7 3.7z"/>'
                   '<path stroke="A" d="M17 14.5l3 3-3 3-3-3zM9 8.5l.01 0M11 10.5l.01 0M8.5 11l.01 0M10.5 6.5l.01 0"/>',
     "regles": '<path d="M3.5 3.5h17v5h-12v12h-5z"/><path stroke="A" d="M7 3.5v2.5M10.5 3.5v2.5M14 3.5v2.5M17.5 3.5v2.5'

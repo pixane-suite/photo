@@ -32,13 +32,16 @@ FILTRES = {
     "vignette": [("force", "Force (− assombrit, + éclaircit)", -100, 100, -45, ""),
                  ("taille", "Taille du centre", 0, 100, 50, " %"), ("douceur", "Douceur", 0, 100, 60, " %"),
                  ("rond", "Rond (0 = suit le cadre)", 0, 100, 40, " %")],
+    "correction": [("deformation", "Déformation (− corrige un coussin, + corrige un tonneau)", -100, 100, 0, ""),
+                   ("vignetage", "Vignetage (+ éclaircit les coins sombres)", -100, 100, 0, ""),
+                   ("franges", "Franges de couleur (rouge / cyan sur les bords)", -100, 100, 0, "")],
 }
 
 
 def noms() -> dict:
     return {"flou": tr("Flou gaussien"), "mouvement": tr("Flou de mouvement"), "radial": tr("Flou radial"),
             "objectif": tr("Flou de l'objectif"), "surface": tr("Flou de surface"), "bruit": tr("Réduction du bruit"),
-            "nettete": tr("Netteté"), "vignette": tr("Vignette")}
+            "nettete": tr("Netteté"), "vignette": tr("Vignette"), "correction": tr("Correction de l'objectif")}
 
 
 def libelles() -> dict:
@@ -51,7 +54,11 @@ def libelles() -> dict:
             "Rond (0 = suit le cadre)": tr("Rond (0 = suit le cadre)"),
             "Méthode": tr("Méthode"),
             "Centre horizontal": tr("Centre horizontal"), "Centre vertical": tr("Centre vertical"),
-            "Reflets lumineux": tr("Reflets lumineux"), "Seuil des reflets": tr("Seuil des reflets")}
+            "Reflets lumineux": tr("Reflets lumineux"), "Seuil des reflets": tr("Seuil des reflets"),
+            "Déformation (− corrige un coussin, + corrige un tonneau)":
+                tr("Déformation (− corrige un coussin, + corrige un tonneau)"),
+            "Vignetage (+ éclaircit les coins sombres)": tr("Vignetage (+ éclaircit les coins sombres)"),
+            "Franges de couleur (rouge / cyan sur les bords)": tr("Franges de couleur (rouge / cyan sur les bords)")}
 
 
 def choix(type_: str, cle: str) -> list[str] | None:
@@ -315,6 +322,69 @@ def vignette(t: np.ndarray, p: dict) -> np.ndarray:
     return out
 
 
+def _bilineaire(c: np.ndarray, sx: np.ndarray, sy: np.ndarray) -> np.ndarray:
+    """Valeurs de c (h, w[, n]) lues aux points (sx, sy), entre les pixels ; bords prolongés."""
+    h, w = c.shape[:2]
+    sx = np.clip(sx, 0, w - 1)
+    sy = np.clip(sy, 0, h - 1)
+    x0 = np.floor(sx).astype(np.int32)
+    y0 = np.floor(sy).astype(np.int32)
+    x1, y1 = np.minimum(x0 + 1, w - 1), np.minimum(y0 + 1, h - 1)
+    fx, fy = sx - x0, sy - y0
+    if c.ndim == 3:
+        fx, fy = fx[..., None], fy[..., None]
+    c = c.astype(np.float32)
+    haut = c[y0, x0] * (1 - fx) + c[y0, x1] * fx
+    bas = c[y1, x0] * (1 - fx) + c[y1, x1] * fx
+    return haut * (1 - fy) + bas * fy
+
+
+def correction_objectif(t: np.ndarray, p: dict) -> np.ndarray:
+    """Filtre > Correction de l'objectif : déformation en tonneau ou en coussin (l'image est agrandie juste assez
+    pour qu'aucun coin ne reste vide), vignetage (coins sombres), franges de couleur (rouge / cyan) sur les bords.
+    Coordonnées relatives à la diagonale : même résultat sur l'aperçu réduit et sur la vraie image."""
+    h, w = t.shape[:2]
+    k = -p["deformation"] / 100 * 0.35                     # + corrige un tonneau : les bords sont rapprochés
+    vig = p["vignetage"] / 100
+    fr = p["franges"] / 100 * 0.006
+    cx, cy, demi = (w - 1) / 2, (h - 1) / 2, math.hypot(w, h) / 2
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    nx, ny = (x - cx) / demi, (y - cy) / demi
+    r2 = nx * nx + ny * ny
+    echelle = 1.0
+    if k:
+        # zoom pour ne rien laisser de vide : le bord de l'image doit lire des pixels de l'image
+        bx = np.concatenate([np.linspace(-cx, cx, 64), np.full(64, cx), np.linspace(-cx, cx, 64), np.full(64, -cx)])
+        by = np.concatenate([np.full(64, -cy), np.linspace(-cy, cy, 64), np.full(64, cy), np.linspace(-cy, cy, 64)])
+        bx, by = bx / demi, by / demi
+        for _ in range(4):
+            ux, uy = bx * echelle, by * echelle
+            f = 1 + k * (ux * ux + uy * uy)
+            m = max(np.abs(ux * f).max() * demi / max(cx, 1), np.abs(uy * f).max() * demi / max(cy, 1))
+            echelle = echelle / m if m > 1 else echelle
+            if m <= 1.0001:
+                break
+    ux, uy = nx * echelle, ny * echelle
+    f = 1 + k * (ux * ux + uy * uy)
+    out = t.copy()
+    a = t.astype(np.float32)
+    if k or fr:
+        canaux = []
+        for i, d in ((0, fr), (1, 0.0), (2, -fr)):            # rouge et bleu un peu plus ou moins écartés
+            g = f * (1 + d)
+            canaux.append(_bilineaire(a[..., i], cx + ux * g * demi, cy + uy * g * demi))
+        alpha = _bilineaire(a[..., 3], cx + ux * f * demi, cy + uy * f * demi)
+        rgb = np.stack(canaux, -1)
+    else:
+        rgb, alpha = a[..., :3], a[..., 3]
+    if vig:
+        g = 1 + vig * np.clip(r2, 0, 1) * 1.2
+        rgb = rgb * g[..., None] if vig > 0 else rgb * np.maximum(g, 0)[..., None]
+    out[..., :3] = _fin(rgb, t)
+    out[..., 3] = _fin(alpha, t)
+    return out
+
+
 # ------------------------------------------------------------------ teinte d'une photo (restauration IA)
 def _ycbcr(rgb: np.ndarray):
     f = rgb[..., :3].astype(np.float32)
@@ -340,7 +410,7 @@ def garder_teinte(original: np.ndarray, resultat: np.ndarray) -> np.ndarray:
 
 FONCTIONS = {"flou": flou_gaussien, "mouvement": flou_mouvement, "radial": flou_radial, "objectif": flou_objectif,
              "surface": flou_surface, "bruit": reduire_bruit, "nettete": nettete,
-             "vignette": vignette}
+             "vignette": vignette, "correction": correction_objectif}
 
 
 def appliquer_calque(img: QImage, calcul, selection: QImage | None, seize: str | None = None) -> QImage:

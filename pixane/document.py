@@ -508,6 +508,22 @@ def vue_ia(resultat: QImage, base: QImage, trous: np.ndarray | None = None) -> Q
     return qimage_rgba(r)
 
 
+def dans_zone(resultat: QImage, base: QImage, poids: np.ndarray | None) -> QImage:
+    """Aperçu d'une proposition telle qu'elle sera posée : le résultat de l'IA dans la zone (poids_zone), l'image
+    d'origine ailleurs (l'IA change parfois un peu plus que la zone : ces pixels-là ne seront pas gardés)."""
+    if poids is None or (resultat.width(), resultat.height()) != (base.width(), base.height()):
+        return resultat
+    r = tableau(resultat.convertToFormat(FORMAT_IMAGE)).astype(np.float32)
+    b = tableau(base.convertToFormat(FORMAT_IMAGE)).astype(np.float32)
+    if poids.shape != r.shape[:2]:
+        return resultat
+    w = poids[..., None]
+    m = b.copy()
+    m[..., :3] = b[..., :3] + (r[..., :3] - b[..., :3]) * w
+    m[..., 3] = r[..., 3]
+    return qimage_rgba(np.clip(m + 0.5, 0, 255).astype(np.uint8))
+
+
 def _image_ia(resultat: QImage, base: QImage, poids: np.ndarray, opacite: np.ndarray | None = None) -> QImage:
     """Résultat de l'IA, transparent là où il ne change rien ou hors de la zone (alpha = poids). opacite (0..1) :
     là où l'image était transparente, le résultat l'est aussi (par défaut : l'opacité de base)."""
