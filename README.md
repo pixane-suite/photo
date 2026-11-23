@@ -426,6 +426,20 @@ ressemblent le plus (sans Internet, rien n'est téléchargé).
   prépare **une seule fois** la liste de vos polices, en arrière-plan, une minute après le démarrage. La durée dépend
   du **nombre de polices installées** : environ 1 min 20 (et 15 Mo) pour 1 200 polices.
   Décochée : la fonction est cachée, rien ne tourne en fond, et cette liste est effacée.
+- **Polices gratuites Google Fonts** (option, décochée d'office : case à l'installation, ou **Affichage > Polices
+  gratuites Google Fonts**, ou Édition > Préférences) : la recherche compare aussi les **polices gratuites de Google
+  Fonts** (environ 1 960 familles, licences libres, surtout OFL : usage commercial compris).
+  - Une seule fois, en arrière-plan : Pixane Photo télécharge le style normal de chacune (**environ 100 Mo**, depuis
+    Fontsource : api.fontsource.org et cdn.jsdelivr.net) dans `%LOCALAPPDATA%\Pixane\polices-google`, puis prépare
+    leur liste (quelques minutes). Elles ne sont **pas installées** dans Windows : elles servent à comparer.
+  - Dans les résultats, une police Google pas installée est marquée **« gratuite, pas installée (Google Fonts,
+    licence) »**. **Télécharger et installer** : tous ses styles (gras, italique…) sont installés dans Windows pour
+    ton compte (sans droits d'administrateur), utilisables tout de suite dans Pixane Photo et tes autres programmes.
+    *Créer un texte* ou *Appliquer* avec une police Google l'installe d'abord.
+  - **Mise à jour** : toute seule tous les 30 jours (nouvelles polices et polices modifiées téléchargées, polices
+    retirées de Google Fonts effacées), ou tout de suite avec **Édition > Préférences > Fonctions installées >
+    Mettre à jour les polices Google maintenant**.
+  - Décochée : le dossier des polices Google est effacé (les polices installées restent installées).
 
 ### Baguette magique (W)
 Un clic sur une couleur sélectionne la zone de couleur proche. Sans IA, instantané.

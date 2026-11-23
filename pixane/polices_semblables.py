@@ -46,6 +46,8 @@ class Resultat:
     gras: bool
     italique: bool
     score: float                        # 0 à 100 (100 : identique)
+    google: str = ""                    # police gratuite de Google Fonts pas installée : son identifiant
+    licence: str = ""
 
     def police(self, taille: int = 40) -> QFont:
         f = QFont(self.famille)
@@ -291,9 +293,9 @@ def _recadrer_ligne(glyphes: list[np.ndarray]) -> list[np.ndarray] | None:
     return res
 
 
-def glyphes_memoire(texte: str, fam: str) -> list[list[np.ndarray]] | None:
-    """Les lettres du texte (sans les espaces), d'après la mémoire des polices."""
-    lettres = memoire()[fam][2]
+def glyphes_memoire(texte: str, fam: str, mem: dict | None = None) -> list[list[np.ndarray]] | None:
+    """Les lettres du texte (sans les espaces), d'après la mémoire des polices (ou celle donnée)."""
+    lettres = (memoire() if mem is None else mem)[fam][2]
     res = []
     for l in sans_espaces(texte):
         gs = []
@@ -415,6 +417,10 @@ def enregistrer_memoire() -> None:
 
 
 def mettre_en_memoire(fam: str) -> None:
+    memoire()[fam] = lettres_police(fam)
+
+
+def lettres_police(fam: str) -> tuple:
     """Écrit chaque lettre de l'alphabet à sa place (une par une : écrit d'un seul trait, l'alphabet se décalait
     peu à peu dans certaines polices, et des lettres voisines étaient rangées à la place des bonnes), avec de la
     marge : les lettres penchées ou qui débordent restent entières."""
@@ -442,7 +448,7 @@ def mettre_en_memoire(fam: str) -> None:
         for c, av in zip(CARACTERES, avances):
             lettres[c] = (av, -marge, a[:, x:x + av + 2 * marge].copy())
             x += av + 2 * marge
-    memoire()[fam] = (fm.lineSpacing(), fm.ascent() + 1, lettres, fm.horizontalAdvance(" "), time.time() - debut)
+    return fm.lineSpacing(), fm.ascent() + 1, lettres, fm.horizontalAdvance(" "), time.time() - debut
 
 
 def _lettre(c: str) -> str:
@@ -450,9 +456,9 @@ def _lettre(c: str) -> str:
     return unicodedata.normalize("NFD", c)[0] if c not in CARACTERES else c
 
 
-def assembler(texte: str, fam: str) -> np.ndarray | None:
+def assembler(texte: str, fam: str, mem: dict | None = None) -> np.ndarray | None:
     """Le texte écrit avec les lettres en mémoire (sans crénage : assez pour un premier tri)."""
-    ligne_h, _base, lettres, espace, _duree = memoire()[fam]
+    ligne_h, _base, lettres, espace, _duree = (memoire() if mem is None else mem)[fam]
     if not lettres:
         return None
     lignes = texte.split("\n")
@@ -479,9 +485,10 @@ def assembler(texte: str, fam: str) -> np.ndarray | None:
 
 
 def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, liste: list | None = None,
-             infos: dict | None = None) -> list[Resultat]:
+             infos: dict | None = None, google: dict | None = None) -> list[Resultat]:
     """Les `nombre` polices les plus proches des lettres du masque (0..1 ou 0..255). progres(fait, total) peut
-    renvoyer False pour arrêter. infos (dict) reçoit : "texte" (le texte vraiment comparé : en majuscules si l'image
+    renvoyer False pour arrêter. google : mémoire des polices Google (par défaut celle de l'option, vide si
+    l'option est désactivée). infos (dict) reçoit : "texte" (le texte vraiment comparé : en majuscules si l'image
     semble l'être), "lettre_par_lettre" (bool)."""
     texte = texte.strip()
     m = masque.astype(np.float32)
@@ -497,11 +504,11 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
     infos["lettre_par_lettre"] = par_lettre
     variantes = [texte] + ([texte.upper()] if texte.upper() != texte else [])
 
-    def note_memoire(t: str, fam: str) -> float | None:
+    def note_memoire(t: str, fam: str, mem: dict | None = None) -> float | None:
         if par_lettre:
-            e = glyphes_memoire(t, fam)
+            e = glyphes_memoire(t, fam, mem)
             return None if e is None else _comparer_lettres(lettres_cible, e, HAUT_TRI, epaisseur=False)
-        e = assembler(t, fam)
+        e = assembler(t, fam, mem)
         return None if e is None else _comparer(cible, e, HAUT_TRI, epaisseur=False)
 
     def note_police(t: str, f: QFont, h: int):
@@ -516,7 +523,12 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
         return None if e is None else (_comparer(cible, e, h), (e.shape, float(e.sum())))
 
     liste = familles() if liste is None else liste
-    total = len(liste) + PREMIERS * (len(STYLES) - 1)
+    # polices gratuites de Google Fonts (option) : celles qui ne sont pas déjà installées
+    from . import polices_google
+    google = polices_google.memoire() if google is None else google
+    installees = set(liste) | set(familles())
+    google = {f: v for f, v in google.items() if f not in installees}
+    total = len(liste) + len(google) + PREMIERS * (len(STYLES) - 1)
     fait = 0
     # passe 1 : toutes les polices, style normal, petite taille (le texte tapé, et aussi en majuscules)
     tris = {t: [] for t in variantes}
@@ -537,6 +549,14 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
             return []
     if nouvelles:
         enregistrer_memoire()
+    for fam in google:
+        fait += 1
+        for t in variantes:
+            n = note_memoire(t, fam, google)
+            if n is not None:
+                tris[t].append((n, fam))
+        if progres is not None and fait % 20 == 0 and progres(fait, total) is False:
+            return []
 
     def niveau(t: str) -> float:                        # note moyenne des 20 meilleures polices
         tris[t].sort(reverse=True)
@@ -546,10 +566,20 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
     infos["texte"] = texte
     tri = tris[texte]
     infos["tri"] = [f for _n, f in tri]
-    # passe 2 : les meilleures, avec gras, italique, gras italique
+    # passe 2 : les meilleures, avec gras, italique, gras italique (les polices Google : chargées pour l'occasion)
+    noms_google = {}
+    for _n, fam in tri[:PREMIERS]:
+        if fam in google:
+            vrai = polices_google.charger(fam)
+            if vrai:
+                noms_google[fam] = vrai
     notes, lentes = [], []
     for n_tri, fam in tri[:PREMIERS]:
-        if lente(fam):                       # très lente à écrire : on garde sa note du tri
+        if fam in google and fam not in noms_google:
+            continue
+        fam = noms_google.get(fam, fam)
+        if fam not in google and fam not in noms_google.values() and lente(fam):
+            # très lente à écrire : on garde sa note du tri
             lentes.append((n_tri, Resultat(fam, False, False, 0)))
             continue
         vus = set()
@@ -572,15 +602,19 @@ def chercher(masque: np.ndarray, texte: str, nombre: int = 10, progres=None, lis
         r = Resultat(fam, gras, ital, 0)
         x = note_police(texte, r.police(HAUT_FIN * 2), HAUT_FIN)
         if x is not None:
-            fins.append((x[0], r))
+            # à ressemblance presque égale, une police déjà installée passe avant une police Google à installer
+            fins.append((x[0] * (0.99 if fam in noms_google.values() else 1.0), r))
     fins += lentes
     fins.sort(key=lambda t: -t[0])
     res, familles_vues = [], set()
+    inverse = {v: k for k, v in noms_google.items()}
     for n, r in fins:                    # une famille une fois (sa meilleure variante)
         if r.famille in familles_vues:
             continue
         familles_vues.add(r.famille)
         r.score = round(n * 100, 1)
+        if r.famille in inverse:
+            r.google, r.licence = polices_google.source(inverse[r.famille])
         res.append(r)
         if len(res) >= nombre:
             break

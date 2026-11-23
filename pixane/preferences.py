@@ -104,6 +104,19 @@ class DialoguePreferences(QDialog):
         self.polices.setChecked(fenetre.a_option_polices.isChecked())
         self.polices.setToolTip(fenetre.a_option_polices.toolTip())
         form.addRow("", self.polices)
+        self.google = QCheckBox(tr("Polices gratuites Google Fonts (police semblable)"))
+        self.google.setChecked(fenetre.a_option_google.isChecked())
+        self.google.setToolTip(fenetre.a_option_google.toolTip())
+        self.google.setEnabled(self.polices.isChecked())
+        self.polices.toggled.connect(self.google.setEnabled)
+        form.addRow("", self.google)
+        self.b_maj_google = QPushButton(tr("Mettre à jour les polices Google maintenant"))
+        self.b_maj_google.setToolTip(tr("Sinon, c'est fait tout seul tous les 30 jours : nouvelles polices et polices "
+                                        "modifiées téléchargées, polices retirées de Google Fonts effacées."))
+        self.b_maj_google.clicked.connect(fenetre.maj_polices_google)
+        self.b_maj_google.setEnabled(fenetre.a_option_google.isChecked())
+        self.google.toggled.connect(lambda v: self.b_maj_google.setEnabled(v and fenetre.a_option_google.isChecked()))
+        form.addRow("", self.b_maj_google)
         self.orthographe = QCheckBox(tr("Orthographe et césure"))
         self.orthographe.setChecked(fenetre.a_option_orthographe.isChecked())
         self.orthographe.setToolTip(fenetre.a_option_orthographe.toolTip())
@@ -193,6 +206,7 @@ class DialoguePreferences(QDialog):
                 "echelle": self.echelle.currentData(), "icones": self.icones.currentData(),
                 "barre_rapide": self.barre_rapide.isChecked(), "grille": self.grille.value(),
                 "polices": self.polices.isChecked(), "orthographe": self.orthographe.isChecked(),
+                "google": self.google.isChecked(),
                 "nouveau_calque": self.nouveau_calque.isChecked(), "pleine": self.pleine.isChecked(),
                 "recuperation": self.recuperation.currentData(), "dossier": self.dossier.text().strip(),
                 "maj": self.maj.isChecked()}

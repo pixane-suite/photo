@@ -16,6 +16,10 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   (moins d'objets ou de personnages hors sujet). **Décrire (IA)** : l'IA écrit elle-même la description, modifiable ;
   modèle facultatif **Qwen3.5 2B** (4,2 Go, Apache-2.0, Hugging Face Comfy-Org), case dans l'installateur et dans
   Installer / Compléter le moteur IA.
+- **Polices gratuites Google Fonts dans « Trouver une police semblable »** (option, décochée d'office ; case dans
+  l'installateur, Affichage et Préférences) : environ 1 960 polices gratuites (surtout OFL), téléchargées une fois en
+  arrière-plan (environ 100 Mo, depuis Fontsource), comparées comme les polices installées. Une police Google pas
+  installée est marquée comme telle ; **Télécharger et installer** l'installe dans Windows pour l'utilisateur.
 
 ## Corrections
 

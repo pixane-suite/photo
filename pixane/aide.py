@@ -297,6 +297,8 @@ TELECHARGES = [
               "SAM License (Meta)"),
     Composant("Qwen3.5 2B", "https://huggingface.co/Qwen/Qwen3.5-2B",
               "Agrandir : description automatique (facultatif)", "Apache-2.0"),
+    Composant("Google Fonts (via Fontsource)", "https://fontsource.org",
+              "Polices gratuites de la recherche de police semblable (facultatif)", "OFL-1.1, Apache-2.0, UFL-1.0"),
 ]
 
 

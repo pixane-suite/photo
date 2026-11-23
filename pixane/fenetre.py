@@ -333,6 +333,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self._choisir_outil(PINCEAU)
         self._actualiser()
         self.option_polices(self.a_option_polices.isChecked(), demarrage=True)
+        self.option_google(self.a_option_google.isChecked(), demarrage=True)
         self.a_langues_orthographe.setEnabled(self.a_option_orthographe.isChecked())
         if self.a_option_orthographe.isChecked():
             from . import orthographe
@@ -344,6 +345,9 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         if not os.environ.get("PIXANE_REGLAGES") and self.reglages.value("polices_semblables", True, type=bool):
             from . import polices_semblables     # mémoire des polices (police semblable) : processus à part
             QTimer.singleShot(60000, polices_semblables.lancer_en_fond)
+            if self.a_option_google.isChecked():  # polices gratuites de Google Fonts : téléchargées une fois
+                from . import polices_google
+                QTimer.singleShot(90000, polices_google.lancer_en_fond)
         # suivre les changements de couleur ou de thème faits dans Windows
         self._signature_windows = theme.signature_windows()
         self._veille_windows = QTimer(self)
@@ -356,6 +360,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         from . import polices_semblables
         self.a_police_semblable.setVisible(actif)
         self.b_police.setVisible(actif)
+        self.a_option_google.setEnabled(actif)
         if not demarrage:
             self.reglages.setValue("polices_semblables", actif)
         if actif:
@@ -363,6 +368,44 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                 polices_semblables.lancer_en_fond()
         else:                       # décoché (ici ou à l'installation) : la mémoire des polices ne garde pas de place
             self._effacer_memoire_polices()
+
+    def option_google(self, actif: bool, demarrage: bool = False) -> None:
+        """Affichage > Polices gratuites Google Fonts (aussi choisi à l'installation) : la recherche de police
+        semblable compare aussi les polices de Google Fonts (téléchargées une fois, en arrière-plan) ; décochée, leur
+        dossier est effacé."""
+        from . import polices_google
+        if demarrage:
+            return
+        if actif:
+            if QMessageBox.question(self, tr("Polices gratuites Google Fonts"), tr(
+                    "Pour comparer aussi les polices gratuites de Google Fonts, Pixane Photo télécharge une fois le "
+                    "style normal de chacune (environ 1 960 familles, environ 100 Mo), depuis Fontsource "
+                    "(api.fontsource.org et cdn.jsdelivr.net), puis prépare leur liste en arrière-plan (quelques "
+                    "minutes).\n\nLicences : presque toutes OFL, gratuites, usage commercial compris. Elles ne sont "
+                    "pas installées dans Windows : seulement celle que tu choisis, avec « Télécharger et installer ».\n\n"
+                    "Télécharger ?")) != QMessageBox.Yes:
+                self.a_option_google.blockSignals(True)
+                self.a_option_google.setChecked(False)
+                self.a_option_google.blockSignals(False)
+                return
+            self.reglages.setValue("polices_google", True)
+            polices_google.lancer_en_fond()
+            self.statusBar().showMessage(tr("Polices Google Fonts : téléchargement en arrière-plan…"), 8000)
+        else:
+            self.reglages.setValue("polices_google", False)
+            polices_google.effacer()
+
+    def maj_polices_google(self) -> None:
+        """Préférences > Mettre à jour les polices Google maintenant : en arrière-plan."""
+        from . import polices_google
+        if polices_google.en_preparation():
+            QMessageBox.information(self, tr("Polices gratuites Google Fonts"),
+                                    tr("Les polices Google sont déjà en cours de mise à jour, en arrière-plan."))
+            return
+        polices_google.lancer_en_fond(forcer=True)
+        QMessageBox.information(self, tr("Polices gratuites Google Fonts"), tr(
+            "Mise à jour lancée en arrière-plan : liste des polices, nouvelles polices et polices modifiées. Tu peux "
+            "continuer à travailler ; la recherche les comparera dès qu'elles seront prêtes."))
 
     def option_orthographe(self, actif: bool) -> None:
         """Affichage > Orthographe et césure : soulignement et césure (les textes en cadre sont redessinés)."""
@@ -657,6 +700,14 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                         "polices en arrière-plan. La durée dépend du nombre de polices installées (environ 1 min 20 et "
                         "15 Mo pour 1 200 polices). Décoché : rien de tout cela."))
         a.toggled.connect(lambda v: self.option_polices(v))
+        # option choisie à l'installation (case « Polices gratuites Google Fonts »), modifiable ici
+        a = self._action(m, tr("Polices gratuites Google Fonts (police semblable)"), None, None, "a_option_google")
+        a.setCheckable(True)
+        a.setChecked(self.reglages.value("polices_google", False, type=bool))
+        a.setToolTip(tr("Coché : Trouver une police semblable compare aussi les polices gratuites de Google Fonts "
+                        "(téléchargées une fois : environ 100 Mo, licences libres) ; celle que tu choisis s'installe "
+                        "d'un clic. Décoché : leur dossier est effacé."))
+        a.toggled.connect(lambda v: self.option_google(v))
         # option choisie à l'installation (case « Orthographe et césure » et ses langues), modifiable ici
         a = self._action(m, tr("Orthographe et césure"), None, None, "a_option_orthographe")
         a.setCheckable(True)
@@ -1763,6 +1814,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             self.changer_taille_icones(v["icones"])
         # cases des menus : leur fonction suit (toggled), comme un clic dans le menu
         for action, cle in ((self.a_barre_rapide, "barre_rapide"), (self.a_option_polices, "polices"),
+                            (self.a_option_google, "google"),
                             (self.a_option_orthographe, "orthographe"), (self.a_ia_nouveau_calque, "nouveau_calque"),
                             (self.a_maj_auto, "maj")):
             if action.isChecked() != v[cle]:

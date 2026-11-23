@@ -1836,5 +1836,22 @@
  "Les lettres de l'image semblent en majuscules : recherche faite avec « {t} ».": "The letters in the image seem to be upper case: searched with \"{t}\".",
  "Lettres lues par Windows : vérifie-les (et corrige si besoin), puis Chercher.": "Letters read by Windows: check them (and correct if needed), then Search.",
  "Windows lit les lettres de l'image…": "Windows is reading the letters in the image…",
- "Windows n'a pas pu lire les lettres : tape-les.": "Windows could not read the letters: type them."
+ "Windows n'a pas pu lire les lettres : tape-les.": "Windows could not read the letters: type them.",
+ "Coché : Trouver une police semblable compare aussi les polices gratuites de Google Fonts (téléchargées une fois : environ 100 Mo, licences libres) ; celle que tu choisis s'installe d'un clic. Décoché : leur dossier est effacé.": "Checked: Find a similar font also compares the free Google Fonts (downloaded once: about 100 MB, free licences); the one you choose installs in one click. Unchecked: their folder is deleted.",
+ "Installation impossible : aucun fichier de police reçu.": "Installation impossible: no font file received.",
+ "Installation impossible : {erreur}": "Installation impossible: {erreur}",
+ "Police gratuite de Google Fonts : tous ses styles sont téléchargés et installés dans Windows pour ton compte (utilisables aussi dans tes autres programmes).": "Free Google Fonts font: all its styles are downloaded and installed in Windows for your account (usable in your other programs too).",
+ "Polices Google Fonts : téléchargement en arrière-plan…": "Google Fonts: downloading in the background…",
+ "Polices Google Fonts encore en préparation : celles déjà prêtes sont comparées.": "Google Fonts still being prepared: those already ready are compared.",
+ "Polices gratuites Google Fonts": "Free Google Fonts",
+ "Polices gratuites Google Fonts (police semblable)": "Free Google Fonts (similar font)",
+ "Pour comparer aussi les polices gratuites de Google Fonts, Pixane Photo télécharge une fois le style normal de chacune (environ 1 960 familles, environ 100 Mo), depuis Fontsource (api.fontsource.org et cdn.jsdelivr.net), puis prépare leur liste en arrière-plan (quelques minutes).\n\nLicences : presque toutes OFL, gratuites, usage commercial compris. Elles ne sont pas installées dans Windows : seulement celle que tu choisis, avec « Télécharger et installer ».\n\nTélécharger ?": "To also compare the free Google Fonts, Pixane Photo downloads the regular style of each one once (about 1,960 families, about 100 MB) from Fontsource (api.fontsource.org and cdn.jsdelivr.net), then prepares their list in the background (a few minutes).\n\nLicences: almost all OFL, free, commercial use included. They are not installed in Windows: only the one you choose, with \"Download and install\".\n\nDownload?",
+ "Téléchargement et installation de {nom}…": "Downloading and installing {nom}…",
+ "gratuite, pas installée (Google Fonts, {licence})": "free, not installed (Google Fonts, {licence})",
+ "{nom} est installée ({n} styles) : utilisable dans Pixane Photo et tes autres programmes.": "{nom} is installed ({n} styles): usable in Pixane Photo and your other programs.",
+ "Polices gratuites de la recherche de police semblable (facultatif)": "Free fonts for the similar font search (optional)",
+ "Mettre à jour les polices Google maintenant": "Update Google fonts now",
+ "Sinon, c'est fait tout seul tous les 30 jours : nouvelles polices et polices modifiées téléchargées, polices retirées de Google Fonts effacées.": "Otherwise it is done by itself every 30 days: new and changed fonts downloaded, fonts removed from Google Fonts deleted.",
+ "Les polices Google sont déjà en cours de mise à jour, en arrière-plan.": "The Google fonts are already being updated, in the background.",
+ "Mise à jour lancée en arrière-plan : liste des polices, nouvelles polices et polices modifiées. Tu peux continuer à travailler ; la recherche les comparera dès qu'elles seront prêtes.": "Update started in the background: font list, new fonts and changed fonts. You can keep working; the search will compare them as soon as they are ready."
 }

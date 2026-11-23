@@ -93,9 +93,13 @@ class FenetrePolices(QDialog):
         self.b_creer.clicked.connect(lambda: self._finir("creer"))
         self.b_copier = QPushButton(tr("Copier le nom"))
         self.b_copier.clicked.connect(self._copier)
+        self.b_installer = QPushButton(tr("Télécharger et installer"))
+        self.b_installer.setToolTip(tr("Police gratuite de Google Fonts : tous ses styles sont téléchargés et installés "
+                                       "dans Windows pour ton compte (utilisables aussi dans tes autres programmes)."))
+        self.b_installer.clicked.connect(self._installer)
         fermer = QPushButton(tr("Fermer"))
         fermer.clicked.connect(self.reject)
-        for b in (self.b_appliquer, self.b_creer, self.b_copier):
+        for b in (self.b_appliquer, self.b_creer, self.b_copier, self.b_installer):
             bas.addWidget(b)
         bas.addStretch(1)
         bas.addWidget(fermer)
@@ -123,6 +127,8 @@ class FenetrePolices(QDialog):
     def done(self, r: int) -> None:
         if self._lecteur is not None:
             self._lecteur.arreter()
+        from . import polices_google
+        polices_google.liberer()                 # polices Google chargées pour la recherche : retirées
         super().done(r)
 
     def lettres(self) -> str:
@@ -156,6 +162,9 @@ class FenetrePolices(QDialog):
         self.etat.setText(tr("Première fois : Pixane Photo prépare tes {n} polices, une seule fois. La durée dépend de leur "
                              "nombre (environ 1 min 20 pour 1 200 polices)…",
                              n=manquantes) if manquantes > 50 else tr("Recherche…"))
+        from . import polices_google
+        if polices_google.active() and polices_google.en_preparation():
+            avertir.append(tr("Polices Google Fonts encore en préparation : celles déjà prêtes sont comparées."))
 
         def progres(fait, total):
             self.progres.setMaximum(total)
@@ -178,9 +187,7 @@ class FenetrePolices(QDialog):
                               t=compare.replace("\n", " / ")))
             self.texte.setText(compare.replace("\n", " / "))     # « Créer un texte » écrira ces lettres
         for r in self.resultats:
-            style = " ".join(x for x in (tr("gras") if r.gras else "", tr("italique") if r.italique else "") if x)
-            it = QListWidgetItem(QIcon(echantillon(compare, r)), f"{r.famille}{'  ·  ' + style if style else ''}\n"
-                                 + tr("ressemblance : {n} %", n=round(r.score)))
+            it = QListWidgetItem(QIcon(echantillon(compare, r)), self._libelle(r))
             it.setData(Qt.UserRole, r)
             self.liste.addItem(it)
         if self.resultats:
@@ -190,11 +197,55 @@ class FenetrePolices(QDialog):
             self.etat.setText(" ".join(avertir + [tr("Rien trouvé : vérifie les lettres tapées et la sélection "
                                                      "(les lettres seules).")]))
 
+    @staticmethod
+    def _libelle(r: ps.Resultat) -> str:
+        style = " ".join(x for x in (tr("gras") if r.gras else "", tr("italique") if r.italique else "") if x)
+        texte = f"{r.famille}{'  ·  ' + style if style else ''}\n" + tr("ressemblance : {n} %", n=round(r.score))
+        if r.google:
+            texte += "\n" + tr("gratuite, pas installée (Google Fonts, {licence})", licence=r.licence or "OFL")
+        return texte
+
     def _maj_boutons(self, *_a) -> None:
         it = self.liste.currentItem()
         self.choisi = it.data(Qt.UserRole) if it is not None else None
         for b in (self.b_appliquer, self.b_creer, self.b_copier):
             b.setEnabled(self.choisi is not None)
+        self.b_installer.setVisible(self.choisi is not None and bool(self.choisi.google))
+
+    def _installer(self) -> bool:
+        """Police Google choisie : téléchargée et installée pour l'utilisateur ; elle devient une police installée."""
+        r = self.choisi
+        if r is None or not r.google:
+            return True
+        from . import polices_google
+        self.etat.setText(tr("Téléchargement et installation de {nom}…", nom=r.famille))
+        self.progres.setVisible(True)
+        self.progres.setValue(0)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        def progres(fait, total):
+            self.progres.setMaximum(total)
+            self.progres.setValue(fait)
+            QApplication.processEvents()
+        try:
+            famille, fichiers = polices_google.installer(r.google, progres)
+        except OSError as e:
+            self.etat.setText(tr("Installation impossible : {erreur}", erreur=str(e)))
+            return False
+        finally:
+            QApplication.restoreOverrideCursor()
+            self.progres.setVisible(False)
+        if not fichiers:
+            self.etat.setText(tr("Installation impossible : aucun fichier de police reçu."))
+            return False
+        r.famille, r.google = famille, ""
+        it = self.liste.currentItem()
+        if it is not None:
+            it.setText(self._libelle(r))
+        self._maj_boutons()
+        self.etat.setText(tr("{nom} est installée ({n} styles) : utilisable dans Pixane Photo et tes autres "
+                             "programmes.", nom=famille, n=len(fichiers)))
+        return True
 
     def _copier(self) -> None:
         if self.choisi is not None:
@@ -203,5 +254,7 @@ class FenetrePolices(QDialog):
 
     def _finir(self, action: str) -> None:
         if self.choisi is not None:
+            if self.choisi.google and not self._installer():     # police Google : installée d'abord
+                return
             self.action = action
             self.accept()

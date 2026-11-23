@@ -127,6 +127,7 @@ french.Orthographe=Orthographe et césure des textes (mots mal écrits souligné
 french.OrthoFr=Français (dictionnaire Grammalecte, 1,4 Mo)
 french.OrthoEn=Anglais (dictionnaire SCOWL en_US, 0,6 Mo)
 french.Polices=Recherche de police semblable (Pixane Photo prépare une fois la liste de tes polices en arrière-plan ; la durée dépend du nombre de polices installées : environ 1 min 20 et 15 Mo pour 1 200 polices ; rien n'est téléchargé)
+french.PolicesGoogle=Polices gratuites Google Fonts dans la recherche de police semblable (environ 1 960 polices, environ 100 Mo téléchargés une fois depuis Fontsource / jsDelivr au premier démarrage ; licences libres, surtout OFL ; celle que tu choisis s'installe d'un clic)
 french.TypeProjet=Projet Pixane Photo
 french.PageMoteurTitre=Moteur IA
 french.PageMoteurDescription=Le moteur IA n'est pas sur ce PC : Pixane Photo peut le télécharger et l'installer.
@@ -182,6 +183,7 @@ english.Orthographe=Spelling and hyphenation of texts (misspelled words underlin
 english.OrthoFr=French (Grammalecte dictionary, 1.4 MB)
 english.OrthoEn=English (SCOWL en_US dictionary, 0.6 MB)
 english.Polices=Similar font search (Pixane Photo prepares the list of your fonts once, in the background; the time depends on the number of installed fonts: about 1 min 20 and 15 MB for 1,200 fonts; nothing is downloaded)
+english.PolicesGoogle=Free Google Fonts in the similar font search (about 1,960 fonts, about 100 MB downloaded once from Fontsource / jsDelivr at first start; free licences, mostly OFL; the one you choose installs in one click)
 english.TypeProjet=Pixane Photo project
 english.PageMoteurTitre=AI engine
 english.PageMoteurDescription=The AI engine is not on this PC: Pixane Photo can download and install it.
@@ -214,6 +216,7 @@ english.DesinstReglages=Also delete Pixane Photo's settings (language, theme, la
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreerIcone}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "polices"; Description: "{cm:Polices}"; GroupDescription: "{cm:Fonctions}"
+Name: "policesgoogle"; Description: "{cm:PolicesGoogle}"; GroupDescription: "{cm:Fonctions}"; Flags: unchecked
 Name: "orthographe"; Description: "{cm:Orthographe}"; GroupDescription: "{cm:Fonctions}"; Flags: checkablealone
 Name: "orthographe\fr"; Description: "{cm:OrthoFr}"
 Name: "orthographe\en"; Description: "{cm:OrthoEn}"
@@ -254,6 +257,9 @@ Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "langue"; Va
 ; Option « Recherche de police semblable » (modifiable ensuite dans Affichage > Recherche de police semblable).
 Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "polices_semblables"; ValueData: "true"; Tasks: polices
 Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "polices_semblables"; ValueData: "false"; Tasks: not polices
+; Option « Polices gratuites Google Fonts » (téléchargées au premier démarrage, en arrière-plan ; modifiable dans Affichage).
+Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "polices_google"; ValueData: "true"; Tasks: policesgoogle
+Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "polices_google"; ValueData: "false"; Tasks: not policesgoogle
 ; Option « Orthographe et césure » et ses langues (modifiables ensuite dans Affichage).
 Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "orthographe"; ValueData: "true"; Tasks: orthographe
 Root: HKCU; Subkey: "{#CleReglages}"; ValueType: string; ValueName: "orthographe"; ValueData: "false"; Tasks: not orthographe

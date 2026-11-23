@@ -320,6 +320,19 @@ alike (no Internet, nothing is downloaded).
   your fonts **once only**, in the background, one minute after starting. The time depends on the **number of
   installed fonts**: about 1 min 20 (and 15 MB) for 1,200 fonts. Unchecked: the feature is
   hidden, nothing runs in the background, and this list is deleted.
+- **Free Google Fonts** (option, unchecked by default: box in the installer, or **View > Free Google Fonts**, or
+  Edit > Preferences): the search also compares the **free fonts of Google Fonts** (about 1,960 families, free
+  licences, mostly OFL: commercial use included).
+  - Once only, in the background: Pixane Photo downloads the regular style of each one (**about 100 MB**, from
+    Fontsource: api.fontsource.org and cdn.jsdelivr.net) into `%LOCALAPPDATA%\Pixane\polices-google`, then prepares
+    their list (a few minutes). They are **not installed** in Windows: they are used for comparing.
+  - In the results, a Google font that is not installed is marked **"free, not installed (Google Fonts, licence)"**.
+    **Download and install**: all its styles (bold, italic…) are installed in Windows for your account (no
+    administrator rights), usable right away in Pixane Photo and your other programs. *Create a text* or *Apply*
+    with a Google font installs it first.
+  - **Update**: by itself every 30 days (new and changed fonts downloaded, fonts removed from Google Fonts deleted),
+    or right away with **Edit > Preferences > Installed features > Update Google fonts now**.
+  - Unchecked: the Google fonts folder is deleted (installed fonts stay installed).
 
 ### Magic wand (W)
 One click on a colour selects the area of similar colour. No AI, instant.
