@@ -52,6 +52,10 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   glissée sur la photo ouverte devient un **nouveau calque**, centré là où on la lâche (un projet s'ouvre toujours
   dans son onglet).
 
+- **Nuancier enrichi** : cercle de couleurs (avec *+ Ajouter au nuancier*), harmonies et nuances de la couleur de
+  peinture, couleurs principales de l'image ouverte, groupes repliables ; clic droit pour ranger une couleur dans
+  *Mes couleurs*.
+
 ## Corrections
 
 - **Outil Déplacer** : il ne déplace plus d'autres calques choisis plus tôt dans le panneau quand le calque actif a changé depuis.

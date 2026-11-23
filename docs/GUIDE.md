@@ -1080,9 +1080,18 @@ corriger sans toucher à la photo).
 - Repasser au même endroit pendant un même coup ne fonce pas la couleur ; un nouveau coup, si.
 
 #### Nuancier
-Le panneau **NUANCIER** (onglet à côté de l'Historique) garde vos couleurs : **un clic** sur une couleur en fait la
-couleur de peinture.
-- **+** ajoute la couleur de peinture ; **−** retire la couleur choisie ; clic droit : *Renommer*, *Retirer*.
+Le panneau **NUANCIER** (onglet à côté de l'Historique) : **un clic** sur une couleur en fait la couleur de
+peinture. De haut en bas :
+- **Cercle de couleurs** : l'anneau choisit la teinte, le carré au centre la saturation (de gauche à droite) et la
+  clarté (de haut en bas). Le code (#RRVVBB) est affiché dessous ; **+ Ajouter au nuancier** la range dans *Mes
+  couleurs*.
+- **Harmonies et nuances** : 9 nuances de la couleur de peinture (du foncé au clair), sa complémentaire, ses couleurs
+  analogues, triade, complémentaires proches et carré. Elles changent avec la couleur choisie.
+- **Couleurs de l'image** : les couleurs principales de la photo ouverte, mises à jour quand elle change. Pratique
+  pour accorder un texte à la pochette. **Tout ajouter** les range dans *Mes couleurs*.
+- Clic droit sur une couleur d'un groupe : **Ajouter à « Mes couleurs »**. Chaque groupe se replie en cliquant sur
+  son titre.
+- **Mes couleurs** : vos couleurs enregistrées. **+** ajoute la couleur de peinture ; **−** retire la couleur choisie ; clic droit : *Renommer*, *Retirer*.
 - **…** : **Importer** un nuancier Photoshop (.aco) ou GIMP (.gpl), **Exporter** en .aco (pour Photoshop),
   **Remettre les couleurs de départ**.
 - Les couleurs du nuancier se retrouvent aussi dans « Couleurs personnalisées » des fenêtres de choix de couleur.

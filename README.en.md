@@ -1130,8 +1130,11 @@ touching the photo).
 - **Colour**: swatch in the top bar. **Alt+click** on the photo picks the colour at that spot (eyedropper).
 - **Size** (or `[` and `]`), **Opacity** (100% fully covers, less lets what is below show through) and **Hardness**
   (100% sharp edge, 0% very soft edge).
-- **Swatches**: the **SWATCHES** panel (tab next to History) keeps your colours: **one click** on a colour makes it
-  the paint colour. **+** adds the paint colour, **−** removes the chosen one, right-click: *Rename*, *Remove*;
+- **Swatches**: the **SWATCHES** panel (tab next to History): **one click** on a colour makes it the paint colour.
+  At the top, a **colour wheel** (ring = hue, inner square = saturation and lightness) with **+ Add to swatches**;
+  then **Harmonies and shades** of the paint colour (9 shades, complementary, analogous, triad, split complementary,
+  square), the **Image colours** (main colours of the open photo, **Add all**), and **My colours**. Right-click a
+  colour of a group: **Add to “My colours”**; click a group title to fold it. In *My colours*, **+** adds the paint colour, **−** removes the chosen one, right-click: *Rename*, *Remove*;
   **…**: **Import** Photoshop (.aco) or GIMP (.gpl) swatches, **Export** as .aco, **Restore the starting colours**.
   The swatches also appear under "Custom colors" in the colour windows.
 - Going over the same spot during one stroke does not darken the colour; a new stroke does.

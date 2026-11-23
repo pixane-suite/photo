@@ -1918,5 +1918,19 @@
  "ex. SUMMER / 2026": "e.g. SUMMER / 2026",
  "Glisser une image": "Drop an image",
  "Image posée à sa taille réelle ({l} × {h} px), plus grande que la photo : ce qui dépasse est gardé (cadre en pointillés). Ctrl+T pour la redimensionner.": "Image placed at its actual size ({l} × {h} px), larger than the photo: what sticks out is kept (dashed frame). Ctrl+T to resize it.",
- "Image posée à sa taille réelle ({l} × {h} px).": "Image placed at its actual size ({l} × {h} px)."
+ "Image posée à sa taille réelle ({l} × {h} px).": "Image placed at its actual size ({l} × {h} px).",
+ "+ Ajouter au nuancier": "+ Add to swatches",
+ "Ajoute la couleur du cercle à « Mes couleurs »": "Adds the wheel colour to “My colours”",
+ "Ajoute toutes les couleurs de l'image à « Mes couleurs »": "Adds all the image colours to “My colours”",
+ "Ajouter à « Mes couleurs »": "Add to “My colours”",
+ "Analogues": "Analogous",
+ "Compl. proches": "Split compl.",
+ "Complémentaire": "Complementary",
+ "Couleurs de l'image": "Image colours",
+ "Harmonies et nuances": "Harmonies and shades",
+ "Mes couleurs": "My colours",
+ "Nuances": "Shades",
+ "Ouvre une image : ses couleurs principales apparaissent ici.": "Open an image: its main colours appear here.",
+ "Tout ajouter": "Add all",
+ "Triade": "Triad"
 }

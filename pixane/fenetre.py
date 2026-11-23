@@ -1341,6 +1341,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
 
     def _couleur_peinture(self, couleur: str, enregistrer: bool = True):
         self.canevas.couleur_peinture = QColor(couleur)
+        if getattr(self, "nuancier", None) is not None:           # cercle et harmonies du nuancier
+            self.nuancier.couleur_changee(QColor(couleur))
         if getattr(self, "opt_degrade_bouton", None) is not None:      # aperçu des points « couleur de peinture »
             self.opt_degrade_bouton.rafraichir()
         if enregistrer:
@@ -1725,7 +1727,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         from .nuancier import PanneauNuancier
         dock = QDockWidget(tr("NUANCIER"), self)
         dock.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        self.nuancier = PanneauNuancier(lambda: self.canevas.couleur_peinture)
+        self.nuancier = PanneauNuancier(lambda: self.canevas.couleur_peinture,
+                                        image_actuelle=lambda: self.doc.image if self.doc is not None else None)
         self.nuancier.choisi.connect(self._couleur_nuancier)
         dock.setWidget(self.nuancier)
         dock.setFixedWidth(290)
@@ -2141,6 +2144,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
 
     def _actualiser(self):
         a_doc = self.doc is not None
+        if getattr(self, "nuancier", None) is not None:           # couleurs de l'image (un peu plus tard)
+            self.nuancier.image_changee()
         self._maj_cible_degrade()
         pret = a_doc and self.moteur.etat == "prêt"
         for a in (self.a_enregistrer, self.a_enregistrer_sous, self.a_fermer, self.a_tout, self.a_rien, self.a_inverser,
