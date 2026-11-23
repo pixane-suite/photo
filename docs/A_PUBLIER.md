@@ -28,7 +28,7 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 - **Nouvelle image en 16 ou 32 bits par couche** (choix retenu).
 
 - **Calques** : l'outil Déplacer bouge un **groupe entier** (ou plusieurs calques choisis) ; **cadre en pointillés**
-  autour de chaque calque qui dépasse de l'image (gris, en couleur pour le calque choisi) ; **Calque > Pixelliser** (texte, forme, style, objet
+  autour de chaque texte et de chaque calque qui dépasse de l'image (gris, en couleur pour le calque choisi) ; **Calque > Pixelliser** (texte, forme, style, objet
   dynamique, tout), aussi au clic droit.
 - **Lasso par points** (choix « Libre / Par points » dans la barre du Lasso).
 - **Outil Texte** : choisir des lettres en glissant sur le texte de la photo, double-clic = un mot ; déplacer par le

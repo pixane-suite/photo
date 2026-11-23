@@ -806,7 +806,7 @@ class Canevas(PlumeMixin, QWidget):
         return None if feuille.contains(poly.boundingRect()) else poly
 
     def _dessiner_cadre_hors(self, p: QPainter):
-        """Calques qui dépassent de la feuille (texte, image, forme…) : cadre en pointillés autour de chacun, avec
+        """Textes, et calques qui dépassent de la feuille (image, forme…) : cadre en pointillés autour de chacun, avec
         tous les outils, pour voir où ils sont ; gris pour les autres calques, couleur d'accent pour le calque choisi
         (l'outil Texte a déjà son cadre pour le texte choisi)."""
         if self.doc is None or self.cadre is not None:
@@ -819,12 +819,21 @@ class Canevas(PlumeMixin, QWidget):
             if not c.visible or c.special or (i == actif and self.outil == TEXTE and c.texte is not None):
                 continue
             try:
-                poly = self._etendue_calque(c)
+                # un texte a toujours son cadre (même dans la feuille) : on voit où sont les textes
+                poly = contour_bloc(c.texte) if c.texte is not None else self._etendue_calque(c)
             except Exception:
                 continue
             if poly is None:
                 continue
             ecran = QPolygonF([self.vers_ecran(q) for q in poly])
+            if c.texte is not None and ecran.size() > 2:     # un peu écarté du texte (et de son fond éventuel)
+                centre = ecran.boundingRect().center()
+                ecart = []
+                for q in ecran:
+                    d = q - centre
+                    n = max(1e-6, (d.x() ** 2 + d.y() ** 2) ** 0.5)
+                    ecart.append(q + d * (6 / n))
+                ecran = QPolygonF(ecart)
             if i == actif:
                 p.setPen(QPen(QColor(0, 0, 0, 150), 1))
                 p.drawPolygon(ecran)

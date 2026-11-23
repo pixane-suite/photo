@@ -800,8 +800,9 @@ group an opacity, a blend mode and a mask that apply to everything inside.
   With a single chosen layer: that layer alone. **Ctrl+Shift+G**: ungroups (the layers stay).
 - **Move a group**: choose the group, then the Move tool (V), with the mouse or the arrows: all its layers move
   together (a single Undo step). Same for several chosen layers (Ctrl+click).
-- **Layer sticking out of the image** (text, image, shape…): a **dashed frame** shows where it is, with any tool,
-  even when it is not chosen: grey for the other layers, in colour for the chosen layer.
+- **Dashed frames**: every **text** (even entirely inside the image) and every layer **sticking out of the image**
+  (image, shape…) has a frame showing where it is, with any tool, even when it is not chosen: grey for the other
+  layers, in colour for the chosen layer.
 - **Layer > Rasterize** (also on right-click): *Text*, *Shape, brush, fill*, *Layer style* (the effects become
   pixels), *Smart object* (its best version is forgotten) or *Entire layer* (all at once). The layer becomes an
   ordinary image; Undo goes back.
