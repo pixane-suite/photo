@@ -15,6 +15,9 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 
 ## Corrections
 
+- **Agrandir l'image** en pleine définition : l'ajout ressortait sous un voile brumeux, et des personnages ou
+  objets de la proposition choisie pouvaient changer. Flux voit maintenant l'image comme modèle au lieu d'une zone
+  grise. Même correction pour « Partir de celle-ci » (variantes d'une proposition).
 - Désinstallation, « Supprimer aussi les réglages » : n'efface plus que les réglages de Pixane Photo (avant :
   toute la clé Software\Pixane, donc aussi les réglages de Pixane Video). Signalé par le projet Video.
 

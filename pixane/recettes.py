@@ -286,8 +286,12 @@ def _n(classe: str, **entrees) -> dict:
 
 
 def _flux_fill(p: dict, pixels, masque, assembleur, nb: int, texte: str = "", denoise: float = 1.0,
-               steps: int = 24, graine: int | None = None, chargeur: dict | None = None) -> None:
-    """Ajoute la chaîne Flux Fill (nœuds 20 à 31) au prompt p."""
+               steps: int = 24, graine: int | None = None, chargeur: dict | None = None, voir: bool = False) -> None:
+    """Ajoute la chaîne Flux Fill (nœuds 20 à 33) au prompt p.
+    voir : retravailler une image déjà dessinée (force < 1 : Pleine définition, Partir de celle-ci). Flux Fill
+    reçoit alors l'image entière comme modèle, et seule la zone du masque est recalculée. Sans cela, il voit la zone
+    en gris uni (« à inventer ») et, à force partielle, ce gris restait : voile brumeux, personnages changés
+    (Agrandir, 23/11/2026)."""
     p["20"] = chargeur or chargeur_fill()
     p["21"] = _n("DualCLIPLoader", clip_name1="clip_l.safetensors", clip_name2="t5xxl_fp8_e4m3fn_scaled.safetensors",
                  type="flux", device="default")
@@ -296,9 +300,17 @@ def _flux_fill(p: dict, pixels, masque, assembleur, nb: int, texte: str = "", de
     p["24"] = _n("CLIPTextEncode", text=texte, clip=["21", 0])
     p["25"] = _n("FluxGuidance", conditioning=["24", 0], guidance=30.0)
     p["26"] = _n("ConditioningZeroOut", conditioning=["24", 0])
-    p["27"] = _n("InpaintModelConditioning", positive=["25", 0], negative=["26", 0], vae=["22", 0],
-                 pixels=pixels, mask=masque, noise_mask=True)
-    p["28"] = _n("RepeatLatentBatch", samples=["27", 2], amount=nb)
+    if voir:
+        p["33"] = _n("ThresholdMask", mask=masque, value=1.0)          # (> 1 : jamais) masque vide : Flux voit toute l'image
+        p["27"] = _n("InpaintModelConditioning", positive=["25", 0], negative=["26", 0], vae=["22", 0],
+                     pixels=pixels, mask=["33", 0], noise_mask=False)
+        p["34"] = _n("SetLatentNoiseMask", samples=["27", 2], mask=masque)   # seule la zone est recalculée
+        latent = ["34", 0]
+    else:
+        p["27"] = _n("InpaintModelConditioning", positive=["25", 0], negative=["26", 0], vae=["22", 0],
+                     pixels=pixels, mask=masque, noise_mask=True)
+        latent = ["27", 2]
+    p["28"] = _n("RepeatLatentBatch", samples=latent, amount=nb)
     p["29"] = _n("KSampler", model=["23", 0], seed=graine or _graine(), steps=steps, cfg=1.0, sampler_name="euler",
                  scheduler="simple", positive=["27", 0], negative=["27", 1], latent_image=["28", 0], denoise=denoise)
     p["30"] = _n("VAEDecode", samples=["29", 0], vae=["22", 0])
@@ -375,9 +387,10 @@ def variante(image: str, force: float, texte: str = "", nb: int = NB_REMPLIR, de
     if decoupe:
         p["11"] = _n("InpaintCropImproved", image=["10", 0], mask=["10", 1], **_decoupe())
         _flux_fill(p, ["11", 1], ["11", 2], ["11", 0], nb, texte=texte, denoise=force, graine=graine,
-                   chargeur=chargeur)
+                   chargeur=chargeur, voir=True)
     else:
-        _flux_fill(p, ["10", 0], ["10", 1], None, nb, texte=texte, denoise=force, graine=graine, chargeur=chargeur)
+        _flux_fill(p, ["10", 0], ["10", 1], None, nb, texte=texte, denoise=force, graine=graine, chargeur=chargeur,
+                   voir=True)
     return p, {"32": tr("Variante")}
 
 
@@ -386,7 +399,8 @@ def affiner(image: str, force: float = 0.4, steps: int = 20, graine: int | None 
     """Agrandir en pleine définition : un morceau de 1024 px à la vraie taille ; la partie transparente (ajout de
     la première passe) est redessinée légèrement par Flux Fill (force), le reste sert de modèle."""
     p = {"10": _n("LoadImage", image=image)}
-    _flux_fill(p, ["10", 0], ["10", 1], None, 1, denoise=force, steps=steps, graine=graine, chargeur=chargeur)
+    _flux_fill(p, ["10", 0], ["10", 1], None, 1, denoise=force, steps=steps, graine=graine, chargeur=chargeur,
+               voir=True)
     return p, {"32": tr("Pleine définition")}
 
 
