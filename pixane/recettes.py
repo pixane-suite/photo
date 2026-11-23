@@ -161,10 +161,12 @@ def description_disponible() -> bool:
 
 
 CONSIGNE_DESCRIPTION = (
-    "Describe this image as a prompt for an image generator that will extend it beyond its borders. Say first what "
-    "kind of image it is (photo, oil painting, drawing, poster...) and its style, then the scene, the setting and "
-    "background, the lighting and the colours. Mention what is near the edges. One paragraph of at most 60 words, "
-    "plain English, no introduction, no list.")
+    "This image will be extended beyond its borders by an image generator. Write the prompt for what the new areas "
+    "should contain. Start with the kind of image (photo, oil painting, drawing, poster...) and its style. Then "
+    "describe only the background, the setting, the textures, the lighting and the colours, especially near the "
+    "left, right, top and bottom edges. Do not describe the main subject or central figures, and do not mention "
+    "any person, flag or object that appears only once. One paragraph of at most 50 words, plain English, no "
+    "introduction.")
 
 
 def decrire(image: str):
