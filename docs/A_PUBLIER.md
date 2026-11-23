@@ -19,6 +19,9 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 
 ## Corrections
 
+- **Souris invisible à l'ouverture** : sans image ouverte, la flèche disparaissait au-dessus de la fenêtre (le
+  pinceau, choisi d'office, cache la flèche pour dessiner son rond, qui n'existe pas sans image). La flèche reste
+  visible tant qu'aucune image n'est ouverte.
 - **Agrandir l'image** en pleine définition : l'ajout ressortait sous un voile brumeux, et des personnages ou
   objets de la proposition choisie pouvaient changer. Flux voit maintenant l'image comme modèle au lieu d'une zone
   grise. Même correction pour « Partir de celle-ci » (variantes d'une proposition).

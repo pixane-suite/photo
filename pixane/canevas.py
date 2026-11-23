@@ -225,6 +225,7 @@ class Canevas(PlumeMixin, QWidget):
             doc.change.connect(self._doc_change)
             doc.taille_changee.connect(self.ajuster)
         self.ajuster()
+        self._curseur()
 
     def _doc_change(self):
         self.update()
@@ -2305,7 +2306,7 @@ class Canevas(PlumeMixin, QWidget):
         if self.style_ouvert:
             self.setCursor(Qt.OpenHandCursor)
             return
-        if self.cadre is not None:
+        if self.cadre is not None or self.doc is None:     # sans image : pas de rond de pinceau, donc la flèche
             self.setCursor(Qt.ArrowCursor)
             return
         self.setCursor(Qt.OpenHandCursor if self.outil == MAIN else
