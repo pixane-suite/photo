@@ -295,6 +295,8 @@ TELECHARGES = [
     Composant("SAM 3.1", "https://huggingface.co/facebook/sam3.1",
               "Sélection d'objet, sélection rapide, ciel, supprimer les personnes, retouche portrait",
               "SAM License (Meta)"),
+    Composant("Qwen3.5 2B", "https://huggingface.co/Qwen/Qwen3.5-2B",
+              "Agrandir : description automatique (facultatif)", "Apache-2.0"),
 ]
 
 

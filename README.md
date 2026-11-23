@@ -626,7 +626,14 @@ Deux cadres apparaissent sur la photo :
   - ligne **Agrandir** : ce qui est ajouté de chaque côté, en % de la photo (0 à 200 %) ;
   - ligne **Bord abîmé** : la bande à refaire de chaque côté, en pixels ;
   - **taille finale** de l'image ;
-  - **Lancer** (ou Entrée) / **Annuler** (ou Échap).
+  - **Lancer** (ou Entrée) / **Annuler** (ou Échap) ;
+  - ligne **Description** (facultative) : ce que l'IA doit ajouter, par exemple « foule, fumée, ciel nuageux ».
+    Vide, l'IA devine d'après l'image et peut inventer des objets ou des personnages hors sujet ; une description
+    la guide (sans tout empêcher : « foule » peut amener un personnage au premier plan). En français ou en anglais
+    (traduite sur ce PC si le traducteur est installé). **Décrire (IA)** : l'IA regarde la photo et écrit elle-même
+    la description (en anglais : genre d'image, style, scène, fond, lumière, couleurs), que tu peux corriger avant
+    de lancer ; quelques secondes. Ce bouton demande le modèle **Qwen3.5 2B** (4,2 Go, Apache-2.0), facultatif :
+    case dans l'installateur et dans *IA > Installer le moteur IA* ; sans lui, le bouton propose de l'installer.
   Les cases et les cadres se suivent : modifier l'un met l'autre à jour.
 - **Taille finale** = photo d'origine + agrandissement. Le bord abîmé ne réduit pas l'image : il est remplacé.
 - **Image entourée de vide** (ex. une photo carrée collée dans une image plus large, avec du transparent à gauche et

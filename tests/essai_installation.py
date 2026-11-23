@@ -227,8 +227,11 @@ with tempfile.TemporaryDirectory() as tmp:
     verifier(not f.b_lancer.isEnabled(), "fenêtre : licence non acceptée -> bouton grisé")
     f.c_licence.setChecked(True)
     verifier(f.b_lancer.isEnabled(), "fenêtre : licence acceptée -> bouton actif")
+    avant = f.liste.topLevelItemCount()        # (Depth Anything, coché d'office, en plus du catalogue de base)
     f.c_schnell.setChecked(True)
-    verifier(f.liste.topLevelItemCount() == len(cat) + 1, "fenêtre : Schnell ajouté à la liste")
+    verifier(f.liste.topLevelItemCount() == avant + 1, "fenêtre : Schnell ajouté à la liste")
+    f.c_description.setChecked(True)
+    verifier(f.liste.topLevelItemCount() == avant + 2, "fenêtre : Qwen3.5 2B (description) ajouté à la liste")
     print("     " + f.place.text())
     f.close()
 

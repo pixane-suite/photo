@@ -4,7 +4,7 @@ from __future__ import annotations
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFontMetrics, QIcon, QImage, QKeySequence, QPainter, QPixmap, QShortcut
 from PySide6.QtWidgets import (QButtonGroup, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QFrame, QGridLayout, QGroupBox, QHBoxLayout,
-                               QLabel, QListWidget, QListWidgetItem, QProgressBar, QPushButton, QRadioButton, QSpinBox,
+                               QLabel, QLineEdit, QListWidget, QListWidgetItem, QProgressBar, QPushButton, QRadioButton, QSpinBox,
                                QSlider, QVBoxLayout, QWidget, QCheckBox)
 
 from .langue import tr
@@ -316,6 +316,7 @@ class BarreAgrandir(QFrame):
     à jeter et faire redessiner par l'IA (cadre intérieur rouge). Les cases suivent le cadre, et l'inverse."""
     lancer = Signal()
     annuler = Signal()
+    decrire = Signal()                          # bouton « Décrire » : description automatique (Qwen3.5)
     valeurs_changees = Signal(object, object)   # (ajout, bord abîmé) en px, (haut, bas, gauche, droite)
 
     COTES = (("haut", "Haut"), ("bas", "Bas"), ("gauche", "Gauche"), ("droite", "Droite"))   # noms traduits à l'affichage
@@ -393,6 +394,24 @@ class BarreAgrandir(QFrame):
         droite.addWidget(self.pleine)
         droite.addStretch()
         bas.addLayout(droite)
+        # description facultative : écrite, ou faite par l'IA (« Décrire ») ; vide : l'IA devine d'après l'image
+        ligne = QHBoxLayout()
+        ligne.setSpacing(6)
+        ligne.addWidget(QLabel(tr("Description")))
+        self.texte = QLineEdit()
+        self.texte.setPlaceholderText(tr("Facultatif : ce que l'IA doit ajouter (ex. foule, fumée, ciel nuageux). "
+                                         "Vide : elle devine d'après l'image."))
+        self.texte.setToolTip(tr("Guide ce que l'IA invente dans l'ajout : évite les objets ou personnages hors sujet. "
+                                 "En français ou en anglais (traduit sur ce PC si le traducteur est installé)."))
+        self.texte.setMinimumWidth(self.texte.fontMetrics().horizontalAdvance("x") * 60)
+        ligne.addWidget(self.texte, 1)
+        self.b_decrire = QPushButton(tr("Décrire (IA)"))
+        self.b_decrire.setAutoDefault(False)
+        self.b_decrire.setToolTip(tr("L'IA regarde la photo et écrit sa description (en anglais, modifiable) : "
+                                     "style, scène, fond, lumière, couleurs. Demande le modèle Qwen3.5 2B."))
+        self.b_decrire.clicked.connect(self.decrire)
+        ligne.addWidget(self.b_decrire)
+        colonne.addLayout(ligne)
         self._px = ((0, 0, 0, 0), (0, 0, 0, 0))
         parent.installEventFilter(self)
         self.hide()
@@ -407,6 +426,7 @@ class BarreAgrandir(QFrame):
             self.taille = (x1 - x0, y1 - y0)
             largeur, hauteur = self.taille
         self.info_vide.setVisible(vide is not None)
+        self.texte.clear()
         for c in self.abime.values():
             c.setMaximum(max(0, max(largeur, hauteur) - 32))
         self.definir_px((0, 0, 0, 0), abime)

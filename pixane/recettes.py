@@ -46,6 +46,8 @@ TEXTE_GARDER_COULEURS = (" Keep exactly the original colors: if the photo is bla
 # Flou selon la profondeur : Depth Anything 3 Small (Apache-2.0), nœuds intégrés à ComfyUI (LoadDA3Model…)
 PROFONDEUR = "depth_anything_3_small.safetensors"
 _profondeur: dict = {"fichier": None}
+DESCRIPTION = "qwen3.5_2b_bf16.safetensors"     # Qwen3.5 2B : décrit l'image (Agrandir, description automatique)
+_description: dict = {"fichier": None}
 # Coloriser, changer la lumière (Flux Kontext) ; remplacer le ciel (Flux Fill) : consignes en anglais
 TEXTE_COLORISER_SEUL = ("Colorize this black and white photo with natural, realistic colors. Keep exactly the same "
                         "people, faces, expressions, objects, details, lighting, framing and composition.")
@@ -117,6 +119,9 @@ def configurer(infos: dict) -> str | None:
     da3 = sorted(f for f in _options(infos, "LoadDA3Model", "model_name") if "depth_anything_3" in f.lower())
     _profondeur["fichier"] = (PROFONDEUR if PROFONDEUR in da3 else da3[0] if da3 else None) \
         if "DA3Inference" in infos and "DA3Render" in infos else None
+    qwens = sorted(f for f in _options(infos, "CLIPLoader", "clip_name") if "qwen3.5" in f.lower())
+    _description["fichier"] = (DESCRIPTION if DESCRIPTION in qwens else qwens[0] if qwens else None) \
+        if "TextGenerate" in infos and "PreviewAny" in infos else None
     kontext_gguf = sorted(f for f in _options(infos, "UnetLoaderGGUF", "unet_name") if "kontext" in f.lower())
     if "ReferenceLatent" not in infos:
         _kontext.update(type=None, fichier=None)
@@ -149,6 +154,29 @@ def detourer(image: str):
 
 def profondeur_disponible() -> bool:
     return _profondeur["fichier"] is not None
+
+
+def description_disponible() -> bool:
+    return _description["fichier"] is not None
+
+
+CONSIGNE_DESCRIPTION = (
+    "Describe this image as a prompt for an image generator that will extend it beyond its borders. Say first what "
+    "kind of image it is (photo, oil painting, drawing, poster...) and its style, then the scene, the setting and "
+    "background, the lighting and the colours. Mention what is near the edges. One paragraph of at most 60 words, "
+    "plain English, no introduction, no list.")
+
+
+def decrire(image: str):
+    """Description de l'image envoyée (anglais), pour guider Flux (Agrandir) : Qwen3.5 avec le nœud TextGenerate de
+    ComfyUI. Sortie texte (PreviewAny)."""
+    p = {"10": _n("LoadImage", image=image),
+         "11": _n("CLIPLoader", clip_name=_description["fichier"] or DESCRIPTION, type="stable_diffusion",
+                  device="default"),
+         "12": _n("TextGenerate", clip=["11", 0], prompt=CONSIGNE_DESCRIPTION, max_length=160,
+                  sampling_mode="off", image=["10", 0]),
+         "13": _n("PreviewAny", source=["12", 0])}
+    return p, {"13": tr("Description")}
 
 
 def profondeur(image: str, cote: int = 1008, sujet: bool = False):
@@ -363,10 +391,12 @@ def remplir(image: str, texte: str = "", nb: int = NB_REMPLIR, graine: int | Non
     return p, {"32": tr("Proposition")}
 
 
-def agrandir(image: str, nb: int = NB_AGRANDIR, graine: int | None = None, chargeur: dict | None = None):
-    """image : toile déjà préparée par Pixane (raccord.preparer), zone à peindre en transparent."""
+def agrandir(image: str, nb: int = NB_AGRANDIR, graine: int | None = None, chargeur: dict | None = None,
+             texte: str = ""):
+    """image : toile déjà préparée par Pixane (raccord.preparer), zone à peindre en transparent.
+    texte : description facultative (écrite, ou faite par « Décrire ») : guide ce que Flux invente dans l'ajout."""
     p = {"10": _n("LoadImage", image=image)}
-    _flux_fill(p, ["10", 0], ["10", 1], None, nb, denoise=1.0, graine=graine, chargeur=chargeur)
+    _flux_fill(p, ["10", 0], ["10", 1], None, nb, texte=texte, denoise=1.0, graine=graine, chargeur=chargeur)
     return p, {"32": tr("Proposition")}
 
 

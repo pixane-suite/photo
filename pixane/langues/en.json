@@ -1818,5 +1818,16 @@
  "Préférences…": "Preferences…",
  "Toutes les {n} min": "Every {n} min",
  "pas trouvé": "not found",
- "Écart de la grille": "Grid spacing"
+ "Écart de la grille": "Grid spacing",
+ "Ajouter Qwen3.5 2B ({taille}) pour la description automatique d'Agrandir l'image (facultatif)": "Add Qwen3.5 2B ({taille}) for the automatic description of Expand image (optional)",
+ "Description": "Description",
+ "Décrire (IA)": "Describe (AI)",
+ "Décrire l'image": "Describe the image",
+ "Facultatif : ce que l'IA doit ajouter (ex. foule, fumée, ciel nuageux). Vide : elle devine d'après l'image.": "Optional: what the AI should add (e.g. crowd, smoke, cloudy sky). Empty: it guesses from the image.",
+ "Guide ce que l'IA invente dans l'ajout : évite les objets ou personnages hors sujet. En français ou en anglais (traduit sur ce PC si le traducteur est installé).": "Guides what the AI invents in the added area: avoids off-topic objects or people. In French or English (translated on this PC if the translator is installed).",
+ "L'IA regarde la photo et écrit sa description (en anglais, modifiable) : style, scène, fond, lumière, couleurs. Demande le modèle Qwen3.5 2B.": "The AI looks at the photo and writes its description (in English, editable): style, scene, background, lighting, colours. Needs the Qwen3.5 2B model.",
+ "La description automatique a besoin du modèle Qwen3.5 2B ({taille}, licence Apache-2.0, Hugging Face), qui n'est pas installé.\n\nOuvrir l'installation du moteur IA maintenant ? (case « description automatique d'Agrandir l'image »)": "The automatic description needs the Qwen3.5 2B model ({taille}, Apache-2.0 licence, Hugging Face), which is not installed.\n\nOpen the AI engine installation now? (\"automatic description of Expand image\" box)",
+ "Qwen3.5 2B (Agrandir : description automatique, facultatif)": "Qwen3.5 2B (Expand: automatic description, optional)",
+ "Qwen3.5 2B (description automatique d'Agrandir) : déjà installé": "Qwen3.5 2B (automatic description for Expand): already installed",
+ "Agrandir : description automatique (facultatif)": "Expand: automatic description (optional)"
 }

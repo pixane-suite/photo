@@ -33,6 +33,8 @@ def _modele_vu(infos: dict, cle: str) -> bool:
         return any("kontext" in f.lower() for f in o("UNETLoader", "unet_name") + o("UnetLoaderGGUF", "unet_name"))
     if cle == "profondeur":
         return any("depth_anything_3" in f.lower() for f in o("LoadDA3Model", "model_name"))
+    if cle == "description":
+        return any("qwen3.5" in f.lower() for f in o("CLIPLoader", "clip_name"))
     if cle == "t5":
         return "t5xxl_fp8_e4m3fn_scaled.safetensors" in o("DualCLIPLoader", "clip_name2") + \
             o("DualCLIPLoader", "clip_name1")
@@ -58,11 +60,12 @@ NOEUD_EXTENSION = {"inpaint": "INPAINT_InpaintWithModel", "crop": "InpaintCropIm
                    "usdu": "UltimateSDUpscale", "usdu_script": "UltimateSDUpscale", "gguf": "UnetLoaderGGUF"}
 # modèle -> nœud de ComfyUI lui-même dont il a besoin (sans lui, ComfyUI est trop ancien : inutile de télécharger)
 NOEUD_COEUR = {"birefnet": "RemoveBackground", "sam": "SAM3_Detect", "kontext": "ReferenceLatent",
-               "profondeur": "DA3Inference"}
+               "profondeur": "DA3Inference", "description": "TextGenerate"}
 
 
 def manquants(infos: dict, dossiers: dict[str, list[str]], dossier_comfyui: Path, schnell: bool = False,
-              kontext: bool = False, profondeur: bool = False) -> tuple[list[Element], list[str]]:
+              kontext: bool = False, profondeur: bool = False,
+              description: bool = False) -> tuple[list[Element], list[str]]:
     """-> (éléments à télécharger, avec leur chemin complet ; remarques à montrer : ComfyUI trop ancien pour une
     fonction, extension présente mais pas encore chargée).
     infos : /object_info ; dossiers : /experiment/models ({type: [dossiers]}) ; dossier_comfyui : celui de main.py."""
@@ -70,7 +73,7 @@ def manquants(infos: dict, dossiers: dict[str, list[str]], dossier_comfyui: Path
     base_modeles = Path(dossiers["checkpoints"][0]).parent if dossiers.get("checkpoints") else \
         Path(dossier_comfyui) / "models"
     liste, trop_ancien, pas_chargees = [], [], []
-    for e in catalogue(True, schnell, kontext, profondeur):
+    for e in catalogue(True, schnell, kontext, profondeur, description):
         if e.genre in ("outil", "7z"):
             continue
         if e.genre == "zip":
@@ -144,6 +147,9 @@ class FenetreCompleter(QDialog):
                                       "vieille photo » (facultatif)"))
         self.c_profondeur = QCheckBox(tr("Ajouter Depth Anything 3 (137 Mo) pour « Flou selon la profondeur » "
                                          "(facultatif)"))
+        from .installation_moteur import TAILLE_DESCRIPTION, go
+        self.c_description = QCheckBox(tr("Ajouter Qwen3.5 2B ({taille}) pour la description automatique d'Agrandir "
+                                          "l'image (facultatif)", taille=go(TAILLE_DESCRIPTION)))
         self.c_traducteur = QCheckBox(tr("Ajouter le traducteur des consignes, français → anglais ({taille})",
                                          taille=tr("{n} Mo", n=round(traduction.TAILLE / 1024 ** 2))))
         self.c_traducteur.setToolTip(explication())
@@ -151,6 +157,7 @@ class FenetreCompleter(QDialog):
         self._deja = {self.c_schnell: _modele_vu(moteur_infos, "schnell"),
                       self.c_kontext: _modele_vu(moteur_infos, "kontext"),
                       self.c_profondeur: _modele_vu(moteur_infos, "profondeur"),
+                      self.c_description: _modele_vu(moteur_infos, "description"),
                       self.c_traducteur: traduction.installe()}
         self.c_profondeur.setChecked(True)               # petit modèle : proposé (coché)
         self.c_traducteur.setChecked(True)               # pas installé : proposé ; installé : coché et grisé
@@ -160,6 +167,8 @@ class FenetreCompleter(QDialog):
                  self._deja[self.c_kontext]),
                 (tr("Depth Anything 3 (« Flou selon la profondeur ») : déjà installé"),
                  self._deja[self.c_profondeur]),
+                (tr("Qwen3.5 2B (description automatique d'Agrandir) : déjà installé"),
+                 self._deja[self.c_description]),
                 (tr("Traducteur des consignes : déjà installé"), self._deja[self.c_traducteur])]):
             if deja:
                 c.setText(texte)
@@ -217,7 +226,8 @@ class FenetreCompleter(QDialog):
     def _liste(self) -> tuple[list[Element], list[str]]:
         from . import traduction
         elements, notes = manquants(self.infos, self.dossiers, self.install["dir"], self.c_schnell.isChecked(),
-                                    self.c_kontext.isChecked(), self.c_profondeur.isChecked())
+                                    self.c_kontext.isChecked(), self.c_profondeur.isChecked(),
+                                    self.c_description.isChecked())
         if self.c_traducteur.isChecked() and not traduction.installe():
             elements += traduction.elements()
         return elements, notes
@@ -267,7 +277,7 @@ class FenetreCompleter(QDialog):
                                                                                       fait=go(fait),
                                                                                       total=go(total)))))
         self.travail.fini.connect(self._fini)
-        for w in (self.b_lancer, self.c_schnell, self.c_kontext, self.c_profondeur, self.c_traducteur,
+        for w in (self.b_lancer, self.c_schnell, self.c_kontext, self.c_profondeur, self.c_description, self.c_traducteur,
                   self.c_licence, self.dossier_trad):
             w.setEnabled(False)
         self.b_arreter.setEnabled(True)
@@ -290,7 +300,7 @@ class FenetreCompleter(QDialog):
             self.accept()
         else:
             self.statut.setText(message)
-            for w in (self.c_schnell, self.c_kontext, self.c_profondeur, self.c_traducteur, self.c_licence):
+            for w in (self.c_schnell, self.c_kontext, self.c_profondeur, self.c_description, self.c_traducteur, self.c_licence):
                 w.setEnabled(not self._deja.get(w, False))
             self.dossier_trad.setEnabled(self.c_traducteur.isChecked())
             self.b_lancer.setText(tr("Reprendre"))

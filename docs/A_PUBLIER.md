@@ -12,6 +12,10 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 - **Édition > Préférences…** (Ctrl+,), comme Pixane Video : tous les réglages durables en onglets
   (Affichage, Fonctions installées, Intelligence artificielle, Enregistrement, Mises à jour), appliqués à OK ; les
   menus restent. Nouveaux réglages visibles : fréquence de la copie de récupération (ou jamais), dossier des images.
+- **Agrandir l'image : description facultative** (ligne « Description » de la barre) : guide ce que l'IA ajoute
+  (moins d'objets ou de personnages hors sujet). **Décrire (IA)** : l'IA écrit elle-même la description, modifiable ;
+  modèle facultatif **Qwen3.5 2B** (4,2 Go, Apache-2.0, Hugging Face Comfy-Org), case dans l'installateur et dans
+  Installer / Compléter le moteur IA.
 
 ## Corrections
 

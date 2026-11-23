@@ -79,7 +79,7 @@ def _comfyui(pilote_recent: bool) -> Element:
 
 
 def catalogue(pilote_recent: bool = True, schnell: bool = False, kontext: bool = False,
-              profondeur: bool = False) -> list[Element]:
+              profondeur: bool = False, description: bool = False) -> list[Element]:
     """Tout ce qu'il faut, dans l'ordre d'installation (ComfyUI d'abord : le reste va dedans)."""
     noeuds = "ComfyUI/custom_nodes/"
     modeles = "ComfyUI/models/"
@@ -160,11 +160,18 @@ def catalogue(pilote_recent: bool = True, schnell: bool = False, kontext: bool =
                              TAILLE_PROFONDEUR, "9c0a53d157c5b315d4c82908a43d93eeaa3a9ac3de9d15c2b4242ef46b5508ad",
                              "Apache-2.0", "modele", modeles + "geometry_estimation/depth_anything_3_small.safetensors",
                              facultatif=True))
+    if description:
+        liste.append(Element("description", tr("Qwen3.5 2B (Agrandir : description automatique, facultatif)"),
+                             HF.format("Comfy-Org/Qwen3.5", "text_encoders/qwen3.5_2b_bf16.safetensors"),
+                             TAILLE_DESCRIPTION, "aa33250c4fc64891ddfaba3a314fd9542ea371843c387178b425fbcc5ed680b1",
+                             "Apache-2.0", "modele", modeles + "text_encoders/qwen3.5_2b_bf16.safetensors",
+                             facultatif=True))
     return liste
 
 
 TAILLE_KONTEXT = 11904640136
 TAILLE_PROFONDEUR = 137254980
+TAILLE_DESCRIPTION = 4548221488
 
 
 def taille_schnell() -> int:
@@ -290,7 +297,8 @@ def elements_installes(dossier: Path, pilote_recent: bool = True) -> list[Elemen
     schnell = "schnell" in infos.get("elements", []) or "schnell" in infos.get("versions", {})
     kontext = "kontext" in infos.get("elements", []) or "kontext" in infos.get("versions", {})
     profondeur = "profondeur" in infos.get("elements", []) or "profondeur" in infos.get("versions", {})
-    return catalogue(pilote_recent, schnell, kontext, profondeur)
+    description = "description" in infos.get("elements", []) or "description" in infos.get("versions", {})
+    return catalogue(pilote_recent, schnell, kontext, profondeur, description)
 
 
 def mises_a_jour_moteur(dossier: Path, pilote_recent: bool = True) -> list[Element]:
@@ -597,7 +605,7 @@ class FenetreInstallation(QDialog):
     installe = Signal(str)                       # dossier de ComfyUI, une fois tout installé
 
     def __init__(self, parent=None, dossier: str | None = None, schnell: bool = False, accepte: bool = False,
-                 kontext: bool = False, profondeur: bool = True):
+                 kontext: bool = False, profondeur: bool = True, description: bool = False):
         super().__init__(parent)
         self.setWindowTitle(tr("Installer le moteur IA"))
         self.setMinimumSize(760, 600)
@@ -647,6 +655,11 @@ class FenetreInstallation(QDialog):
         self.c_profondeur.setChecked(profondeur)
         self.c_profondeur.toggled.connect(self._actualiser)
         lay.addWidget(self.c_profondeur)
+        self.c_description = QCheckBox(tr("Ajouter Qwen3.5 2B ({taille}) pour la description automatique d'Agrandir "
+                                          "l'image (facultatif)", taille=go(TAILLE_DESCRIPTION)))
+        self.c_description.setChecked(description)
+        self.c_description.toggled.connect(self._actualiser)
+        lay.addWidget(self.c_description)
         from . import traduction
         from .installation_traducteur import explication
         self.c_traducteur = QCheckBox(tr("Ajouter le traducteur des consignes, français → anglais ({taille})",
@@ -712,7 +725,7 @@ class FenetreInstallation(QDialog):
     def elements(self) -> list[Element]:
         recent = self.pilote is None or self.pilote >= PILOTE_CUDA13
         liste = catalogue(recent, self.c_schnell.isChecked(), self.c_kontext.isChecked(),
-                          self.c_profondeur.isChecked())
+                          self.c_profondeur.isChecked(), self.c_description.isChecked())
         if self.c_traducteur.isChecked():
             from . import traduction
             if not traduction.installe():
@@ -791,7 +804,7 @@ class FenetreInstallation(QDialog):
         self.travail.etat.connect(self._etat)
         self.travail.progres.connect(self._progres)
         self.travail.fini.connect(self._fini)
-        for w in (self.b_lancer, self.dossier, self.c_schnell, self.c_kontext, self.c_profondeur, self.c_traducteur,
+        for w in (self.b_lancer, self.dossier, self.c_schnell, self.c_kontext, self.c_profondeur, self.c_description, self.c_traducteur,
                   self.c_licence, self.dossier_trad):
             w.setEnabled(False)
         self.b_arreter.setEnabled(True)
@@ -832,7 +845,7 @@ class FenetreInstallation(QDialog):
             self.installe.emit(str(dossier))
             QMessageBox.information(self, tr("Installer le moteur IA"), message)
         else:
-            for w in (self.dossier, self.c_schnell, self.c_kontext, self.c_profondeur, self.c_traducteur,
+            for w in (self.dossier, self.c_schnell, self.c_kontext, self.c_profondeur, self.c_description, self.c_traducteur,
                       self.c_licence, self.dossier_trad):
                 w.setEnabled(True)
             self.b_lancer.setText(tr("Reprendre"))
@@ -865,6 +878,7 @@ def main():
     a.add_argument("--demarrer", action="store_true", help="commencer tout de suite")
     a.add_argument("--sans-traducteur", action="store_true", help="traducteur refusé dans l'installateur")
     a.add_argument("--sans-profondeur", action="store_true", help="flou de profondeur refusé dans l'installateur")
+    a.add_argument("--description", action="store_true", help="description automatique choisie dans l'installateur")
     args = a.parse_args()
 
     from PySide6.QtGui import QIcon
@@ -877,7 +891,7 @@ def main():
     traduire_qt(app, langue.choisir(reglages.value("langue", langue.AUTO)))
     theme.appliquer(app, reglages.value("theme", theme.AUTO))
     f = FenetreInstallation(dossier=args.dossier, schnell=args.schnell, accepte=args.accepte, kontext=args.kontext,
-                            profondeur=not args.sans_profondeur)
+                            profondeur=not args.sans_profondeur, description=args.description)
     if args.sans_traducteur:
         f.c_traducteur.setChecked(False)
     f.show()

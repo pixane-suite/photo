@@ -289,6 +289,8 @@ class Moteur:
                 raise ErreurMoteur(tr("Erreur pendant le calcul. {detail}", detail=detail.strip()[:600]))
             resultats = []
             for noeud, libelle in sorties.items():
+                for texte in entree["outputs"].get(noeud, {}).get("text", []):   # sortie texte (PreviewAny)
+                    resultats.append((libelle, str(texte).encode("utf-8")))
                 images = entree["outputs"].get(noeud, {}).get("images", [])
                 for i, im in enumerate(images):
                     params = urllib.parse.urlencode({"filename": im["filename"], "subfolder": im["subfolder"],

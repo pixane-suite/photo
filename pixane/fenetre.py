@@ -283,6 +283,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.barre_agrandir.pleine.setChecked(self.reglages.value("agrandir_pleine", True, type=bool))
         self.barre_agrandir.pleine.toggled.connect(lambda v: self.reglages.setValue("agrandir_pleine", v))
         self.barre_agrandir.lancer.connect(self._lancer_agrandir)
+        self.barre_agrandir.decrire.connect(self._decrire_agrandir)
         self.barre_agrandir.annuler.connect(self._fin_agrandir)
         self.barre_agrandir.valeurs_changees.connect(self.canevas.definir_cadre)
         self.canevas.cadre_change.connect(self.barre_agrandir.definir_px)
@@ -1942,14 +1943,16 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                 self.completer_moteur(install)          # ComfyUI installé autrement : seulement ce qui manque
                 return
             dossier = str(racine.parent)        # installé par Pixane : on complète (ex. Flux Schnell)
-        schnell = kontext = False
+        schnell = kontext = description = False
         profondeur = True                       # petit modèle (137 Mo) : toujours proposé (case cochée)
         if dossier is not None:
             from .installation_moteur import lire_infos
             infos = lire_infos(Path(dossier)) or {}
             schnell = "schnell" in infos.get("elements", []) or "schnell" in (infos.get("versions") or {})
             kontext = "kontext" in infos.get("elements", []) or "kontext" in (infos.get("versions") or {})
-        f = FenetreInstallation(self, dossier=dossier, schnell=schnell, kontext=kontext, profondeur=profondeur)
+            description = "description" in infos.get("elements", []) or "description" in (infos.get("versions") or {})
+        f = FenetreInstallation(self, dossier=dossier, schnell=schnell, kontext=kontext, profondeur=profondeur,
+                                description=description)
         f.commence.connect(self.moteur.arreter)      # ComfyUI ne doit pas tourner pendant qu'on le remplace
         f.installe.connect(lambda _d: self._redemarrer_moteur())
         f.exec()
@@ -3280,6 +3283,71 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.barre_agrandir.ouvrir(iw, ih, abime, vide=None if c is None else (c, (iw, ih)))
         self.canevas.commencer_cadre(abime, base=c)
 
+    def _decrire_agrandir(self):
+        """Bouton « Décrire » de la barre d'Agrandir : Qwen3.5 décrit la photo ; la description (anglais) va dans
+        la case, où elle peut être corrigée avant de lancer."""
+        titre = tr("Décrire l'image")
+        if not recettes.description_disponible():
+            from .installation_moteur import TAILLE_DESCRIPTION, go
+            if QMessageBox.question(self, titre, tr(
+                    "La description automatique a besoin du modèle Qwen3.5 2B ({taille}, licence Apache-2.0, "
+                    "Hugging Face), qui n'est pas installé.\n\nOuvrir l'installation du moteur IA maintenant ? "
+                    "(case « description automatique d'Agrandir l'image »)",
+                    taille=go(TAILLE_DESCRIPTION))) == QMessageBox.Yes:
+                self.installer_moteur()
+            return
+        from .dialogues import Attente
+        from PIL import Image
+        import io
+        c = getattr(self, "_contenu_agrandir", None)
+        image = self.doc.image if c is None else self.doc.image.copy(c[0], c[1], c[2] - c[0], c[3] - c[1])
+        photo = Image.fromarray(a_plat(tableau(image.convertToFormat(FORMAT_IMAGE))))
+        photo.thumbnail((768, 768), Image.LANCZOS)
+        tampon = io.BytesIO()
+        photo.save(tampon, "PNG")
+        png = tampon.getvalue()
+        annuler = threading.Event()
+        barre = self.barre_agrandir
+
+        def calcul(progres):
+            nom = self.moteur.envoyer_image(png)
+            prompt, sorties = recettes.decrire(nom)
+            res = self.moteur.executer(prompt, sorties, annuler, progres)
+            if not res:
+                raise ErreurMoteur(tr("Le calcul s'est arrêté sans résultat."))
+            return res[0][1].decode("utf-8", "replace").strip()
+
+        attente = Attente(titre, self)
+        attente.annuler.connect(annuler.set)
+
+        def ok(texte):
+            attente.hide()
+            attente.deleteLater()
+            self._description_auto = " ".join(texte.split())
+            if barre.isVisible():
+                barre.texte.setText(self._description_auto)
+                barre.texte.setCursorPosition(0)
+
+        def echec(message):
+            attente.hide()
+            attente.deleteLater()
+            if message:
+                QMessageBox.warning(self, titre, message)
+        t = self._tache(calcul, ok, echec)
+        t.progres.connect(attente.maj)
+        t.lancer()
+        attente.show()
+
+    def _texte_agrandir(self, texte: str) -> str:
+        """Description pour Flux (anglais) : celle de « Décrire » telle quelle ; un texte écrit est traduit sur ce PC
+        si le traducteur est installé (appelé pendant le calcul, pas dans la fenêtre)."""
+        if not texte or texte == getattr(self, "_description_auto", None) or not traduction.installe():
+            return texte
+        try:
+            return traduction.traduire(texte) or texte
+        except Exception:
+            return texte
+
     def _fin_agrandir(self):
         self.barre_agrandir.hide()
         self.canevas.finir_cadre()
@@ -3288,6 +3356,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         if self.canevas.cadre is None or not self.barre_agrandir.b_lancer.isEnabled():
             return
         ajout, abime = self.barre_agrandir.valeurs_px()
+        texte = self.barre_agrandir.texte.text().strip()
         self._fin_agrandir()
         iw, ih = self.doc.image.width(), self.doc.image.height()
         contenu = getattr(self, "_contenu_agrandir", None)
@@ -3332,9 +3401,15 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         if self.barre_agrandir.pleine.isChecked() and affinage.utile(geo.taille, geo.travail):
             m = affinage.masque_ajout(geo.taille, geo.marges, orig.shape[:2], max(geo.bande) * 1.5)
             affiner = lambda img, fin: self._affiner_agrandir(img, m, fin, lambda a: reaccorder(orig, a, geo))
-        self._lancer(tr("Agrandir"), False, lambda nom: recettes.agrandir(nom), apres=raccord, png=png,
-                     placer=placer, affiner=affiner, sans_ia=prolonge,
-                     variante=lambda nom, force: recettes.variante(nom, force, nb=recettes.NB_AGRANDIR,
+        anglais = {}
+
+        def guide() -> str:              # traduit une seule fois, pendant le calcul
+            if "t" not in anglais:
+                anglais["t"] = self._texte_agrandir(texte)
+            return anglais["t"]
+        self._lancer(tr("Agrandir"), False, lambda nom: recettes.agrandir(nom, texte=guide()), apres=raccord,
+                     png=png, placer=placer, affiner=affiner, sans_ia=prolonge,
+                     variante=lambda nom, force: recettes.variante(nom, force, texte=guide(), nb=recettes.NB_AGRANDIR,
                                                                    decoupe=False))
 
     def _affiner_agrandir(self, image: QImage, m, fin, accorder=None):

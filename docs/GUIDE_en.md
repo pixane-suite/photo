@@ -513,7 +513,14 @@ Two frames appear on the photo:
   - **Expand** row: what is added on each side, as a % of the photo (0 to 200%);
   - **Damaged edge** row: the strip to redo on each side, in pixels;
   - **final size** of the image;
-  - **Start** (or Enter) / **Cancel** (or Esc).
+  - **Start** (or Enter) / **Cancel** (or Esc);
+  - **Description** row (optional): what the AI should add, for example "crowd, smoke, cloudy sky". When empty, the
+    AI guesses from the image and may invent off-topic objects or people; a description guides it (without
+    preventing everything: "crowd" can bring a person into the foreground). In French or English (translated on
+    this PC if the translator is installed). **Describe (AI)**: the AI looks at the photo and writes the description
+    itself (in English: kind of image, style, scene, background, lighting, colours), which you can correct before
+    starting; a few seconds. This button needs the **Qwen3.5 2B** model (4.2 GB, Apache-2.0), optional: box in the
+    installer and in *AI > Install the AI engine*; without it, the button offers to install it.
   The boxes and the frames follow each other: changing one updates the other.
 - **Final size** = original photo + expansion. The damaged edge does not shrink the image: it is replaced.
 - **Image surrounded by empty space** (e.g. a square photo pasted into a wider image, with transparency on the left
