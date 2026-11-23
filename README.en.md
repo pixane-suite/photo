@@ -1023,7 +1023,7 @@ result live; **OK** keeps the style (a single step in Undo), **Cancel** puts eve
 
 - **Ready-made styles** (at the top): Soft shadow, Realistic shadow, Ground shadow, Sticker, Black outline, Outline
   only, Neon, Gold, Chrome, Emboss, Engraved, Fire, Candy, Glass, Long shadow, Double outline, Rainbow, Glitch,
-  80s retro, Silver, Ice, Comic book. Thumbnails are computed **on your layer**. One
+  80s retro, Silver, Ice, Comic book, 3D text, Golden 3D text. Thumbnails are computed **on your layer**. One
   click tries it, then every effect can still be adjusted.
 - **The same effect several times** (two outlines, three shadows…): ⧉ button. The first in the list is in front.
   ▲ / ▼ change the order, ✕ deletes, the tick box turns an effect off without losing it.
@@ -1427,6 +1427,36 @@ With a shape layer chosen, the Pen shows its points: drag a **point** to move it
 
 A **text** retouched with the brush or the stamp becomes an image (a message reminds you; Ctrl+Z to go back).
 Groups and adjustment layers have no pixels: a message asks you to choose an image layer or a mask.
+
+### Create: collage, panorama, GIF, ID photo, vectorize…
+- **File > New photo collage…**: add your photos (drag the thumbnails to change the order), the number of columns,
+  the size, the spacing between photos, rounded corners and the background colour. Each photo fills its cell and
+  arrives **in its own layer** (to move or transform afterwards).
+- **File > Stitch a panorama…**: choose photos taken from the same spot while turning, overlapping by about a third.
+  Pixane joins them and cuts the empty edges; the panorama opens as a new image.
+- **File > Export an animated GIF…**: each checked layer becomes a frame of the animation (from the bottom up), with
+  the duration of each frame, the width, *Loop* and *Back and forth*.
+- **Image > ID photo…**: choose the format (35 × 45 mm for Belgium and France, 2 × 2 inches for the United States…),
+  **click on the face** to centre the red frame on it and adjust *Face size* (the head from the top of the frame to
+  just above the shoulders). Result: one photo, or a **10 × 15 cm (4 × 6 in) sheet** filled with copies and cut
+  lines, at 300 dpi: print it at 100%, without "fit to page".
+- **Image > Vectorize…**: the layer (a logo, a drawing, a scanned text) becomes vector shapes, in colour or black and
+  white, more or less detailed, with a preview. OK puts it in a new layer; *Save the SVG…* keeps the vector file (it
+  can be enlarged without blur, for cutting or printing).
+- **Edit > Paste in perspective…** (vanishing point): copy an image (Ctrl+C), then drag its 4 corners onto a surface
+  seen at an angle (wall, screen, poster, façade); Enter: the image is placed there following the perspective, in a
+  new layer.
+- **Layer > Double exposure…**: a second photo (open or a file) appears **inside the subject's silhouette**: the
+  selection (Select > Select subject, for example) or, without a selection, the dark areas of a silhouette on a light
+  background. New layer in Screen mode, with a mask: paint the mask or change the mode and opacity to adjust.
+- **"3D text" and "Golden 3D text" styles** (Layer style): a raised thickness behind the letters.
+- **Snapshots** (History panel): *New snapshot…* keeps the state of the image under a name ("Before colours"…); a
+  double-click goes back to it (Ctrl+Z undoes that). They last while the image is open.
+- **AI > Face retouch (AI)…**: check *Natural smile*, *Eyes wide open*, *Looking at the camera*, *Smoother skin*,
+  *No dark circles*, *Younger*, *Older*, *Whiter teeth*. **AI > Make-up (AI)…**: *Natural make-up*, *Lipstick*,
+  *Eyeshadow* (with a colour), *Eyeliner and mascara*, *Blush*, *Evening make-up*. The person, the pose and the
+  background stay the same; with a selection, only that area changes. Same engine as *Edit with an instruction*
+  (Flux Kontext, about 1 minute per option).
 
 ---
 

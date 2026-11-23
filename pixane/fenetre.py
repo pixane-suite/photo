@@ -38,6 +38,7 @@ from .canevas import (DENSITE_MOINS, DENSITE_PLUS, DOIGT, EPONGE, GOUTTE, HISTOR
                       TAILLE_MAX, TAMPON, TAMPON_MOTIF, TEXTE, Canevas)
 from .dialogues import Attente, BarreAgrandir, ChoixResultat, ReglagesUpscale
 from .fenetre_plus import FenetrePlusMixin, outils_plus
+from .creation import CreationMixin
 from .interface_plus import InterfacePlusMixin
 from .outils_plus import (CRAYON, DEPLACER_IA, ELLIPSE_SEL, LASSO_MAG, LOUPE, MELANGEUR, PIECE, PIPETTE, REGLE,
                           ROTATION_VUE)
@@ -262,7 +263,7 @@ class Carte(QPushButton):
         self.image.setPixmap(ic.pixmap(28, 28))
 
 
-class Fenetre(FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsForme, ActionsPhotoIA,
+class Fenetre(CreationMixin, FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsForme, ActionsPhotoIA,
               QMainWindow):
     etat_moteur = Signal(str)
 
@@ -337,6 +338,7 @@ class Fenetre(FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContou
             tr("Nouvelle police disponible : {noms}", noms=", ".join(noms[:5])), 8000))
         self._barre_etat()
         self._interface_plus()
+        self._creation()
         from .selection_ia import SelectionAuto
         self.selection_auto = SelectionAuto(self)
         from .suppression import Suppression
@@ -3329,6 +3331,7 @@ class Fenetre(FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContou
         c = self.canevas
         if not self.doc or c.transfo is not None or c.cadre is not None or c.persp is not None:
             return
+        self._persp_coller = None
         c.commencer_persp()
         self.opt_pinceau.hide()
         self.opt_persp.show()
@@ -3351,6 +3354,8 @@ class Fenetre(FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContou
             return
         coins = list(c.persp)
         self._fin_persp()
+        if self._coller_persp_fini(coins):
+            return
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
             avant = self.doc.etat()
@@ -3363,6 +3368,7 @@ class Fenetre(FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContou
         self.historique.push(CommandeEtat(self.doc, avant, apres, tr("Recadrage en perspective")))
 
     def _annuler_persp(self):
+        self._persp_coller = None
         if self.canevas.persp is not None:
             self._fin_persp()
 

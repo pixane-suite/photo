@@ -967,7 +967,7 @@ calque…**. La photo montre le résultat en direct ; **OK** garde le style (une
 
 - **Styles tout prêts** (en haut) : Ombre douce, Ombre réaliste, Ombre au sol, Autocollant, Contour noir, Contour
   seul, Néon, Or, Chrome, Relief, Gravé, Feu, Bonbon, Verre, Ombre longue, Contour double, Arc-en-ciel, Glitch,
-  Rétro 80, Argent, Glace, Bande dessinée. Les vignettes sont calculées **sur votre calque**. Un
+  Rétro 80, Argent, Glace, Bande dessinée, Texte 3D, Texte 3D doré. Les vignettes sont calculées **sur votre calque**. Un
   clic l'essaie, puis chaque effet reste réglable.
 - **Plusieurs fois le même effet** (deux contours, trois ombres…) : bouton ⧉. Le premier de la liste passe devant.
   ▲ / ▼ changent l'ordre, ✕ supprime, la case à cocher éteint un effet sans le perdre.
@@ -1392,6 +1392,37 @@ pour changer la courbe (l'autre poignée suit ; **Alt** : la poignée bouge seul
 
 Un **texte** retouché au pinceau ou au tampon devient une image (un message le rappelle ; Ctrl+Z pour revenir).
 Les groupes et calques de réglage n'ont pas de pixels : un message invite à choisir un calque d'image ou un masque.
+
+### Créer : collage, panorama, GIF, photo d'identité, vectoriser…
+- **Fichier > Nouveau collage de photos…** : ajoutez vos photos (glissez les vignettes pour changer l'ordre), le
+  nombre de colonnes, la taille, l'espace entre les photos, les coins arrondis et la couleur du fond. Chaque photo
+  remplit sa case et arrive **dans son propre calque** (à déplacer ou transformer ensuite).
+- **Fichier > Assembler un panorama…** : choisissez des photos prises du même endroit en tournant, qui se chevauchent
+  d'environ un tiers. Pixane les raccorde et coupe les bords vides ; le panorama s'ouvre en nouvelle image.
+- **Fichier > Exporter un GIF animé…** : chaque calque coché devient une image de l'animation (du bas vers le haut),
+  avec la durée de chaque image, la largeur, *En boucle* et *Aller-retour*.
+- **Image > Photo d'identité…** : choisissez le format (35 × 45 mm pour la Belgique et la France, 2 × 2 pouces
+  pour les États-Unis…), **cliquez sur le visage** pour y centrer le cadre rouge et réglez *Taille du visage* (la
+  tête du haut du cadre jusqu'au-dessus des épaules). Résultat : une photo, ou une **planche 10 × 15 cm** remplie de
+  copies avec traits de coupe, à 300 dpi : imprimez-la à 100 %, sans « ajuster à la page ».
+- **Image > Vectoriser…** : le calque (un logo, un dessin, un texte scanné) devient des formes vectorielles, en
+  couleurs ou en noir et blanc, plus ou moins détaillées, avec un aperçu. OK le pose dans un nouveau calque ;
+  *Enregistrer le SVG…* garde le fichier vectoriel (il s'agrandit sans flou, pour une découpe ou une impression).
+- **Édition > Coller en perspective…** (point de fuite) : copiez une image (Ctrl+C), puis tirez ses 4 coins sur une
+  surface vue de biais (mur, écran, affiche, façade) ; Entrée : l'image s'y pose en suivant la perspective, dans un
+  nouveau calque.
+- **Calque > Double exposition…** : une deuxième photo (ouverte ou un fichier) apparaît **dans la silhouette** du
+  sujet : la sélection (Sélection > Sélectionner le sujet, par exemple) ou, sans sélection, les zones sombres d'une
+  silhouette sur fond clair. Nouveau calque en mode Superposition, avec un masque : peignez le masque ou changez le
+  mode et l'opacité pour ajuster.
+- **Styles « Texte 3D » et « Texte 3D doré »** (Style du calque) : une épaisseur en relief derrière les lettres.
+- **Instantanés** (panneau Historique) : *Nouvel instantané…* garde l'état de l'image sous un nom (« Avant
+  couleurs »…) ; un double-clic y revient (Ctrl+Z annule ce retour). Ils durent tant que l'image est ouverte.
+- **IA > Retouche du visage (IA)…** : cochez *Sourire naturel*, *Yeux bien ouverts*, *Regard vers l'objectif*,
+  *Peau plus lisse*, *Sans cernes*, *Plus jeune*, *Plus âgé*, *Dents plus blanches*. **IA > Maquillage (IA)…** :
+  *Maquillage naturel*, *Rouge à lèvres*, *Fard à paupières* (avec une couleur), *Eye-liner et mascara*, *Blush*,
+  *Maquillage de soirée*. La personne, la pose et le fond restent les mêmes ; avec une sélection, seule cette zone
+  change. Même moteur que *Modifier avec une consigne* (Flux Kontext, environ 1 minute par proposition).
 
 ---
 

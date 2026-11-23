@@ -67,6 +67,7 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 - **Filigrane** (Fichier > Filigrane…) : texte ou logo ajouté aux exports (Exporter sous, pour le web, par lot).
 - **Nouveaux outils** : pipette (échantillon moyenné), sélection elliptique, lasso magnétique, outil Pièce, Déplacer un objet (IA), loupe, rotation de la vue (la photo ne bouge pas), règle avec Redresser, crayon (trait net), pinceau mélangeur, peinture en symétrie (2 ou 4 traits).
 - **Interface** : panneaux déplaçables et menu Fenêtre, espaces de travail, panneaux Navigateur, Info et Deuxième image, écran d'accueil, rechercher une commande (Ctrl+F), raccourcis clavier personnalisables, plein écran (F11), barre contextuelle, menu rapide (clic droit), taille du pinceau avec Alt + clic droit, réglage en glissant sur un nom, masque rapide (Maj+Q), chercher un calque, plans de travail, photo suivante / précédente du dossier, photo rechargée si son fichier change.
+- **Créer** : collage de photos, panorama, GIF animé, photo d'identité (planche 10 × 15 cm), vectoriser (SVG), coller en perspective, double exposition, styles Texte 3D, instantanés nommés dans l'Historique, retouche du visage et maquillage par l'IA.
 
 ## Corrections
 

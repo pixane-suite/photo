@@ -707,4 +707,22 @@ def styles_prets() -> list[tuple[str, Style]]:
                               ("contour", dict(couleur="#000000", taille=6)),
                               ("ombre", dict(couleur="#e0261b", mode="normal", opacite=100, angle=135, distance=11,
                                              taille=0, **{"global": False})))),
+        # texte 3D : l'épaisseur = des ombres nettes empilées, de plus en plus foncées vers l'arrière
+        ("Texte 3D", _s(("biseau", dict(taille=4, profondeur=120, altitude=40)),
+                        *[("ombre", dict(couleur=_mix("#ff8a1e", "#5a1e00", k / 14), mode="normal", opacite=100,
+                                         angle=125, distance=k, taille=0, **{"global": False}))
+                          for k in range(1, 15)])),
+        ("Texte 3D doré", _s(("degrade", dict(angle=90, degrade=_points(("#fff3b0", 0), ("#e0a82e", .5),
+                                                                        ("#8a5a10", 1)))),
+                             ("biseau", dict(taille=5, profondeur=200, altitude=45)),
+                             *[("ombre", dict(couleur=_mix("#b07a1a", "#3a2405", k / 12), mode="normal", opacite=100,
+                                              angle=120, distance=k, taille=0, **{"global": False}))
+                               for k in range(1, 13)])),
     ]]
+
+
+def _mix(a: str, b: str, t: float) -> str:
+    """Couleur entre a et b (t de 0 à 1)."""
+    ca, cb = QColor(a), QColor(b)
+    return QColor(round(ca.red() + (cb.red() - ca.red()) * t), round(ca.green() + (cb.green() - ca.green()) * t),
+                  round(ca.blue() + (cb.blue() - ca.blue()) * t)).name()
