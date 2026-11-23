@@ -2472,13 +2472,46 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         return rep == QMessageBox.Discard
 
     def dragEnterEvent(self, e):
-        if e.mimeData().hasUrls():
+        if e.mimeData().hasUrls() or e.mimeData().hasImage():
             e.acceptProposedAction()
 
     def dropEvent(self, e):
-        urls = [u.toLocalFile() for u in e.mimeData().urls() if u.isLocalFile()]
+        """Glisser des fichiers : sur la photo ouverte, une image devient un nouveau calque à sa taille réelle,
+        centrée là où on lâche ; un projet (.piximg, .psd, .ora), ou un lâcher hors de la photo, s'ouvre dans son
+        onglet. Une image venue d'un navigateur (sans fichier) devient aussi un calque."""
+        donnees = e.mimeData()
+        urls = [u.toLocalFile() for u in donnees.urls() if u.isLocalFile()]
+        c = self.canevas
+        sur_photo = False
+        pt = None
+        if self.doc is not None:
+            local = c.mapFrom(self, e.position().toPoint())
+            sur_photo = c.rect().contains(local)
+            if sur_photo:
+                pt = c.vers_image(QPointF(local))
+        projets = (".piximg", ".pixane", ".chr", ".psd", ".ora")
+        if not urls and donnees.hasImage() and self.doc is not None:
+            img = QImage(donnees.imageData())
+            if not img.isNull():
+                self._poser_image(img, self._place_centree(img, pt), tr("Glisser une image"))
+            return
         for u in urls:
-            self.charger(u)
+            if sur_photo and not u.lower().endswith(projets):
+                try:
+                    lu = Document.ouvrir(u)
+                except Exception:                      # pas une image lisible : on essaie de l'ouvrir
+                    self.charger(u)
+                    continue
+                img = QImage(lu.image)
+                self._poser_image(img, self._place_centree(img, pt), tr("Glisser une image"), Path(u).stem)
+            else:
+                self.charger(u)
+
+    @staticmethod
+    def _place_centree(img: QImage, pt: QPointF | None) -> QPoint | None:
+        if pt is None:
+            return None
+        return QPoint(round(pt.x() - img.width() / 2), round(pt.y() - img.height() / 2))
 
     def closeEvent(self, e):
         if not self._peut_fermer_tout():
@@ -2567,24 +2600,23 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                 place = QPoint(x, y)
             except ValueError:
                 pass
+        self._poser_image(img, place, tr("Coller"))
+
+    def _poser_image(self, img: QImage, place: QPoint | None, titre: str, nom: str | None = None):
+        """Image collée ou glissée : nouveau calque, à sa taille réelle (rien n'est réduit) ; ce qui dépasse de la
+        photo est gardé (cadre en pointillés autour du calque) ; Ctrl+T pour la redimensionner."""
         img = img.convertToFormat(QImage.Format_ARGB32_Premultiplied)
         w, h = self.doc.taille()
-        t = None
-        if img.width() > w or img.height() > h:
-            # plus grande que la photo : réduite pour tenir entière, puis le cadre Transformer s'ouvre ; tous ses
-            # pixels sont gardés jusqu'à la validation (on peut la réagrandir sans perte)
-            from PySide6.QtCore import QRect
-            t = Transformation(img, QRect(0, 0, img.width(), img.height()))
-            t.centre = QPointF(w / 2, h / 2)
-            t.sx = t.sy = min(w / img.width(), h / img.height())
-            img, place = t.rendu(w, h), QPoint(0, 0)
         avant = self.doc.etat()
-        apres = self.doc.etat_coller(img, place)
-        self.historique.push(CommandeEtat(self.doc, avant, apres, tr("Coller")))
-        if t is not None and self.canevas.transfo is None:
-            self._commencer_transfo(t)
-            self.statusBar().showMessage(tr("Image collée plus grande que la photo : réduite à {p} %. Ajuste sa taille "
-                                            "avec les poignées, puis Entrée.", p=round(t.sx * 100)), 15000)
+        apres = self.doc.etat_coller(img, place, nom)
+        self.historique.push(CommandeEtat(self.doc, avant, apres, titre))
+        if img.width() > w or img.height() > h:
+            self.statusBar().showMessage(tr(
+                "Image posée à sa taille réelle ({l} × {h} px), plus grande que la photo : ce qui dépasse est gardé "
+                "(cadre en pointillés). Ctrl+T pour la redimensionner.", l=img.width(), h=img.height()), 15000)
+        else:
+            self.statusBar().showMessage(tr("Image posée à sa taille réelle ({l} × {h} px).", l=img.width(),
+                                            h=img.height()), 6000)
 
     def supprimer_selection(self):
         if not self.doc or not self._verifier_selection_simple() or \

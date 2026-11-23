@@ -48,8 +48,13 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 - **Filtres > Correction de l'objectif** : déformation tonneau / coussin, vignetage, franges de couleur.
 - **Affichage > Comparer avant / après** (Ctrl+Alt+B) : rideau entre la photo à l'ouverture et la photo actuelle.
 
+- **Coller et glisser une image** : elle garde sa **taille réelle** (plus de réduction automatique) ; une image
+  glissée sur la photo ouverte devient un **nouveau calque**, centré là où on la lâche (un projet s'ouvre toujours
+  dans son onglet).
+
 ## Corrections
 
+- **Outil Déplacer** : il ne déplace plus d'autres calques choisis plus tôt dans le panneau quand le calque actif a changé depuis.
 - **Fenêtre des propositions** (Effacer, Remplir…) : l'aperçu montre exactement ce qui sera posé (le résultat de l'IA dans la zone, la photo d'origine autour) ; avant, il pouvait montrer des changements hors de la zone qui n'étaient pas gardés.
 - Outil Texte : **Ctrl+Z** ne retirait pas un texte posé par erreur d'un clic (la case de saisie gardait le
   raccourci).

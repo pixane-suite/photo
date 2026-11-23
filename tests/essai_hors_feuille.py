@@ -63,9 +63,6 @@ p.fillRect(200, 0, 200, 200, QColor(0, 0, 255))
 p.end()
 QApplication.clipboard().setImage(grande)
 f.coller()
-t = c.transfo
-t.sx = t.sy = 1.0
-f._valider_transfo()
 k = doc.calques[1]
 verifier(k.hors is not None and rect(k) == (-100, -50, 400, 200), f"collée en taille réelle : calque 400 × 200 {rect(k)}")
 verifier(couleur(k.image, 50, 50) == ROUGE and couleur(k.image, 150, 50) == BLEU, "la feuille montre le milieu")

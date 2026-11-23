@@ -1915,5 +1915,8 @@
  "Yeux rouges : clique au milieu de l'œil rouge (ou tire un cadre autour) ; la pupille redevient sombre, le reflet du flash reste. Dans le calque choisi.": "Red eye: click in the middle of the red eye (or draw a box around it); the pupil turns dark again, the flash highlight stays. In the chosen layer.",
  "Yeux rouges corrigés ({n} pixels). Ctrl+Z pour revenir.": "Red eye fixed ({n} pixels). Ctrl+Z to undo.",
  "Zone agrandie (Remplacer un texte)": "Area enlarged (Replace a text)",
- "ex. SUMMER / 2026": "e.g. SUMMER / 2026"
+ "ex. SUMMER / 2026": "e.g. SUMMER / 2026",
+ "Glisser une image": "Drop an image",
+ "Image posée à sa taille réelle ({l} × {h} px), plus grande que la photo : ce qui dépasse est gardé (cadre en pointillés). Ctrl+T pour la redimensionner.": "Image placed at its actual size ({l} × {h} px), larger than the photo: what sticks out is kept (dashed frame). Ctrl+T to resize it.",
+ "Image posée à sa taille réelle ({l} × {h} px).": "Image placed at its actual size ({l} × {h} px)."
 }

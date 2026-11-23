@@ -1,4 +1,4 @@
-"""Coller une image plus grande que la photo (réduite, cadre Transformer ouvert, rien de perdu), Transformer (Ctrl+T)
+"""Coller une image plus grande que la photo (taille réelle, rien de perdu, Ctrl+T pour la réduire), Transformer (Ctrl+T)
 seulement la sélection, et cadre à poignées de l'outil Déplacer. Usage : essai_transformer_coller.py"""
 import os
 import sys
@@ -46,19 +46,21 @@ p.fillRect(400, 0, 400, 400, QColor(0, 0, 255))
 p.end()
 QApplication.clipboard().setImage(grande)
 f.coller()
+from pixane.document import rect_entier
+k = doc.calques[1]
+r = rect_entier(k)
+verifier(len(doc.calques) == 2 and f.canevas.transfo is None, "collée sur un nouveau calque, sans cadre ni réduction")
+verifier((r.x(), r.y(), r.width(), r.height()) == (-300, -150, 800, 400),
+         f"taille réelle 800 × 400, centrée, ce qui dépasse est gardé ({r.x()}, {r.y()}, {r.width()}, {r.height()})")
+a = tableau(k.image)
+verifier(a[50, 5, 2] > 200 and a[50, 194, 0] > 200, "la feuille montre le milieu (rouge à gauche, bleu à droite)")
+f.transformer()
 t = f.canevas.transfo
-verifier(len(doc.calques) == 2 and t is not None, "collée sur un nouveau calque, cadre Transformer ouvert")
-verifier(t is not None and abs(t.sx - 0.25) < 1e-6 and t.source.size() == grande.size(),
-         "réduite à 25 %, toute l'image gardée dans le cadre")
-a = tableau(doc.calques[1].image)
-verifier(a[50, 5, 3] == 255 and a[50, 194, 3] == 255 and a[50, 5, 2] > 200 and a[50, 194, 0] > 200,
-         "l'image entière tient dans la photo (rouge à gauche, bleu à droite)")
-# l'agrandir de nouveau x2 puis valider : on voit le milieu, net (pas de perte due à la réduction)
-t.sx = t.sy = 0.5
+verifier(t is not None and t.source.size() == grande.size(), "Ctrl+T : toute l'image dans le cadre")
+t.sx = t.sy = 0.25
 f._valider_transfo()
 a = tableau(doc.calques[1].image)
-verifier(f.canevas.transfo is None and a[50, 5, 2] > 200 and a[50, 194, 0] > 200 and a[50, 99, 3] == 255,
-         "réagrandie à 50 % puis validée")
+verifier(a[50, 5, 2] > 200 and a[50, 194, 0] > 200 and a[50, 99, 3] == 255, "réduite à 25 % : l'image entière tient")
 f.historique.undo()
 f.historique.undo()
 verifier(len(doc.calques) == 1, "Ctrl+Z deux fois : transformation puis collage annulés")

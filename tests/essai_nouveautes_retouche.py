@@ -235,6 +235,35 @@ v = tableau(dans_zone(res, base, poids_zone(zone, 200, 100)).convertToFormat(FOR
 verifier(tuple(v[50, 50, :3]) == (255, 0, 0) and tuple(v[50, 150, :3]) == (0, 0, 255),
          "aperçu des propositions : l'IA dans la zone, l'original ailleurs (comme à l'application)")
 
+# ------------------------------------------------------------------ coller / glisser : l'image garde sa taille réelle
+from PySide6.QtCore import QMimeData, QPoint, QUrl
+from PySide6.QtGui import QDropEvent
+from pixane.document import rect_entier
+petit = QImage(1027, 400, QImage.Format_RGB32)
+petit.fill(QColor(255, 255, 255))
+doc = charger(petit, "petite.png")
+grande = QImage(2048, 1152, QImage.Format_RGB32)
+grande.fill(QColor(0, 160, 0))
+QApplication.clipboard().setImage(grande)
+f.coller()
+r = rect_entier(doc.calque_actif)
+verifier((r.width(), r.height()) == (2048, 1152) and len(doc.calques) == 2 and c.transfo is None,
+         f"Coller une image 2k dans une photo 1027 × 400 : taille réelle gardée ({r.width()} × {r.height()})")
+grande.save(str(sortie / "grande.png"))
+donnees = QMimeData()
+donnees.setUrls([QUrl.fromLocalFile(str(sortie / "grande.png"))])
+cible = c.vers_ecran(QPointF(300, 200)).toPoint()
+pos = QPointF(c.mapTo(f, cible))
+nb_docs = len(f.documents)
+f.dropEvent(QDropEvent(pos, Qt.CopyAction, donnees, Qt.LeftButton, Qt.NoModifier))
+app.processEvents()
+r = rect_entier(doc.calque_actif)
+verifier(len(f.documents) == nb_docs and len(doc.calques) == 3 and (r.width(), r.height()) == (2048, 1152)
+         and abs(r.center().x() - 300) <= 2 and abs(r.center().y() - 200) <= 2 and doc.calque_actif.nom.startswith("grande"),
+         f"glisser un fichier sur la photo : nouveau calque « grande », taille réelle, centré au lâcher "
+         f"({r}, {len(f.documents)}/{nb_docs} docs, {len(doc.calques)} calques, {doc.calque_actif.nom!r})")
+doc.modifie = False
+
 for d in list(f.documents):
     d.modifie = False
 f.close()

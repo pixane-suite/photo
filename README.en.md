@@ -472,9 +472,12 @@ They work on the **layer chosen** in the Layers panel:
 - **Paste** (Ctrl+V): puts the copied image in a **new layer**, at **the same place** if it comes from Pixane Photo, in the
   centre if it comes from elsewhere (screenshot, another program…). Then move it with the Move tool (V). To enlarge
   or shrink it: **Ctrl+T** (see *Transform layer*).
-  - **Image larger than the photo**: it arrives **reduced to fit entirely**, with the *Transform* frame already
-    open. Adjust its size and position, then press **Enter**. Nothing is ever cut off: what extends beyond the
-    canvas is kept in the layer (see *Pixels outside the canvas*).
+  - The image always keeps **its actual size** (a 2048 px image pasted into a 1027 px photo stays 2048 px). What
+    extends beyond the canvas is kept in the layer (dashed frame around it, see *Pixels outside the canvas*); to
+    shrink it: **Ctrl+T**.
+- **Drop an image** (a file from Explorer, or an image from a browser) **onto the open photo**: it arrives in a **new
+  layer**, at its actual size, centred where you release it. A project (.piximg, .psd, .ora), or a file dropped
+  outside the photo, opens in its own tab.
 - **Delete selection** (Del): erases the selected area of the layer (transparent).
 
 A **locked** layer is protected; a **text** that is cut or deleted becomes an image. Ctrl+Z undoes everything.
@@ -1580,6 +1583,7 @@ Advice for better results. This chapter also opens from **Help > Tips**.
 | Ctrl+N, Ctrl+Alt+V | New image, New image from clipboard |
 | Ctrl+Alt+I, Ctrl+Alt+C | Image size, Canvas size |
 | Ctrl+Alt+Y | Print preview (CMYK) |
+| Ctrl+Alt+B | Compare before / after |
 | Ctrl+T | Transform layer (Enter apply, Esc cancel) |
 | Ctrl+Alt+F | Layer style |
 | Ctrl+Shift+N, Ctrl+J | New layer, Duplicate layer |

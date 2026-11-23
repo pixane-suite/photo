@@ -486,9 +486,12 @@ Ils agissent sur le **calque choisi** dans le panneau Calques :
 - **Coller** (Ctrl+V) : met l'image copiée dans un **nouveau calque**, à **la même place** si elle vient de Pixane Photo,
   au centre si elle vient d'ailleurs (capture d'écran, autre logiciel…). Bougez-la ensuite avec l'outil Déplacer (V).
   Pour l'agrandir ou la réduire : **Ctrl+T** (voir *Transformer le calque*).
-  - **Image plus grande que la photo** : elle arrive **réduite pour tenir entière**, avec le cadre *Transformer*
-    déjà ouvert. Ajustez sa taille et sa place, puis **Entrée**. Rien n'est jamais coupé : ce qui dépasse de la
-    feuille est gardé dans le calque (voir *Pixels hors de la feuille*).
+  - L'image garde toujours **sa taille réelle** (une image de 2048 px collée dans une photo de 1027 px reste en
+    2048 px). Ce qui dépasse de la feuille est gardé dans le calque (cadre en pointillés autour, voir *Pixels hors de
+    la feuille*) ; pour la réduire : **Ctrl+T**.
+- **Glisser une image** (fichier depuis l'Explorateur, ou image depuis un navigateur) **sur la photo ouverte** : elle
+  arrive dans un **nouveau calque**, à sa taille réelle, centrée là où vous lâchez. Un projet (.piximg, .psd, .ora),
+  ou un fichier lâché hors de la photo, s'ouvre dans son propre onglet.
 - **Supprimer la sélection** (Suppr) : efface la zone sélectionnée du calque (transparente).
 
 Un calque **verrouillé** est protégé ; un **texte** coupé ou supprimé devient une image. Ctrl+Z annule tout.
@@ -1643,6 +1646,7 @@ Des conseils pour obtenir de meilleurs résultats. Ce chapitre s'ouvre aussi par
 | Ctrl+N, Ctrl+Alt+V | Nouvelle image, Nouvelle image depuis le presse-papiers |
 | Ctrl+Alt+I, Ctrl+Alt+C | Taille de l'image, Taille de la zone de travail |
 | Ctrl+Alt+Y | Aperçu de l'impression (CMJN) |
+| Ctrl+Alt+B | Comparer avant / après |
 | Ctrl+T | Transformer le calque (Entrée valider, Échap annuler) |
 | Ctrl+Alt+F | Style du calque |
 | Ctrl+Maj+N, Ctrl+J | Nouveau calque, Dupliquer le calque |

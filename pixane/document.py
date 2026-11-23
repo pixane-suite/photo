@@ -1375,14 +1375,15 @@ class Document(QObject):
         p.end()
         return self.etat_calque_modifie(self.actif, image=img, texte=None)
 
-    def etat_coller(self, img: QImage, place: QPoint | None = None):
-        """Coller : nouveau calque au-dessus du calque choisi, l'image à sa place d'origine (copiée dans Pixane)
-        ou au centre (venue d'ailleurs). La sélection est vidée."""
+    def etat_coller(self, img: QImage, place: QPoint | None = None, nom: str | None = None):
+        """Coller : nouveau calque au-dessus du calque choisi, l'image à sa taille réelle, à sa place d'origine
+        (copiée dans Pixane) ou au centre (venue d'ailleurs) ; ce qui dépasse de la feuille est gardé. La sélection
+        est vidée."""
         w, h = self.taille()
         if place is None:
             place = QPoint((w - img.width()) // 2, (h - img.height()) // 2)
-        c = avec_image_entiere(Calque(self.nom_libre(tr("Collage")), image_vide(w, h)), img, place.x(), place.y(),
-                               w, h)
+        c = avec_image_entiere(Calque(self.nom_libre(nom or tr("Collage")), image_vide(w, h)), img, place.x(),
+                               place.y(), w, h)
         return self.inserer(c, selection=nouvelle_selection(w, h))
 
     def etat_calque_entier(self, index: int, img: QImage, x: int, y: int, **changements):

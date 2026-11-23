@@ -898,7 +898,10 @@ class Canevas(PlumeMixin, QWidget):
         """Calques que l'outil Déplacer bouge : le calque choisi ; un groupe -> tout son contenu ; plusieurs calques
         choisis dans le panneau -> tous (groupes compris)."""
         doc = self.doc
-        depart = set(self.calques_choisis()) | {doc.actif}
+        choisis = set(self.calques_choisis())
+        # le choix du panneau ne compte que s'il contient le calque actif (sinon il date d'avant : calque choisi
+        # autrement, autre image…) ; sinon seul le calque actif bouge
+        depart = choisis if doc.actif in choisis else {doc.actif}
         depart = {i for i in depart if 0 <= i < len(doc.calques)}
         idents, changement = set(), True
         for i in depart:
