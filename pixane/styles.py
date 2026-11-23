@@ -675,4 +675,36 @@ def styles_prets() -> list[tuple[str, Style]]:
                      ("biseau", dict(taille=8, profondeur=120, opacite_sombre=40)),
                      ("contour", dict(couleur="#ffffff", taille=1.5, opacite=70)),
                      ("ombre", dict(distance=6, taille=14, opacite=30)), remplissage=0.15)),
+        ("Ombre longue", _s(*[("ombre", dict(couleur="#1b1b2f", mode="normal", opacite=100 - k * 2, angle=135,
+                                              distance=k * 1.25, taille=0.6, **{"global": False}))
+                               for k in range(1, 36)])),
+        ("Contour double", _s(("contour", dict(couleur="#ffffff", taille=7)),       # le premier passe devant
+                              ("contour", dict(couleur="#000000", taille=14)))),
+        ("Arc-en-ciel", _s(("degrade", dict(angle=0, degrade=_points(
+            ("#ff1e1e", 0), ("#ff9a00", .2), ("#ffe600", .4), ("#22d04a", .6), ("#1e7bff", .8), ("#9b30ff", 1)))),
+                           ("contour", dict(couleur="#ffffff", taille=3)))),
+        ("Glitch", _s(("ombre", dict(couleur="#00f0ff", mode="ecran", opacite=100, angle=180, distance=5, taille=0,
+                                     **{"global": False})),
+                      ("ombre", dict(couleur="#ff0055", mode="ecran", opacite=100, angle=0, distance=5, taille=0,
+                                     **{"global": False})))),
+        ("Rétro 80", _s(("degrade", dict(angle=90, degrade=_points(
+            ("#ff2a8a", 0), ("#ff7b3a", .45), ("#ffe45c", .55), ("#fff6c8", 1)))),
+                        ("contour", dict(couleur="#ffffff", taille=2)),
+                        ("ombre", dict(couleur="#2b0f5c", mode="normal", opacite=100, angle=135, distance=8, taille=0,
+                                       **{"global": False})),
+                        ("lueur", dict(couleur="#ff2a8a", taille=26, opacite=55)))),
+        ("Argent", _s(("degrade", dict(angle=90, degrade=_points(
+            ("#6d737a", 0), ("#d8dde2", .45), ("#9aa1a8", .55), ("#f7f9fb", 1)))),
+                      ("biseau", dict(taille=5, profondeur=160, altitude=40, opacite_sombre=45)),
+                      ("contour", dict(couleur="#50565c", taille=1.5)),
+                      ("ombre", dict(distance=4, taille=8, opacite=40)))),
+        ("Glace", _s(("degrade", dict(angle=90, degrade=_points(("#7fc8ff", 0), ("#d9f2ff", .6), ("#ffffff", 1)))),
+                     ("lueur_interne", dict(couleur="#ffffff", taille=8, opacite=70)),
+                     ("biseau", dict(taille=4, profondeur=140, opacite_sombre=25, sombre="#2a6fb0")),
+                     ("contour", dict(couleur="#bfe6ff", taille=1.5)),
+                     ("lueur", dict(couleur="#6ccaff", taille=18, opacite=60)))),
+        ("Bande dessinée", _s(("couleur", dict(couleur="#ffd400")),
+                              ("contour", dict(couleur="#000000", taille=6)),
+                              ("ombre", dict(couleur="#e0261b", mode="normal", opacite=100, angle=135, distance=11,
+                                             taille=0, **{"global": False})))),
     ]]

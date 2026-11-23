@@ -155,6 +155,11 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
   - The **file size** is shown live.
   - Camera information (EXIF: model, date, sometimes location) is **removed** by default (box to keep it).
     Suggested name: `<photo>_web.jpg`.
+- **File > Watermark…**: a **text** ("© your name") or a **logo** (transparent PNG recommended) placed on
+  **exported** images. Settings: font, bold, colour, **position** (9 places) or **repeated over the whole image**,
+  size (in % of the width), opacity, margin, angle, soft shadow; preview on the open image. Tick **Add the watermark
+  to every export**: it is then added by *Export as*, *Export for web* and *Batch processing* (in those two windows,
+  a box removes it for one export). The photo itself never changes.
 - **File > Batch processing…**: the same work on **a whole folder** of photos.
   - **Photos to process** (source folder, never modified) and **Results in** (another folder).
   - Options: **Shrink** (longest side), **Auto adjust** (brightness, contrast, temperature, like the Auto button),
@@ -877,7 +882,8 @@ result live; **OK** keeps the style (a single step in Undo), **Cancel** puts eve
 | **Ground shadow** | For a cut-out object: shadow lying on the ground, in perspective, sharp at the base and blurred at the end. **Drag the round dot on the photo** to choose its direction and length |
 
 - **Ready-made styles** (at the top): Soft shadow, Realistic shadow, Ground shadow, Sticker, Black outline, Outline
-  only, Neon, Gold, Chrome, Emboss, Engraved, Fire, Candy, Glass. Thumbnails are computed **on your layer**. One
+  only, Neon, Gold, Chrome, Emboss, Engraved, Fire, Candy, Glass, Long shadow, Double outline, Rainbow, Glitch,
+  80s retro, Silver, Ice, Comic book. Thumbnails are computed **on your layer**. One
   click tries it, then every effect can still be adjusted.
 - **The same effect several times** (two outlines, three shadows…): ⧉ button. The first in the list is in front.
   ▲ / ▼ change the order, ✕ deletes, the tick box turns an effect off without losing it.
@@ -1298,6 +1304,7 @@ selection if there is one). To be able to come back to them later, use an **adju
 | **Black & white** | Ctrl+Alt+Shift+B | Converts to black & white choosing the lightness of each colour (reds, yellows, greens, cyans, blues, magentas); **Tint**: colours the greys (sepia…) |
 | **Vibrance** | — | Mostly boosts dull colours, sparing those already vivid (skin); **Saturation**: all colours equally |
 | **Replace colour** | — | Click the colour to change in the preview (Shift+click: add one, Alt+click: remove one), set the **Tolerance**, then the **Hue**, **Saturation** and **Lightness**: only those pixels change, folds and shadows kept (a red jumper turns blue) |
+| **Colours from another image** | — | Your photo takes on the **colour mood** of a reference image: another open photo (list) or a file (**File…**). **Strength** and **Light from the reference** (0 %: only the colours change; 100 %: the light too) |
 | **Photo filter** | — | Like a colour filter in front of the lens: warming, cooling, sepia… or a custom colour; **Density**; *Preserve luminosity* |
 | **Channel mixer** | — | Each output channel (red, green, blue) is made of a share of red, green, blue and a constant; **Monochrome**: custom black & white |
 | **Gradient map** | — | Dark tones take the colour on the left of a gradient, light tones the one on the right ("duotone", poster effects); *Invert* |

@@ -842,22 +842,25 @@ class Document(QObject):
         self.chemin = chemin
         self.modifie = False
 
-    def exporter(self, chemin: str | Path, qualite: int = 95) -> None:
+    def exporter(self, chemin: str | Path, qualite: int = 95, filigrane: dict | None = None) -> None:
         """Image à plat (JPEG, PNG, TIFF, WebP, BMP), pleine taille, avec résolution, profil de couleur et EXIF.
         Le document ne change pas (ni son fichier, ni « modifié ») : c'est une copie (Fichier > Exporter sous).
         Document 16 bits : PNG et TIFF enregistrés en 16 bits (les autres formats n'en ont que 8). Document 32 bits :
         TIFF en 32 bits, PNG en 16 bits. EXR et .hdr : toujours en 32 bits (HDR)."""
         chemin = Path(chemin)
         ext = chemin.suffix.lower()
-        if ext in (".exr", ".hdr") or (self.profondeur == 32 and ext in (".tif", ".tiff")):
+        if filigrane is None and (ext in (".exr", ".hdr") or (self.profondeur == 32 and ext in (".tif", ".tiff"))):
             from . import hdr
             img = self.image_profonde()
             hdr.ecrire(chemin, prof.tab32(img), dpi=self.dpi)
             return
-        if self.profondeur > 8 and ext in (".png", ".tif", ".tiff"):
+        if filigrane is None and self.profondeur > 8 and ext in (".png", ".tif", ".tiff"):
             self._exporter16(chemin, ext)
             return
         im = qimage_vers_pil(self.image_tramee())
+        if filigrane is not None:                     # filigrane (Fichier > Filigrane) : sur la copie seulement
+            from .filigrane import appliquer
+            im = appliquer(im, filigrane)
         opaque = bool(np.all(np.asarray(im)[:, :, 3] == 255))
         options = {}
         if self.icc and self.mode != "gris":

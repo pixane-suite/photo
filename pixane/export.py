@@ -108,6 +108,11 @@ class DialogueExport(QDialog):
         self.meta = QCheckBox(tr("Garder les informations de l'appareil (EXIF) et le profil couleur"))
         self.meta.setChecked(self.reglages.value("export_meta", "false") == "true")
         form.addRow("", self.meta)
+        from . import filigrane
+        self.reglage_filigrane = filigrane.charger(self.reglages)
+        self.filigrane = QCheckBox(tr("Ajouter le filigrane (Fichier > Filigrane…)"))
+        self.filigrane.setChecked(bool(self.reglage_filigrane["actif"]))
+        form.addRow("", self.filigrane)
         lay.addLayout(form)
         self.estimation = QLabel()
         self.estimation.setObjectName("discret")
@@ -127,7 +132,7 @@ class DialogueExport(QDialog):
         self._minuterie.setInterval(250)
         self._minuterie.timeout.connect(self._estimer)
         for w in (self.format.currentIndexChanged, self.cote.valueChanged, self.cote_case.toggled,
-                  self.qualite.valueChanged, self.meta.toggled):
+                  self.qualite.valueChanged, self.meta.toggled, self.filigrane.toggled):
             w.connect(self._change)
         self.dernier: bytes | None = None
         self._change()
@@ -142,6 +147,9 @@ class DialogueExport(QDialog):
 
     def octets(self) -> tuple[bytes, tuple[int, int]]:
         im = preparer(self.image, self.cote.value() if self.cote_case.isChecked() else None)
+        if self.filigrane.isChecked():
+            from . import filigrane
+            im = filigrane.appliquer(im, self.reglage_filigrane)
         return encoder(im, self.format.currentData(), self.qualite.value(), self.meta.isChecked(), self.exif,
                        self.icc), im.size
 
@@ -213,6 +221,9 @@ def traiter_une(chemin: Path, sortie: Path, opts: dict, moteur=None, annuler=Non
         q = ajuster(q, auto(q), None)
         im = qimage_vers_pil(q)
     im = preparer(im, opts.get("cote"))
+    if opts.get("filigrane"):
+        from . import filigrane
+        im = filigrane.appliquer(im, opts["filigrane"])
     fmt = opts.get("format", "jpg")
     if fmt == "garder":
         fmt = {".png": "png", ".webp": "webp"}.get(chemin.suffix.lower(), "jpg")
@@ -294,6 +305,11 @@ class DialogueLot(QDialog):
         self.action.setCurrentIndex(max(0, i))
         self.action.setToolTip(tr("Action enregistrée dans le panneau Actions, jouée sur chaque photo"))
         form.addRow(tr("Action"), self.action)
+        from . import filigrane
+        self.reglage_filigrane = filigrane.charger(r)
+        self.filigrane = QCheckBox(tr("Ajouter le filigrane (Fichier > Filigrane…)"))
+        self.filigrane.setChecked(bool(self.reglage_filigrane["actif"]))
+        form.addRow("", self.filigrane)
         self.upscale = QCheckBox(tr("Upscale IA rapide ×2 (RealESRGAN)"))
         self.upscale.setChecked(r.value("lot_upscale", "false") == "true")
         form.addRow(tr("IA"), self.upscale)
@@ -349,7 +365,8 @@ class DialogueLot(QDialog):
         return {"cote": self.cote.value() if self.cote_case.isChecked() else None, "auto": self.auto.isChecked(),
                 "upscale": self.upscale.isChecked(), "facteur": 2, "arriere_plan": self.fond.isChecked(),
                 "format": self.format.currentData(), "qualite": self.qualite.value(),
-                "suffixe": self.suffixe.text().strip(), "action": self.action.currentData()}
+                "suffixe": self.suffixe.text().strip(), "action": self.action.currentData(),
+                "filigrane": self.reglage_filigrane if self.filigrane.isChecked() else None}
 
     def photos(self) -> list[Path]:
         src = Path(self.source.text())

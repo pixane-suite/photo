@@ -61,6 +61,11 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   fuites de lumière), Effet miniature, Bordure et cadre (Polaroid, coins arrondis, bords déchirés, passe-partout…).
 - **Annuler** : 100 étapes au lieu de 30, et le nombre se choisit dans Préférences > Enregistrement (10 à 1000).
 
+- **Styles de texte** : 8 de plus (Ombre longue, Contour double, Arc-en-ciel, Glitch, Rétro 80, Argent, Glace, Bande
+  dessinée).
+- **Couleurs d'une autre image** (Image > Réglages) : la photo prend l'ambiance de couleurs d'une référence.
+- **Filigrane** (Fichier > Filigrane…) : texte ou logo ajouté aux exports (Exporter sous, pour le web, par lot).
+
 ## Corrections
 
 - **Outil Déplacer** : il ne déplace plus d'autres calques choisis plus tôt dans le panneau quand le calque actif a changé depuis.

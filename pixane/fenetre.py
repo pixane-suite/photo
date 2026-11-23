@@ -602,6 +602,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self._action(m, tr("Enregistrer sous…"), "Ctrl+Shift+S", self.enregistrer_sous, "a_enregistrer_sous")
         self._action(m, tr("Exporter sous…"), "Ctrl+Alt+Shift+W", self.exporter_sous, "a_exporter_sous")
         self._action(m, tr("Exporter pour le web…"), "Ctrl+Alt+Shift+S", self.exporter_web, "a_exporter_web")
+        self._action(m, tr("Filigrane…"), None, self.filigrane, "a_filigrane")
         self._action(m, tr("Exporter pour l'impression (CMJN)…"), None, self.exporter_impression, "a_exporter_cmjn")
         self._action(m, tr("Traitement par lot…"), None, self.traitement_lot, "a_lot", "lot")
         m.addSeparator()
@@ -2980,15 +2981,27 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             chemin = chemin.with_name(chemin.name + next(e for e in formats if formats[e] == filtre))
         self.reglages.setValue("exporter_format", {".jpeg": ".jpg", ".tiff": ".tif"}.get(chemin.suffix.lower(),
                                                                                          chemin.suffix.lower()))
+        from . import filigrane
+        f = filigrane.charger(self.reglages)
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            self.doc.exporter(chemin)
+            self.doc.exporter(chemin, filigrane=f if f["actif"] else None)
         except Exception as e:
             QMessageBox.critical(self, tr("Exporter sous"), tr("Impossible d'enregistrer :\n{erreur}", erreur=e))
             return
         finally:
             QApplication.restoreOverrideCursor()
         self.statusBar().showMessage(tr("Exporté : {chemin}  —  la photo ouverte n'a pas changé", chemin=chemin), 8000)
+
+    def filigrane(self):
+        """Fichier > Filigrane… : texte ou logo ajouté aux exports (la photo ne change pas)."""
+        from .filigrane import DialogueFiligrane
+        d = DialogueFiligrane(self, self.doc.image if self.doc else None)
+        if d.exec():
+            v = d.valeurs()
+            self.statusBar().showMessage(tr("Filigrane enregistré : il sera ajouté à chaque export.") if v["actif"]
+                                         else tr("Filigrane enregistré (pas ajouté aux exports : case décochée)."),
+                                         6000)
 
     def exporter_impression(self):
         """Fichier > Exporter pour l'impression : TIFF, PDF ou JPEG en CMJN, profil intégré."""

@@ -36,6 +36,8 @@ class ActionsCalques:
             self._action(sous, ajustements.nom(t) + "…", raccourci, lambda *_, t=t: self.reglage(t), f"a_regl_{t}")
             if t == "vibrance":
                 self._action(sous, tr("Remplacer la couleur…"), None, self.remplacer_couleur, "a_remplacer_couleur")
+                self._action(sous, tr("Couleurs d'une autre image…"), None, self.couleurs_autre_image,
+                             "a_couleurs_autre_image")
 
         m_calque.addSeparator()
         sous = m_calque.addMenu(tr("Nouveau calque de réglage"))
@@ -106,7 +108,7 @@ class ActionsCalques:
         return m
 
     def _actions_calques_doc(self) -> list:
-        noms = [f"a_regl_{t}" for t in REGLAGES_PIXELS] + ["a_remplacer_couleur"]
+        noms = [f"a_regl_{t}" for t in REGLAGES_PIXELS] + ["a_remplacer_couleur", "a_couleurs_autre_image"]
         noms += [f"a_cr_{t}" for t in ajustements.TYPES] + [f"a_filtre_{t}" for t in filtres.FILTRES]
         noms += ["a_fluidite", "a_harmoniser"]
         noms += ["a_taille_grille", "a_nouveau_repere", "a_effacer_reperes", "a_exporter_web"]
@@ -747,6 +749,19 @@ class ActionsCalques:
             finally:
                 QApplication.restoreOverrideCursor()
         d.deleteLater()
+
+    def couleurs_autre_image(self):
+        """Image > Réglages > Couleurs d'une autre image : l'ambiance de couleurs d'une référence (photo ouverte ou
+        fichier), avec aperçu en direct."""
+        from . import couleurs_reference
+        titre = tr("Couleurs d'une autre image")
+        if not self._verifier_pixels(titre):
+            return
+        Panneau = couleurs_reference.panneau(self.documents, self.doc, self)
+        neutres = {"force": 100, "lumiere": 50, "ref": None}
+        panneau = Panneau(dict(neutres), {})
+        self._dialogue_pixels(titre, panneau, neutres, couleurs_reference.transferer, toujours=True,
+                              seize="flottant")
 
     def filtre(self, type_: str):
         titre = filtres.noms()[type_]

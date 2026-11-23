@@ -255,6 +255,11 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
   - Le **poids du fichier** s'affiche en direct.
   - Les informations de l'appareil (EXIF : modèle, date, parfois le lieu) sont **enlevées** par défaut (case pour
     les garder). Nom proposé : `<photo>_web.jpg`.
+- **Fichier > Filigrane…** : un **texte** (« © votre nom ») ou un **logo** (PNG transparent conseillé) posé sur les
+  images **exportées**. Réglages : police, gras, couleur, **place** (9 positions) ou **répété sur toute l'image**,
+  taille (en % de la largeur), opacité, marge, angle, ombre douce ; aperçu sur l'image ouverte. Cochez **Ajouter le
+  filigrane à chaque export** : il est alors ajouté par *Exporter sous*, *Exporter pour le web* et *Traitement par
+  lot* (dans ces deux fenêtres, une case permet de l'enlever pour un export). La photo elle-même ne change jamais.
 - **Fichier > Traitement par lot…** : le même travail sur **tout un dossier** de photos.
   - **Photos à traiter** (dossier d'origine, jamais modifié) et **Résultats dans** (un autre dossier).
   - Au choix : **Réduire** (plus grand côté), **Réglage automatique** (luminosité, contraste, température, comme
@@ -1009,7 +1014,8 @@ calque…**. La photo montre le résultat en direct ; **OK** garde le style (une
 | **Ombre au sol** | Pour un objet détouré : ombre couchée sur le sol, en perspective, nette au pied et floue au bout. **Tirez le point rond sur la photo** pour choisir sa direction et sa longueur |
 
 - **Styles tout prêts** (en haut) : Ombre douce, Ombre réaliste, Ombre au sol, Autocollant, Contour noir, Contour
-  seul, Néon, Or, Chrome, Relief, Gravé, Feu, Bonbon, Verre. Les vignettes sont calculées **sur votre calque**. Un
+  seul, Néon, Or, Chrome, Relief, Gravé, Feu, Bonbon, Verre, Ombre longue, Contour double, Arc-en-ciel, Glitch,
+  Rétro 80, Argent, Glace, Bande dessinée. Les vignettes sont calculées **sur votre calque**. Un
   clic l'essaie, puis chaque effet reste réglable.
 - **Plusieurs fois le même effet** (deux contours, trois ombres…) : bouton ⧉. Le premier de la liste passe devant.
   ▲ / ▼ changent l'ordre, ✕ supprime, la case à cocher éteint un effet sans le perdre.
@@ -1451,6 +1457,7 @@ sélection s'il y en a une). Pour pouvoir y revenir plus tard, utilisez plutôt 
 | **Noir et blanc** | Ctrl+Alt+Maj+B | Passe en noir et blanc en choisissant la clarté de chaque couleur (rouges, jaunes, verts, cyans, bleus, magentas) ; **Virage** : teinte le gris (sépia…) |
 | **Vibrance** | — | Ravive surtout les couleurs ternes en ménageant celles déjà vives (la peau) ; **Saturation** : toutes les couleurs autant |
 | **Remplacer la couleur** | — | Cliquez la couleur à changer dans l'aperçu (Maj+clic : en ajouter une, Alt+clic : en retirer une), réglez la **Tolérance**, puis la **Teinte**, la **Saturation** et la **Clarté** : seuls ces points changent, plis et ombres gardés (un pull rouge devient bleu) |
+| **Couleurs d'une autre image** | — | Votre photo prend l'**ambiance de couleurs** d'une image de référence : une autre photo ouverte (liste) ou un fichier (**Fichier…**). **Force** et **Lumière de la référence** (0 % : seules les couleurs changent ; 100 % : la lumière aussi) |
 | **Filtre photo** | — | Comme un filtre de couleur devant l'objectif : réchauffant, refroidissant, sépia… ou une couleur au choix ; **Densité** ; *Garder la luminosité* |
 | **Mélangeur de couches** | — | Chaque couleur de sortie (rouge, vert, bleu) est faite d'une part de rouge, de vert, de bleu et d'une constante ; **Monochrome** : noir et blanc sur mesure |
 | **Courbe de transfert de dégradé** | — | Les tons sombres prennent la couleur de gauche d'un dégradé, les clairs celle de droite (« duotone », effets d'affiche) ; *Inverser* |
