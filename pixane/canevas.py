@@ -15,6 +15,8 @@ from PySide6.QtWidgets import QWidget
 from . import calque_pinceau, regles
 from .composition import argb_vers_masque, masque_vers_argb
 from .document import COULEUR_SELECTION, Document, image_entiere, tableau, vectoriel
+from .outils_plus import (CRAYON, DEPLACER_IA, ELLIPSE_SEL, LASSO_MAG, LOUPE, MELANGEUR, PIECE, PIPETTE, REGLE,
+                          ROTATION_VUE, CanevasPlusMixin)
 from .plume import PlumeMixin
 from .langue import tr
 from .pointe import Pointe, Reglages
@@ -52,19 +54,21 @@ NETTETE_PINCEAU = "nettete_pinceau"            # netteté au pinceau
 DOIGT = "doigt"                                # étaler la couleur
 HISTORIQUE = "historique"                      # pinceau d'historique : repeindre l'état de l'instantané
 OUTILS_FILTRE = (DENSITE_MOINS, DENSITE_PLUS, EPONGE, GOUTTE, NETTETE_PINCEAU, DOIGT)
-OUTILS_RETOUCHE = (PEINTURE, TAMPON, TAMPON_MOTIF, CORRECTEUR, HISTORIQUE) + OUTILS_FILTRE
+OUTILS_RETOUCHE = (PEINTURE, TAMPON, TAMPON_MOTIF, CORRECTEUR, HISTORIQUE, CRAYON, MELANGEUR) + OUTILS_FILTRE
 MODES_TRAIT = {DENSITE_MOINS: "eclaircir", DENSITE_PLUS: "assombrir", EPONGE: "eponge", GOUTTE: "goutte",
                NETTETE_PINCEAU: "nettete", DOIGT: "doigt"}
 OUTILS_ROND = (PINCEAU, GOMME, GOMME_CALQUE, PEINTURE, TAMPON, TAMPON_MOTIF, RAPIDE, SUPPRIMER,
-               CORRECTEUR, HISTORIQUE) + OUTILS_FILTRE                     # curseur rond
+               CORRECTEUR, HISTORIQUE, CRAYON, MELANGEUR) + OUTILS_FILTRE                     # curseur rond
 OUTILS_AUTO = (BAGUETTE, RAPIDE, OBJET, SEL_TEXTE)                       # sélections calculées
-OUTILS_CALQUE = (GOMME_CALQUE, PEINTURE, TAMPON, TAMPON_MOTIF, CORRECTEUR, DEGRADE, SEAU, HISTORIQUE) + OUTILS_FILTRE                  # outils qui changent les pixels du calque
+OUTILS_CALQUE = (GOMME_CALQUE, PEINTURE, TAMPON, TAMPON_MOTIF, CORRECTEUR, DEGRADE, SEAU, HISTORIQUE, CRAYON,
+                 MELANGEUR) + OUTILS_FILTRE                  # outils qui changent les pixels du calque
 GROUPES_PINCEAU = ("peinture", "gomme", "selection")   # un pinceau à forme choisi par groupe d'outils
 GROUPE_OUTIL = {PEINTURE: "peinture", GOMME_CALQUE: "gomme", PINCEAU: "selection", GOMME: "selection"}
 OPACITE_SELECTION = 0.45
 
 # outils de sélection : les flèches du clavier décalent la sélection (Maj : 10 pixels)
-OUTILS_SELECTION = (RECTANGLE, LASSO, PINCEAU, BAGUETTE, RAPIDE, OBJET, SEL_TEXTE)
+OUTILS_SELECTION = (RECTANGLE, ELLIPSE_SEL, LASSO, LASSO_MAG, PINCEAU, BAGUETTE, RAPIDE, OBJET, SEL_TEXTE)
+FORMES_SELECTION = (RECTANGLE, ELLIPSE_SEL, LASSO)          # sélections tracées à la souris
 FLECHES = {Qt.Key_Left: (-1, 0), Qt.Key_Right: (1, 0), Qt.Key_Up: (0, -1), Qt.Key_Down: (0, 1)}
 
 
@@ -77,7 +81,7 @@ def _distance_segment(p: QPointF, a: QPointF, b: QPointF) -> float:
     return ((p - q).x() ** 2 + (p - q).y() ** 2) ** 0.5
 
 
-class Canevas(PlumeMixin, QWidget):
+class Canevas(CanevasPlusMixin, PlumeMixin, QWidget):
     selection_modifiee = Signal(object, str)   # (état avant, nom de l'action) -> pour annuler (sélection ou calque)
     infos = Signal(int, int, float)             # largeur, hauteur, zoom
     refus = Signal(str)                         # action impossible (ex. calque verrouillé) : message
@@ -116,10 +120,14 @@ class Canevas(PlumeMixin, QWidget):
     suppression = Signal(list, float)           # pinceau Supprimer : points (image), taille du pinceau
     travail_change = Signal()                   # travail en cours (Transformer, Agrandir, Recadrer) : gestes changés
     poignee_sol_bouge = Signal(object)          # style « ombre au sol » : bout de l'ombre tiré (point image)
+    regle_changee = Signal()                    # outil Règle : nouvelle mesure
+    piece_glissee = Signal(int, int)            # outil Pièce : zone à réparer glissée sur une partie saine (dx, dy)
+    objet_deplace = Signal(int, int)            # Déplacer un objet (IA) : sélection glissée de (dx, dy)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_plume()
+        self._init_plus()
         self._sur_masque = False             # coup de pinceau / gomme en cours sur le masque du calque
         self.doc: Document | None = None
         self.zoom = 1.0
@@ -328,6 +336,8 @@ class Canevas(PlumeMixin, QWidget):
         self.vue_peinte.emit()
         p = QPainter(self)
         p.fillRect(self.rect(), self.couleur_fond)
+        if self.doc and self.angle_vue:                # rotation de la vue : tout le dessin tourne
+            p.setTransform(self._transfo_vue())
         if not self.doc:
             p.setPen(self.couleur_texte)
             p.drawText(self.rect(), Qt.AlignCenter, tr("Fichier > Ouvrir…  (ou glisse une photo ici)"))
@@ -340,7 +350,7 @@ class Canevas(PlumeMixin, QWidget):
             p.drawPixmap(self.decalage, self._pixmap_reduite())
         else:
             p.save()
-            p.setTransform(QTransform(self.zoom, 0, 0, self.zoom, self.decalage.x(), self.decalage.y()))
+            p.setTransform(QTransform(self.zoom, 0, 0, self.zoom, self.decalage.x(), self.decalage.y()), True)
             p.drawImage(QPointF(0, 0), self.doc.image_affichee())
             p.restore()
         if self.comparer:
@@ -348,7 +358,7 @@ class Canevas(PlumeMixin, QWidget):
             return
         # sélection (calque rouge semi-transparent)
         p.save()
-        p.setTransform(QTransform(self.zoom, 0, 0, self.zoom, self.decalage.x(), self.decalage.y()))
+        p.setTransform(QTransform(self.zoom, 0, 0, self.zoom, self.decalage.x(), self.decalage.y()), True)
         p.setOpacity(OPACITE_SELECTION)
         if self.apercu_plein is not None:
             p.setOpacity(1)
@@ -362,12 +372,14 @@ class Canevas(PlumeMixin, QWidget):
             p.drawImage(QPointF(0, 0), self.indice_effacer)
         self._dessiner_auto(p)
         # tracé en cours
-        if self._trace and self.outil in (RECTANGLE, LASSO):
+        if self._trace and self.outil in FORMES_SELECTION:
             stylo = QPen(QColor(255, 255, 255), 0, Qt.DashLine)
             stylo.setCosmetic(True)
             p.setPen(stylo)
             if self.outil == RECTANGLE:
                 p.drawRect(QRectF(self._trace[0], self._trace[-1]).normalized())
+            elif self.outil == ELLIPSE_SEL:
+                p.drawEllipse(QRectF(self._trace[0], self._trace[-1]).normalized())
             else:
                 chemin = QPainterPath(self._trace[0])
                 for pt in self._trace[1:]:
@@ -395,6 +407,7 @@ class Canevas(PlumeMixin, QWidget):
             self._dessiner_persp(p)
             return
         self._dessiner_cadre_deplacer(p)
+        self._dessiner_plus(p)
         if self.outil == PLUME:
             self._dessiner_plume(p)
         if self.outil == RECADRER and self.recadre is not None:
@@ -617,7 +630,7 @@ class Canevas(PlumeMixin, QWidget):
         elif cotes:
             self.setCursor(Qt.SizeHorCursor)
         else:
-            self.setCursor(Qt.OpenHandCursor if self.outil == MAIN else Qt.ArrowCursor)
+            self.setCursor(Qt.OpenHandCursor if self.outil in (MAIN, ROTATION_VUE) else Qt.ArrowCursor)
 
     def _tirer_cadre(self, pos: QPointF, symetrique: bool):
         pt = self.vers_image(pos)
@@ -1081,7 +1094,7 @@ class Canevas(PlumeMixin, QWidget):
     # ---------------------------------------------------------- pinceau de couleur et tampon
     def _presser_retouche(self, pos: QPointF, alt: bool):
         pt = self.vers_image(pos)
-        if alt and self.outil == PEINTURE:               # pipette : couleur de la photo visible
+        if alt and self.outil in (PEINTURE, CRAYON, MELANGEUR):   # pipette : couleur de la photo visible
             x, y = int(pt.x()), int(pt.y())
             if 0 <= x < self.doc.image.width() and 0 <= y < self.doc.image.height():
                 self.couleur_prise.emit(QColor(self.doc.image.pixel(x, y)).name())
@@ -1165,9 +1178,19 @@ class Canevas(PlumeMixin, QWidget):
                 return
             self._trait = Trait("tampon", c.image, self.taille_pinceau, self.durete, self.opacite,
                                 source=source, decalage=QPointF(0, 0))
+        elif self.outil == CRAYON:                       # trait net, pixel par pixel
+            self._trait = Trait("peinture", c.image, self.taille_pinceau, 1.0, self.opacite,
+                                couleur=self.couleur_peinture)
+            self._trait.net = True
+        elif self.outil == MELANGEUR:
+            self._trait = Trait("melangeur", c.image, self.taille_pinceau, self.durete, self.opacite,
+                                couleur=self.couleur_peinture)
+            self._trait.melange = self.melange
         else:
             self._trait = Trait("peinture", c.image, self.taille_pinceau, self.durete, self.opacite,
                                 couleur=self.couleur_peinture, **self.parametres_pinceau(PEINTURE))
+        if self.outil in (PEINTURE, CRAYON, MELANGEUR) + OUTILS_FILTRE:
+            self._trait.miroirs = self.miroirs()        # peinture en symétrie
         self._trait.ajouter(pt, self._pression_evt)
         self.doc.apercu_calque(self.doc.actif, self._trait.image)
 
@@ -1245,7 +1268,7 @@ class Canevas(PlumeMixin, QWidget):
             nom = tr("Tampon de motif")
         noms = {DENSITE_MOINS: tr("Densité −"), DENSITE_PLUS: tr("Densité +"), EPONGE: tr("Éponge"),
                 GOUTTE: tr("Goutte d'eau"), NETTETE_PINCEAU: tr("Netteté (pinceau)"), DOIGT: tr("Doigt"),
-                HISTORIQUE: tr("Pinceau d'historique")}
+                HISTORIQUE: tr("Pinceau d'historique"), CRAYON: tr("Crayon"), MELANGEUR: tr("Pinceau mélangeur")}
         if self.outil in noms:
             nom = noms[self.outil]
         if self._sur_masque:
@@ -2132,6 +2155,8 @@ class Canevas(PlumeMixin, QWidget):
         chemin = QPainterPath()
         if self.outil == RECTANGLE:
             chemin.addRect(QRectF(self._trace[0], self._trace[-1]).normalized())
+        elif self.outil == ELLIPSE_SEL:
+            chemin.addEllipse(QRectF(self._trace[0], self._trace[-1]).normalized())
         else:
             chemin.moveTo(self._trace[0])
             for pt in self._trace[1:]:
@@ -2267,6 +2292,8 @@ class Canevas(PlumeMixin, QWidget):
             self.transfo.commencer(quoi, self.vers_image(pos))
             self._transfo_glisse = True
             return
+        if self._presser_plus(e, pos):
+            return
         if self.outil == TEXTE:
             self._presser_texte(pos, bool(e.modifiers() & Qt.ControlModifier))
             self.update()
@@ -2313,7 +2340,7 @@ class Canevas(PlumeMixin, QWidget):
             return
         mods = e.modifiers()
         self._nouvelle = False
-        if self.outil in (RECTANGLE, LASSO):           # comme Photoshop : Maj ajoute, Alt retire
+        if self.outil in FORMES_SELECTION:             # comme Photoshop : Maj ajoute, Alt retire
             mode = ("retirer" if mods & Qt.AltModifier else "ajouter" if mods & Qt.ShiftModifier
                     else self.mode_forme)
             self._soustraire = mode == "retirer"
@@ -2322,7 +2349,7 @@ class Canevas(PlumeMixin, QWidget):
             self._soustraire = self.mode_retirer != bool(mods & Qt.AltModifier)
         self._avant = self.doc.etat()
         pt = self.vers_image(pos)
-        if self.outil == RECTANGLE:
+        if self.outil in (RECTANGLE, ELLIPSE_SEL):
             pt = regles.aimanter(self, pt)
         self._trace = [pt]
         if self.outil == GOMME_CALQUE:
@@ -2400,6 +2427,8 @@ class Canevas(PlumeMixin, QWidget):
             else:
                 self._curseur_transfo(self._sous_transfo(pos))
             self.update()
+            return
+        if self._glisser_plus(e, pos):
             return
         if self._trace_points is not None:
             pt = self.vers_image(pos)
@@ -2482,7 +2511,7 @@ class Canevas(PlumeMixin, QWidget):
             elif self.outil in (PINCEAU, GOMME):
                 self._coup_de_pinceau(self._trace[-1], pt)
                 self._trace.append(pt)
-            elif self.outil == RECTANGLE:
+            elif self.outil in (RECTANGLE, ELLIPSE_SEL):
                 self._trace = [self._trace[0], regles.aimanter(self, pt)]
             else:
                 self._trace.append(pt)
@@ -2512,6 +2541,8 @@ class Canevas(PlumeMixin, QWidget):
                 self.transfo.finir()
                 self._apercu_transfo(lisse=True)
                 self.transfo_change.emit()
+            return
+        if self._lacher_plus():
             return
         if self._trace_points is not None:
             points, self._trace_points = self._trace_points, None
@@ -2556,13 +2587,14 @@ class Canevas(PlumeMixin, QWidget):
             return
         if self._trace is None:
             return
-        if self.outil in (RECTANGLE, LASSO):
+        if self.outil in FORMES_SELECTION:
             if self._nouvelle:                         # un simple clic, sans tracé, désélectionne
                 self.doc.selection.fill(0)
             if len(self._trace) > 1:
                 self._remplir_forme()
         self._nouvelle = False
         noms = {PINCEAU: "Pinceau de sélection", GOMME: "Gomme de sélection", RECTANGLE: "Sélection rectangle",
+                ELLIPSE_SEL: "Sélection elliptique",
                 LASSO: "Lasso", GOMME_CALQUE: "Gomme de calque"}
         self._img_calque = None
         self._trace = None
@@ -2573,6 +2605,12 @@ class Canevas(PlumeMixin, QWidget):
 
     def mouseDoubleClickEvent(self, e):
         if self.style_ouvert:
+            return
+        if self.outil == LASSO_MAG and self.magnetique_en_cours() and e.button() == Qt.LeftButton:
+            self.finir_magnetique()                   # double-clic : le lasso magnétique se ferme
+            return
+        if self.outil == ROTATION_VUE and e.button() == Qt.LeftButton:
+            self.definir_angle_vue(0)                 # double-clic : vue droite
             return
         if self._poly is not None and e.button() == Qt.LeftButton:
             self.finir_poly()                         # double-clic : le lasso par points se ferme
@@ -2616,7 +2654,7 @@ class Canevas(PlumeMixin, QWidget):
         if not self.doc:
             return
         facteur = 1.2 if e.angleDelta().y() > 0 else 1 / 1.2
-        self.definir_zoom(self.zoom * facteur, e.position())
+        self.definir_zoom(self.zoom * facteur, self.derotation(e.position()))
 
     # ---------------------------------------------------------- clavier
     def keyPressEvent(self, e):
@@ -2624,6 +2662,21 @@ class Canevas(PlumeMixin, QWidget):
             self.comparaison_finie.emit()
             return
         if self.outil == PLUME and self.touche_plume(e):
+            return
+        if self.outil == LASSO_MAG and self.magnetique_en_cours():
+            if e.key() in (Qt.Key_Return, Qt.Key_Enter):
+                self.finir_magnetique()
+                return
+            if e.key() == Qt.Key_Escape:
+                self.annuler_magnetique()
+                return
+            if e.key() == Qt.Key_Backspace:
+                self.retirer_ancre_magnetique()
+                return
+        if self.outil == REGLE and self.regle is not None and e.key() == Qt.Key_Escape:
+            self.regle = None
+            self.regle_changee.emit()
+            self.update()
             return
         if self._poly is not None:                   # lasso par points : Entrée ferme, Échap annule, Retour arrière
             if e.key() in (Qt.Key_Return, Qt.Key_Enter):
@@ -2728,7 +2781,7 @@ class Canevas(PlumeMixin, QWidget):
         if self.cadre is not None or self.doc is None:     # sans image : pas de rond de pinceau, donc la flèche
             self.setCursor(Qt.ArrowCursor)
             return
-        self.setCursor(Qt.OpenHandCursor if self.outil == MAIN else
+        self.setCursor(Qt.OpenHandCursor if self.outil in (MAIN, ROTATION_VUE) else
                        Qt.BlankCursor if self.outil in OUTILS_ROND else
                        Qt.IBeamCursor if self.outil == TEXTE else
                        Qt.SizeAllCursor if self.outil == DEPLACER else Qt.CrossCursor)

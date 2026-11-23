@@ -23,6 +23,7 @@ from .pointe import Placement, Pointe, Reglages, dessiner, texture_grise, textur
 PEINTURE, TAMPON, GOMME = "peinture", "tampon", "gomme"
 ECLAIRCIR, ASSOMBRIR, EPONGE, GOUTTE, NETTETE, DOIGT = ("eclaircir", "assombrir", "eponge", "goutte", "nettete",
                                                        "doigt")
+MELANGEUR = "melangeur"         # pinceau mélangeur : la couleur du pinceau se mélange à celle de la toile
 FILTRES_PINCEAU = (ECLAIRCIR, ASSOMBRIR, EPONGE, GOUTTE, NETTETE)    # calculés d'après l'image d'avant le coup
 GAMMES = ("ombres", "moyens", "lumieres")
 _LUM_BVR = np.array([0.114, 0.587, 0.299], np.float32)               # pixels Qt : ordre B, V, R
@@ -71,6 +72,10 @@ class Trait:
         self._flou = None                       # Goutte d'eau, Netteté : image floutée (calculée au premier besoin)
         self._tampon_doigt = None               # Doigt : couleur « emportée » par le doigt
         self._differer = False                  # tracer() : composer une seule fois, à la fin
+        self.miroirs = []                       # symétrie : fonctions point -> point reflété (chaque touche est
+        #                                         aussi posée à ces endroits)
+        self.net = False                        # crayon : bord net, sans lissage (pixel par pixel)
+        self.melange = 0.5                      # pinceau mélangeur : part de la toile reprise à chaque touche
         self.mode = mode
         from .profondeur import bits, format_de
         self._b = bits(base)                    # profondeur du calque : le coup se fait dans la même
@@ -108,6 +113,15 @@ class Trait:
     # ------------------------------------------------------------------ dessin du masque
     def _touche(self, p: QPainter, c: QPointF):
         r = self.taille / 2
+        if self.net:                                # crayon : pixels entiers, sans lissage
+            p.setBrush(QColor(255, 255, 255))
+            n = max(1, int(round(self.taille)))
+            x0, y0 = int(math.floor(c.x() - n / 2 + 0.5)), int(math.floor(c.y() - n / 2 + 0.5))
+            if n <= 2:
+                p.fillRect(QRect(x0, y0, n, n), QColor(255, 255, 255))
+            else:
+                p.drawEllipse(QRect(x0, y0, n, n))
+            return
         if self.durete >= 0.99:
             p.setBrush(QColor(255, 255, 255))
         else:
@@ -120,35 +134,53 @@ class Trait:
 
     def ajouter(self, pt: QPointF, pression: float = 1.0) -> QRect:
         """Prolonge le coup jusqu'au point ; renvoie la zone de l'image modifiée. pression : tablette (0..1)."""
-        if self.mode == DOIGT:
-            return self._ajouter_doigt(pt)
+        if self.mode in (DOIGT, MELANGEUR):
+            zone = self._ajouter_doigt(pt)
+            if self.miroirs:                        # chaque reflet garde sa propre « charge » de couleur
+                principal = (self._dernier, self._reste, self._tampon_doigt)
+                etats = self.__dict__.setdefault("_etats_miroirs", {})
+                for k, m in enumerate(self.miroirs):
+                    self._dernier, self._reste, self._tampon_doigt = etats.get(k, (None, 0.0, None))
+                    zone = zone.united(self._ajouter_doigt(m(pt)))
+                    etats[k] = (self._dernier, self._reste, self._tampon_doigt)
+                self._dernier, self._reste, self._tampon_doigt = principal
+            return zone
         if self.formes:
             return self._ajouter_formes(pt, pression)
         p = QPainter(self.masque)
-        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.Antialiasing, not self.net)
         p.setPen(Qt.NoPen)
         p.setCompositionMode(QPainter.CompositionMode_Lighten)     # le plus opaque gagne (pas d'accumulation)
-        pas = max(1.0, self.taille * 0.08)
+        pas = max(1.0, self.taille * 0.08) if not self.net else max(0.5, self.taille * 0.25)
         zone = QRectF(pt, pt)
+        centres = []
         if self._dernier is None:
-            self._touche(p, pt)
+            centres.append(pt)
         else:
             a = self._dernier
             d = math.hypot(pt.x() - a.x(), pt.y() - a.y())
             t = pas - self._reste
             while t <= d:
-                self._touche(p, a + (pt - a) * (t / d))
+                centres.append(a + (pt - a) * (t / d))
                 t += pas
             self._reste = d - (t - pas)
             zone = QRectF(a, pt).normalized()
+        for c in centres:
+            self._touche(p, c)
+            for m in self.miroirs:
+                self._touche(p, m(c))
         p.end()
         self._dernier = pt
         r = self.taille / 2 + 2
-        zone = zone.adjusted(-r, -r, r, r).toAlignedRect().intersected(self.image.rect())
-        if not zone.isEmpty():
-            if not self._differer:
-                self._composer(zone)
-        return zone
+        zones = [zone] + [QRectF(m(zone.topLeft()), m(zone.bottomRight())).normalized() for m in self.miroirs]
+        rect = QRect()
+        for z in zones:
+            z = z.adjusted(-r, -r, r, r).toAlignedRect().intersected(self.image.rect())
+            if not z.isEmpty():
+                if not self._differer:
+                    self._composer(z)
+                rect = rect.united(z)
+        return rect
 
     def tracer(self, points) -> None:
         """Tout un trait d'un coup (points : [(QPointF, pression)]) : même résultat que des ajouter() successifs,
@@ -168,6 +200,15 @@ class Trait:
     # ------------------------------------------------------------------ moteur à formes
     def _ajouter_formes(self, pt: QPointF, pression: float) -> QRect:
         touches = self.placement.ajouter(pt, pression)
+        if touches and self.miroirs:                # symétrie : chaque touche aussi à ses reflets
+            from dataclasses import replace
+            reflets = []
+            for t in touches:
+                for m in self.miroirs:
+                    q = m(QPointF(t.x, t.y))
+                    retourne = (q.x() != t.x) != (q.y() != t.y)      # un seul axe : la forme est retournée
+                    reflets.append(replace(t, x=q.x(), y=q.y(), angle=(-t.angle if retourne else t.angle + 180)))
+            touches = list(touches) + reflets
         zone = QRectF()
         if touches:
             p = QPainter(self.couche)
@@ -187,8 +228,14 @@ class Trait:
                 zone = zone.united(dessiner(p, self.placement_double.pointe, t, False))
             p.end()
         zone = zone.toAlignedRect().intersected(self.image.rect())
-        if not zone.isEmpty():
-            if not self._differer:
+        if not zone.isEmpty() and not self._differer:
+            if self.miroirs and touches:
+                r = int(max(t.taille for t in touches)) + 4
+                morceaux = [QRect(int(t.x) - r, int(t.y) - r, 2 * r, 2 * r).intersected(self.image.rect())
+                            for t in touches]
+                for z in _regrouper(morceaux):
+                    self._composer_formes(z)
+            else:
                 self._composer_formes(zone)
         return zone
 
@@ -251,14 +298,26 @@ class Trait:
         self._dernier = pt
         zone = QRect()
         force = self.opacite
+        melangeur = self.mode == MELANGEUR
+        if melangeur:                                  # couleur du pinceau, prémultipliée, dans l'ordre B, V, R, A
+            c0, al = self.couleur, self.couleur.alphaF()
+            peinture = np.array([c0.blueF() * al, c0.greenF() * al, c0.redF() * al, al], np.float32)
         for c in points:
             rect = QRect(int(round(c.x())) - r, int(round(c.y())) - r, 2 * r + 1, 2 * r + 1)
             dessous = _vue(self.image, rect)               # hors de l'image : transparent
-            if self._tampon_doigt is None:
+            if melangeur:
+                if self._tampon_doigt is None:             # le pinceau arrive chargé de sa couleur
+                    self._tampon_doigt = np.broadcast_to(peinture, dessous.shape).copy()
+                # la charge se mêle à la toile : « mélange » = part de la toile reprise ; la charge s'épuise
+                charge = self._tampon_doigt * (1 - self.melange) + dessous * self.melange
+                nouveau = dessous + (charge - dessous) * forme * force
+                self._tampon_doigt = charge * 0.92 + peinture * 0.08      # un peu de couleur fraîche à chaque pas
+            elif self._tampon_doigt is None:
                 self._tampon_doigt = dessous
                 continue
-            nouveau = dessous + (self._tampon_doigt - dessous) * forme * force
-            self._tampon_doigt = self._tampon_doigt * force + nouveau * (1 - force)
+            else:
+                nouveau = dessous + (self._tampon_doigt - dessous) * forme * force
+                self._tampon_doigt = self._tampon_doigt * force + nouveau * (1 - force)
             p = QPainter(self.image)
             p.setCompositionMode(QPainter.CompositionMode_Source)
             p.drawImage(rect.topLeft(), _qimage(nouveau, self._b))
@@ -351,6 +410,24 @@ class Trait:
 
 
 _ronds: dict = {}
+
+
+def _regrouper(rects: list) -> list:
+    """Rectangles qui se chevauchent réunis (moins de recompositions, sans couvrir toute l'image)."""
+    res: list = []
+    for r in rects:
+        if r.isEmpty():
+            continue
+        fusion = True
+        while fusion:
+            fusion = False
+            for i, q in enumerate(res):
+                if q.intersects(r):
+                    r = r.united(res.pop(i))
+                    fusion = True
+                    break
+        res.append(r)
+    return res
 
 
 def _rond(durete: float) -> np.ndarray:

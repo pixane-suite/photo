@@ -37,6 +37,9 @@ from .canevas import (DENSITE_MOINS, DENSITE_PLUS, DOIGT, EPONGE, GOUTTE, HISTOR
                       OUTILS_AUTO, OUTILS_ROND, PEINTURE, PINCEAU, RAPIDE, RECADRER, RECTANGLE, SEAU, SUPPRIMER, EFFACER_CLIC, YEUX,
                       TAILLE_MAX, TAMPON, TAMPON_MOTIF, TEXTE, Canevas)
 from .dialogues import Attente, BarreAgrandir, ChoixResultat, ReglagesUpscale
+from .fenetre_plus import FenetrePlusMixin, outils_plus
+from .outils_plus import (CRAYON, DEPLACER_IA, ELLIPSE_SEL, LASSO_MAG, LOUPE, MELANGEUR, PIECE, PIPETTE, REGLE,
+                          ROTATION_VUE)
 from .document import (EXTENSIONS_CALQUES, EXTENSIONS_LECTURE, FORMAT_IMAGE, Document, image_entiere,
                        Origine, a_plat, attacher_origine, masque, nouvelle_selection, origine_valide, qimage_rgb,
                        tableau, transformation_depuis, trous_a_remplir, vue_ia)
@@ -85,6 +88,8 @@ def taille_position(v: int) -> int:
 def position_taille(taille: int) -> int:
     import math
     return round(1000 * math.log(max(2, taille) / 2) / math.log(TAILLE_MAX / 2))
+
+SEL_FORMES = (RECTANGLE, ELLIPSE_SEL, LASSO, LASSO_MAG)     # sélections tracées : nouvelle / ajouter / retirer
 
 class Tache(QObject):
     """Exécute une fonction dans un fil secondaire et renvoie le résultat par signal."""
@@ -256,7 +261,8 @@ class Carte(QPushButton):
         self.image.setPixmap(ic.pixmap(28, 28))
 
 
-class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsForme, ActionsPhotoIA, QMainWindow):
+class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsForme, ActionsPhotoIA,
+              QMainWindow):
     etat_moteur = Signal(str)
 
     def __init__(self):
@@ -744,6 +750,11 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self._action(m, tr("Zoom arrière"), "Ctrl+-", lambda: self.canevas.zoomer(0.8), "a_zoom_moins", "zoom_moins")
         self._action(m, tr("Ajuster à la fenêtre"), "Ctrl+0", self.canevas.ajuster, "a_ajuster", "ajuster")
         self._action(m, tr("Taille réelle (100 %)"), "Ctrl+1", self.canevas.zoom_100)
+        self._action(m, tr("Tourner la vue à gauche (15°)"), "Ctrl+Alt+Left",
+                     lambda: self.canevas.definir_angle_vue(self.canevas.angle_vue - 15), "a_vue_gauche")
+        self._action(m, tr("Tourner la vue à droite (15°)"), "Ctrl+Alt+Right",
+                     lambda: self.canevas.definir_angle_vue(self.canevas.angle_vue + 15), "a_vue_droite_15")
+        self._action(m, tr("Vue droite"), None, lambda: self.canevas.definir_angle_vue(0), "a_vue_droite")
         a = self._action(m, tr("Comparer avant / après"), "Ctrl+Alt+B", None, "a_comparer")
         a.setCheckable(True)
         a.setToolTip(tr("Rideau sur la photo : à gauche la photo à l'ouverture, à droite la photo actuelle ; glisse "
@@ -1144,6 +1155,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         b.clicked.connect(self.prendre_instantane)
         lay.addWidget(b)
         tout.addWidget(self.opt_historique)
+        self._options_plus(tout)
         for w in (self.opt_densite, self.opt_eponge, self.opt_historique):
             w.hide()
         self.canevas.source_historique = self._source_historique
@@ -1466,7 +1478,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                                           (DOIGT, tr("Doigt : étale la couleur comme de la peinture fraîche"), "",
                                            "doigt"),
                                           (HISTORIQUE, tr("Pinceau d'historique : repeint l'état de l'instantané "
-                                                          "(la photo à l'ouverture)"), "", "historique")):
+                                                          "(la photo à l'ouverture)"), "", "historique")) + outils_plus():
             a = QAction(texte, self, checkable=True)
             if touche:
                 a.setShortcut(touche)
@@ -1481,10 +1493,12 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         # comme Photoshop : un bouton par famille d'outils ; clic droit (ou clic maintenu) pour choisir dans la
         # famille ; le bouton montre le dernier outil choisi. Main et Déplacer restent seuls.
         self._bouton_groupe = {}
-        for famille in ((MAIN,), (DEPLACER,), (RECTANGLE, LASSO, PINCEAU, GOMME), (OBJET, RAPIDE, BAGUETTE, SEL_TEXTE),
-                        (SUPPRIMER, EFFACER_CLIC, CORRECTEUR, YEUX, TAMPON, TAMPON_MOTIF, HISTORIQUE),
-                        (PEINTURE, GOMME_CALQUE, DEGRADE, SEAU), (DENSITE_MOINS, DENSITE_PLUS, EPONGE),
-                        (GOUTTE, NETTETE_PINCEAU, DOIGT), (FORMES,), (PLUME,),
+        for famille in ((MAIN, LOUPE, ROTATION_VUE), (DEPLACER, DEPLACER_IA),
+                        (RECTANGLE, ELLIPSE_SEL, LASSO, LASSO_MAG, PINCEAU, GOMME),
+                        (OBJET, RAPIDE, BAGUETTE, SEL_TEXTE),
+                        (SUPPRIMER, EFFACER_CLIC, CORRECTEUR, PIECE, YEUX, TAMPON, TAMPON_MOTIF, HISTORIQUE),
+                        (PEINTURE, CRAYON, MELANGEUR, GOMME_CALQUE, DEGRADE, SEAU), (DENSITE_MOINS, DENSITE_PLUS, EPONGE),
+                        (GOUTTE, NETTETE_PINCEAU, DOIGT), (PIPETTE, REGLE), (FORMES,), (PLUME,),
                         (RECADRER,), (TEXTE,)):
             if len(famille) == 1:
                 barre.addAction(self._actions_outils[famille[0]])
@@ -1508,7 +1522,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             barre.addWidget(bouton)
 
     def _mode_selection(self, mode: str):
-        if self.canevas.outil in (RECTANGLE, LASSO) + OUTILS_AUTO:
+        if self.canevas.outil in SEL_FORMES + OUTILS_AUTO:
             self.canevas.mode_forme = mode
         else:
             self.canevas.definir_mode_retirer(mode == "retirer")
@@ -1530,25 +1544,25 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             menu = bouton.menu()
             bouton.setDefaultAction(self._actions_outils[outil])
             bouton.setMenu(menu)
-        if outil in (RECTANGLE, LASSO) + OUTILS_AUTO:
+        if outil in SEL_FORMES + OUTILS_AUTO:
             {"nouvelle": self.p_nouvelle, "ajouter": self.p_ajouter,
              "retirer": self.p_retirer}[self.canevas.mode_forme].setChecked(True)
         elif outil == PINCEAU:
             (self.p_retirer if self.canevas.mode_retirer else self.p_ajouter).setChecked(True)
-        self.p_nouvelle.setVisible(outil in (RECTANGLE, LASSO) + OUTILS_AUTO)
+        self.p_nouvelle.setVisible(outil in SEL_FORMES + OUTILS_AUTO)
         self.opt_lasso.setVisible(outil == LASSO)
         if outil != LASSO:
             self.canevas.annuler_poly()
-        self.options.setEnabled(outil not in (MAIN, TEXTE))
-        self.opt_taille.setVisible(outil in OUTILS_ROND or outil in (MAIN, TEXTE, RECTANGLE, LASSO))
+        self.options.setEnabled(outil not in (MAIN, TEXTE, LOUPE))
+        self.opt_taille.setVisible(outil in OUTILS_ROND or outil in (MAIN, TEXTE, LOUPE, RECTANGLE, LASSO))
         if outil in (BAGUETTE, OBJET, SEL_TEXTE):
             self.opt_taille.setVisible(False)
-        self.opt_selection.setVisible(outil in (RECTANGLE, LASSO, PINCEAU) + OUTILS_AUTO)
+        self.opt_selection.setVisible(outil in SEL_FORMES + (PINCEAU,) + OUTILS_AUTO)
         self.opt_baguette.setVisible(outil == BAGUETTE)
         self.opt_sel_texte.setVisible(outil == SEL_TEXTE)
-        self.opt_couleur.setVisible(outil in (PEINTURE, DEGRADE, SEAU))
-        self.opt_retouche.setVisible(outil in (PEINTURE, TAMPON, TAMPON_MOTIF, CORRECTEUR, DEGRADE, SEAU, HISTORIQUE)
-                                     + OUTILS_FILTRE)
+        self.opt_couleur.setVisible(outil in (PEINTURE, DEGRADE, SEAU, CRAYON, MELANGEUR, PIPETTE))
+        self.opt_retouche.setVisible(outil in (PEINTURE, TAMPON, TAMPON_MOTIF, CORRECTEUR, DEGRADE, SEAU, HISTORIQUE,
+                                               CRAYON, MELANGEUR) + OUTILS_FILTRE)
         self.opt_densite.setVisible(outil in (DENSITE_MOINS, DENSITE_PLUS))
         self.opt_eponge.setVisible(outil == EPONGE)
         self.opt_historique.setVisible(outil == HISTORIQUE)
@@ -1559,6 +1573,7 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.montrer_options_forme(outil)
         self.opt_recadrer.setVisible(outil == RECADRER)
         self.opt_deplacer.setVisible(outil == DEPLACER)
+        self._visibilite_plus(outil)
         self.maj_bouton_pinceau()
         # la barre du haut se remet en page (sinon un groupe trop large la ferait déborder)
         self.options.adjustSize()

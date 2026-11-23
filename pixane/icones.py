@@ -171,6 +171,25 @@ DESSINS = {
                'a1.5 1.5 0 0 1-1.5-1.5z"/><path stroke="A" d="M8 11h8M8 15h8"/>',
     "degrouper": '<path stroke-dasharray="2.6 2.2" d="M3.5 18.5V6a1.5 1.5 0 0 1 1.5-1.5h4l2 2.5h8A1.5 1.5 0 0 1 '
                  '20.5 8.5v10A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5z"/><path stroke="A" d="M8 11h8M8 15h8"/>',
+    # outils ajoutés
+    "pipette": '<path d="M14.5 6.5l3 3-9 9H5.5v-3z"/><path d="M13 5l6 6M16.5 3.5a2.1 2.1 0 0 1 3 0l1 1a2.1 2.1 0 0 1 0 3'
+               'L18.5 9.5 14.5 5.5z"/><path stroke="A" d="M7 17l.01 0"/>',
+    "ellipse_sel": '<ellipse cx="12" cy="12" rx="8.5" ry="6.5" stroke-dasharray="3 2.4"/>',
+    "lasso_mag": '<path d="M7.5 16.5C4.5 15.3 3 13.4 3 11c0-4.1 4-7 9-7s9 2.9 9 7c0 1.3-.4 2.4-1.1 3.3"/>'
+                 '<path stroke="A" d="M12 14.5v4a3 3 0 0 0 6 0v-4M12 16.5h2M16 16.5h2"/>',
+    "piece": '<path d="M4 9.5h5.5V4h5v5.5H20v5h-5.5V20h-5v-5.5H4z" stroke-dasharray="2.6 2"/>'
+             '<path stroke="A" d="M15 15l5 5M20 16v4h-4"/>',
+    "deplacer_ia": '<circle cx="9" cy="10" r="4.5"/><path stroke="A" d="M14 15l6 6M20 16.5V21h-4.5"/>'
+                   '<path d="M17.5 3.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/>',
+    "loupe": '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/><path stroke="A" d="M8 10.5h5M10.5 8v5"/>',
+    "rotation_vue": '<rect x="6.5" y="6.5" width="11" height="11" rx="1.2" transform="rotate(-15 12 12)"/>'
+                    '<path stroke="A" d="M4 9a9 9 0 0 1 14-4.5M18.5 2v3h-3M20 15a9 9 0 0 1-14 4.5M5.5 22v-3h3"/>',
+    "regle": '<rect x="2.5" y="8" width="19" height="8" rx="1.2" transform="rotate(-25 12 12)"/>'
+             '<path stroke="A" d="M6.3 12.7l-1-2.2M9.5 11.2l-.6-1.4M12.7 9.7l-1-2.2M15.9 8.2l-.6-1.4M19.1 6.7l-1-2.2"/>',
+    "crayon": '<path d="M16 3.5l4.5 4.5L9 19.5l-5.5 1 1-5.5z"/><path d="M13.5 6l4.5 4.5"/>'
+              '<path stroke="A" d="M4.5 15l4.5 4.5"/>',
+    "melangeur": '<path d="M14.5 4.5l5 5-7.8 7.8-5-5z"/><path d="M6.7 12.3l5 5"/>'
+                 '<circle stroke="A" cx="5.5" cy="18.5" r="2.5"/><path stroke="A" d="M3 3.5c3 0 4 2 7 2"/>',
     "rep_v": '<rect x="7" y="3" width="10" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/>'
              '<rect x="8" y="17" width="8" height="4" rx="1"/>',
 }

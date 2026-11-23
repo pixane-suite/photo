@@ -317,6 +317,8 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
 | Actual size (100%) | Ctrl+1 |
 | Move the view | **Hand** tool (H), or hold **Space** and drag, or drag with the **middle button** |
 | Move **a layer** | **Move** tool (V): only the selected layer moves (the Hand only moves the view) |
+| **Zoom tool** | **Zoom** tool (Z, grouped with the Hand): click = zoom ×2, **Alt**+click = zoom ÷2; drag a frame to zoom exactly on it |
+| **Rotate the view** | **Rotate view** tool (Shift+H, grouped with the Hand): drag to turn the display like a sheet on a table (Shift: by 15°); double-click: straight view. Also **View > Rotate view left / right** (Ctrl+Alt+← / →) and **Straight view**. **The photo does not change**: only the display turns (handy to paint a stroke in the right direction) |
 | **Compare before / after** | **View > Compare before / after** (Ctrl+Alt+B): a divider on the photo, on the left the photo as opened, on the right the current photo; drag to move it. Nothing is changed. Esc or Ctrl+Alt+B to finish |
 
 ### Rulers, guides and grid (View menu)
@@ -327,6 +329,10 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
   guide…* places one at an exact position, *Clear guides* removes them all, Ctrl+; hides or shows them. They are
   saved in the .piximg file.
 - **Grid** (Ctrl+'): regular lines over the photo; *Grid size…* sets the spacing (100 px by default).
+- **Ruler** (tool grouped with the Eyedropper): drag from one point to another (Shift: in 15° steps); the length,
+  the angle and the x and y distances are shown in the top bar. **Straighten** rotates the photo so that this line
+  becomes horizontal (or vertical if it is closer to it) and crops the empty corners: draw the ruler along a tilted
+  horizon, then Straighten. Esc or *Clear* removes the ruler.
 - **Snap** (Ctrl+Shift+;, on by default): rectangle selection, gradient and shapes snap to guides, to the photo's
   edges and to the grid (when shown), within 8 screen pixels.
 
@@ -343,7 +349,9 @@ The selection tools share **two buttons** in the left bar (small triangle): the 
 | Tool | Key | Use |
 |---|---|---|
 | **Rectangle** | M | Rectangular selection |
+| **Elliptical selection** | | Ellipse or circle (works like the rectangle) |
 | **Lasso** | L | **Freehand**: draw an outline freehand, button held down; the shape is closed automatically. **Polygonal** (choice in the bar, remembered): one click per point; click the first point, double-click or Enter to close, Backspace removes the last point, Esc cancels |
+| **Magnetic lasso** | | Click on the edge of the object, then follow that edge: the line **snaps** to the outline by itself. Click = anchor point (also placed automatically); double-click, Enter or click on the start to close; Backspace removes the last anchor; Esc cancels |
 | **Selection brush** | B | Paint the area. Ideal for an object, some text, a wire… |
 | **Selection eraser** | E | Remove from the selection by painting |
 | **Object selection** (AI) | O | Drag a frame around an object, or click on it: the AI cuts it out |
@@ -351,7 +359,7 @@ The selection tools share **two buttons** in the left bar (small triangle): the 
 | **Magic wand** | W | One click on a colour: the whole area of similar colour (no AI) |
 | **Text selection** | Y | A frame around a text: only the letters, thin strokes included (no AI) |
 
-- **Rectangle and lasso**, as in Photoshop: a new selection **replaces** the old one. Holding **Shift** when you
+- **Rectangle, ellipse and lassos**, as in Photoshop: a new selection **replaces** the old one. Holding **Shift** when you
   start drawing **adds** to the selection, **Alt** **removes**. A single click without drawing **deselects**.
   The **New / Add / Remove** pills in the top bar choose the mode without a key.
 - **Selection brush**: it always adds to the selection; **Remove** pill or holding **Alt**: it removes (like the
@@ -1319,6 +1327,27 @@ one Undo step.
 | **Sharpen** | Makes details sharper (eyes, letters); at low strength, or grain appears |
 | **Smudge** | Spreads the colour along the stroke, like wet paint; the strength says how far it spreads |
 | **History brush** | Paints back the **snapshot**: at first, the photo as it was opened. To undo an effect in some places only. **Take a snapshot** (top bar) keeps the current state. It is under the Clone stamp, and also at the bottom of the **History** panel (*History brush* button) |
+
+### Eyedropper, pencil, mixer brush, symmetry
+- **Eyedropper** (I): click (or drag) on the photo, the colour becomes the brush colour. Top bar: **Sample** (1 pixel,
+  or the average of a 3 to 31 pixel square, useful on a grainy photo) and **Selected layer only** (otherwise: the
+  image as you see it). With the brush, Alt+click does the same.
+- **Pencil** (N, grouped with the colour brush): **crisp** stroke, pixel by pixel, no soft edge; for pixel art or
+  pixel-precise retouching (size 1 to a few pixels).
+- **Mixer brush** (grouped with the colour brush): the brush comes loaded with its colour, which **blends** with the
+  canvas colour and runs out little by little, like real paint. **Mix** (top bar): share of the canvas picked up at
+  each dab (0%: mostly the brush colour, 100%: mostly the canvas colour).
+- **Symmetry** (small mirror button in the top bar, with the brush, pencil, mixer and retouch brushes): each stroke is
+  also painted mirrored, **left ↔ right**, **top ↔ bottom** or **both** (4 strokes), around the middle of the image.
+  For a logo, a mandala, a face.
+
+### Patch and Move an object (AI)
+- **Patch** (grouped with the Healing brush): circle the flaw (or keep your selection), then drag it onto a **clean
+  part** of the photo: it replaces it, matched to the surrounding light and colours (like Photoshop's Patch tool).
+  A single Undo step.
+- **Move an object (AI)** (grouped with Move): select the object (object selection, lasso…), then drag it to its new
+  place. The AI **rebuilds the background** at its original place (several proposals, like Erase), then the object
+  is placed at its new position, in a **new layer** (you can still adjust it with Move).
 
 ### Liquify (Filters > Liquify…, Ctrl+Shift+X)
 To shape the image with a brush, like Photoshop's Liquify: slim a silhouette, stretch a letter, bloat a detail. A

@@ -324,6 +324,8 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
 | Taille réelle (100 %) | Ctrl+1 |
 | Déplacer la vue | Outil **Main** (H), ou maintenir **Espace** et glisser, ou glisser avec le **bouton du milieu** |
 | Déplacer **un calque** | Outil **Déplacer** (V) : seul le calque choisi bouge (la Main, elle, ne déplace que la vue) |
+| **Loupe** | Outil **Loupe** (Z, rangé avec la Main) : clic = zoom ×2, **Alt**+clic = zoom ÷2 ; tirez un cadre pour zoomer exactement dessus |
+| **Tourner la vue** | Outil **Rotation de la vue** (Maj+H, rangé avec la Main) : glissez pour tourner l'affichage comme une feuille sur la table (Maj : par 15°) ; double-clic : vue droite. Aussi **Affichage > Tourner la vue à gauche / à droite** (Ctrl+Alt+← / →) et **Vue droite**. **La photo ne change pas** : seul l'affichage tourne (pratique pour peindre un trait dans le bon sens) |
 | **Comparer avant / après** | **Affichage > Comparer avant / après** (Ctrl+Alt+B) : un rideau sur la photo, à gauche la photo telle qu'à l'ouverture, à droite la photo actuelle ; glissez pour le déplacer. Rien n'est modifié. Échap ou Ctrl+Alt+B pour finir |
 
 ### Règles, repères et grille (menu Affichage)
@@ -334,6 +336,10 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
   curseur devient une double flèche au-dessus) ; tiré hors de la photo, il disparaît. *Nouveau repère…* le pose à une position exacte, *Effacer les repères* les enlève tous,
   Ctrl+; les cache ou les montre. Ils sont gardés dans le fichier .piximg.
 - **Grille** (Ctrl+') : lignes régulières sur la photo ; *Taille de la grille…* règle l'écart (100 px par défaut).
+- **Règle** (outil rangé avec la Pipette) : glissez d'un point à un autre (Maj : par pas de 15°) ; la longueur, l'angle
+  et les écarts en x et y s'affichent dans la barre du haut. **Redresser** tourne la photo pour que cette ligne
+  devienne horizontale (ou verticale si elle en est plus proche) et recadre les coins vides : tracez la règle le
+  long d'un horizon penché, puis Redresser. Échap ou *Effacer* enlève la règle.
 - **Magnétisme** (Ctrl+Maj+;, coché par défaut) : la sélection rectangle, le dégradé et les formes s'accrochent aux
   repères, aux bords de la photo et à la grille (si elle est affichée), à moins de 8 pixels d'écran.
 
@@ -351,7 +357,9 @@ directement leur touche.
 | Outil | Touche | Usage |
 |---|---|---|
 | **Rectangle** | M | Sélection rectangulaire |
+| **Sélection elliptique** | | Ellipse ou cercle (même fonctionnement que le rectangle) |
 | **Lasso** | L | **Libre** : tracer un contour à main levée, bouton appuyé ; la forme est fermée automatiquement. **Par points** (choix dans la barre, retenu) : un clic par point ; clic sur le premier point, double-clic ou Entrée pour fermer, Retour arrière enlève le dernier point, Échap annule |
+| **Lasso magnétique** | | Cliquez au bord de l'objet, puis suivez ce bord : le trait **se colle** au contour tout seul. Clic = point d'ancrage (posés aussi automatiquement) ; double-clic, Entrée ou clic sur le départ pour fermer ; Retour arrière enlève le dernier ancrage ; Échap abandonne |
 | **Pinceau de sélection** | B | Peindre la zone. Idéal pour un objet, un texte, un fil… |
 | **Gomme de sélection** | E | Retirer de la sélection en peignant |
 | **Sélection d'objet** (IA) | O | Tirer un cadre autour d'un objet, ou cliquer dessus : l'IA le détoure |
@@ -359,7 +367,7 @@ directement leur touche.
 | **Baguette magique** | W | Un clic sur une couleur : toute la zone de couleur proche (sans IA) |
 | **Sélection de texte** | Y | Un cadre autour d'un texte : les lettres seules, traits fins compris (sans IA) |
 
-- **Rectangle et lasso**, comme dans Photoshop : une nouvelle sélection **remplace** l'ancienne. Maintenir **Maj** en
+- **Rectangle, ellipse et lassos**, comme dans Photoshop : une nouvelle sélection **remplace** l'ancienne. Maintenir **Maj** en
   commençant le tracé **ajoute** à la sélection, **Alt** **retire**. Un simple clic sans tracer **désélectionne**.
   Les pastilles **Nouvelle / Ajouter / Retirer** de la barre du haut choisissent le mode sans touche.
 - **Pinceau de sélection** : il ajoute toujours à la sélection ; pastille **Retirer** ou **Alt** maintenu : il retire
@@ -1375,6 +1383,27 @@ coup, si. Chaque coup est une étape d'Annuler.
 | **Netteté** | Rend plus nets les détails (yeux, lettres) ; à petite force, sinon du grain apparaît |
 | **Doigt** | Étale la couleur dans le sens du geste, comme de la peinture fraîche ; la force dit jusqu'où elle s'étale |
 | **Pinceau d'historique** | Repeint l'**instantané** : au départ, la photo telle qu'à l'ouverture. Pour annuler un effet seulement à certains endroits. **Prendre un instantané** (barre du haut) garde l'état actuel. Il est rangé sous le Tampon, et aussi en bas du panneau **Historique** (bouton *Pinceau d'historique*) |
+
+### Pipette, crayon, pinceau mélangeur, symétrie
+- **Pipette** (I) : clic (ou glisser) sur la photo, la couleur devient celle du pinceau. Barre du haut :
+  **Échantillon** (1 pixel, ou la moyenne d'un carré de 3 à 31 pixels, utile sur une photo avec du grain) et
+  **Calque choisi seulement** (sinon : l'image telle qu'on la voit). Avec le pinceau, Alt+clic fait la même chose.
+- **Crayon** (N, rangé avec le pinceau de couleur) : trait **net**, pixel par pixel, sans bord adouci ; pour le
+  pixel art ou une retouche au pixel près (taille 1 à quelques pixels).
+- **Pinceau mélangeur** (rangé avec le pinceau de couleur) : le pinceau arrive chargé de sa couleur, qui se **mêle**
+  à celle de la toile et s'épuise peu à peu, comme une vraie peinture. **Mélange** (barre du haut) : part de la toile
+  reprise à chaque touche (0 % : surtout la couleur du pinceau, 100 % : surtout celle de la toile).
+- **Symétrie** (petit bouton miroir de la barre du haut, avec le pinceau, le crayon, le mélangeur et les pinceaux de
+  retouche) : chaque trait est aussi peint en miroir, **gauche ↔ droite**, **haut ↔ bas** ou **les deux** (4 traits),
+  autour du milieu de l'image. Pour un logo, un mandala, un visage.
+
+### Pièce et Déplacer un objet (IA)
+- **Pièce** (rangé avec le Pinceau correcteur) : entourez le défaut (ou gardez votre sélection), puis glissez-le sur
+  une **partie saine** de la photo : elle vient le remplacer, raccordée à la lumière et aux couleurs autour (comme
+  l'outil Pièce de Photoshop). Une seule étape d'Annuler.
+- **Déplacer un objet (IA)** (rangé avec Déplacer) : sélectionnez l'objet (sélection d'objet, lasso…), puis glissez-le
+  à sa nouvelle place. L'IA **reconstruit le fond** à sa place d'origine (propositions au choix, comme Effacer), puis
+  l'objet est posé à sa nouvelle place, dans un **nouveau calque** (vous pouvez encore l'ajuster avec Déplacer).
 
 ### Fluidité (Filtres > Fluidité…, Ctrl+Maj+X)
 Pour modeler l'image au pinceau, comme la Fluidité de Photoshop : affiner une silhouette, allonger une lettre, gonfler

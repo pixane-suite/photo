@@ -65,6 +65,7 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   dessinée).
 - **Couleurs d'une autre image** (Image > Réglages) : la photo prend l'ambiance de couleurs d'une référence.
 - **Filigrane** (Fichier > Filigrane…) : texte ou logo ajouté aux exports (Exporter sous, pour le web, par lot).
+- **Nouveaux outils** : pipette (échantillon moyenné), sélection elliptique, lasso magnétique, outil Pièce, Déplacer un objet (IA), loupe, rotation de la vue (la photo ne bouge pas), règle avec Redresser, crayon (trait net), pinceau mélangeur, peinture en symétrie (2 ou 4 traits).
 
 ## Corrections
 
