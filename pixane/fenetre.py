@@ -146,6 +146,9 @@ def ajuster_case(case, plus_long: str) -> None:
     case.setMaximumWidth(case.fontMetrics().horizontalAdvance(plus_long) + 44)
 
 
+LARGEUR_TEXTE, LARGEUR_TEXTE_MIN = 360, 300       # volet Texte : largeur de départ, plus petite largeur
+
+
 class CommandeProfondeur(QUndoCommand):
     """Image > Mode > 8 / 16 / 32 bits : la profondeur du document change avec ses calques (Annuler la remet)."""
 
@@ -1464,7 +1467,17 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
             self.statusBar().showMessage(aides[outil], 10000)
         if outil == RECADRER:
             self._proportion()
-        self.dock_texte.setVisible(outil == TEXTE)
+        if outil == TEXTE and not self.dock_texte.isVisible():
+            # plus petite largeur : celle du contenu (taille de l'interface comprise), sans barre de défilement en bas
+            mini = max(LARGEUR_TEXTE_MIN, self.panneau_texte.widget().minimumSizeHint().width()
+                       + self.panneau_texte.verticalScrollBar().sizeHint().width() + 6)
+            self.dock_texte.setMinimumWidth(mini)
+            self.dock_texte.show()
+            largeur = int(self.reglages.value("largeur_volet_texte", LARGEUR_TEXTE, type=int))
+            self.resizeDocks([self.dock_texte], [max(mini, largeur)], Qt.Horizontal)
+        elif outil != TEXTE and self.dock_texte.isVisible():
+            self.reglages.setValue("largeur_volet_texte", self.dock_texte.width())
+            self.dock_texte.hide()
         if outil == TEXTE:
             self._sync_texte()
         if outil == PEINTURE:
@@ -1656,7 +1669,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         self.panneau_texte.apercu_texte.connect(self._apercu_texte)
         self.panneau_texte.tracer.connect(self._mode_trace)
         self.dock_texte.setWidget(self.panneau_texte)
-        self.dock_texte.setFixedWidth(290)
+        # largeur réglable à la souris (bord droit du volet), retenue
+        self.dock_texte.setMinimumWidth(LARGEUR_TEXTE_MIN)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dock_texte)
         self.dock_texte.hide()
 
@@ -2319,6 +2333,8 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
         if not self._peut_fermer_tout():
             e.ignore()
             return
+        if self.dock_texte.isVisible():
+            self.reglages.setValue("largeur_volet_texte", self.dock_texte.width())
         self.moteur.arreter()
         traduction.arreter()
         self._recuperation.tout_effacer()

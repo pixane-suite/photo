@@ -919,6 +919,7 @@ Toutes les actions sur les calques s'annulent avec Ctrl+Z (changer de calque cho
 Outil **Texte** (touche **T**, icône « T » dans la barre d'outils). Le panneau **Texte** s'ouvre à gauche.
 
 ### Écrire, déplacer, tourner
+- **Largeur du panneau Texte** : tirez son bord droit à la souris pour l'élargir ; la largeur est retenue.
 - **Cliquer sur la photo** : un nouveau texte « Texte » apparaît à cet endroit, sur **son propre calque**.
   Tapez directement : le mot proposé est remplacé. La case du panneau accepte plusieurs lignes (Entrée).
 - **Cliquer sur un texte existant** : il est choisi et ses réglages s'affichent ; on peut le modifier à tout

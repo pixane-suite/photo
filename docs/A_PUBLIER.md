@@ -24,7 +24,7 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
 - **Outil Texte plus pratique** : double-clic sur un texte de la photo ou sur un calque de texte pour l'éditer ;
   lettres sélectionnées surlignées sur la photo ; couleur (texte, contour, ombre, fond) montrée sur la photo pendant
   le choix ; liste des polices filtrée par **style** (avec / sans empattements, manuscrites, fantaisie, chasse fixe)
-  et de **taille** réglable (petite, moyenne, grande).
+  et de **taille** réglable (petite, moyenne, grande) ; **panneau Texte élargissable** à la souris (largeur retenue).
 - **Nouvelle image en 16 ou 32 bits par couche** (choix retenu).
 
 ## Corrections

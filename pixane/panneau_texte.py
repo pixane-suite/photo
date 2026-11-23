@@ -245,8 +245,7 @@ class PanneauTexte(QScrollArea):
         # ---- caractères
         lay.addWidget(_titre(tr("Caractères")))
         self.police = ChoixPolice()
-        ligne = QHBoxLayout()
-        ligne.addWidget(QLabel(tr("Style :")))
+        form_liste = self._formulaire(lay)
         self.style_police = QComboBox()
         for cle, nom in (("", tr("Toutes")), ("serif", tr("Avec empattements")), ("sans", tr("Sans empattements")),
                          ("manuscrite", tr("Manuscrites")), ("fantaisie", tr("Fantaisie")),
@@ -254,14 +253,12 @@ class PanneauTexte(QScrollArea):
             self.style_police.addItem(nom, cle)
         self.style_police.setToolTip(tr("Ne montrer dans la liste des polices que celles de ce style (lu dans "
                                         "chaque police ; quelques polices de fantaisie peuvent être mal rangées)"))
-        ligne.addWidget(self.style_police, 1)
-        ligne.addWidget(QLabel(tr("Liste :")))
+        form_liste.addRow(tr("Style :"), self.style_police)
         self.taille_liste = QComboBox()
         for cle, nom in (("petite", tr("Petite")), ("moyenne", tr("Moyenne")), ("grande", tr("Grande"))):
             self.taille_liste.addItem(nom, cle)
         self.taille_liste.setToolTip(tr("Taille de la liste des polices et de leur aperçu"))
-        ligne.addWidget(self.taille_liste)
-        lay.addLayout(ligne)
+        form_liste.addRow(tr("Liste :"), self.taille_liste)
         reg = _reglages()
         self._choisir_liste(self.style_police, reg.value("police_style_filtre", "", type=str))
         self._choisir_liste(self.taille_liste, reg.value("police_taille_liste", "petite", type=str))

@@ -975,6 +975,7 @@ All layer actions can be undone with Ctrl+Z (changing the selected layer does no
 **Text** tool (key **T**, "T" icon in the toolbar). The **Text** panel opens on the left.
 
 ### Writing, moving, rotating
+- **Text panel width**: drag its right edge with the mouse to widen it; the width is remembered.
 - **Click on the photo**: a new text "Text" appears at that spot, on **its own layer**.
   Just type: the suggested word is replaced. The panel's box accepts several lines (Enter).
 - **Click on an existing text**: it is selected and its settings are shown; it can be edited at any time,
