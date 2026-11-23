@@ -1463,7 +1463,9 @@ class Fenetre(ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsFor
                               "couleur."),
                  TAMPON: tr("Tampon : Alt+clic sur l'endroit à copier, puis peins là où il doit être recopié."),
                  SUPPRIMER: tr("Supprimer (IA) : peins sur un fil, une tache, un bouton… ; au lâcher, il disparaît "
-                               "(dans le calque choisi). Pour un gros objet, préfère Effacer."),
+                               "(dans le calque choisi). Astuce : une image de très bonne qualité et des petites "
+                               "zones, l'une après l'autre, respectent mieux l'image d'origine. Pour un gros objet, "
+                               "préfère Effacer."),
                  CORRECTEUR: tr("Pinceau correcteur : Alt+clic sur une zone saine, puis peins sur le défaut ; au "
                                 "lâcher, la copie prend la lumière et la couleur d'autour."),
                  DEGRADE: tr("Dégradé : glisse du début à la fin (Maj : horizontal, vertical ou à 45°). Dans la "

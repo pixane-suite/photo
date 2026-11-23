@@ -1886,5 +1886,6 @@
  "Pixelliser": "Rasterize",
  "Rien à pixelliser dans ce calque : c'est déjà une image.": "Nothing to rasterize in this layer: it is already an image.",
  "Zone agrandie (analyse avant Effacer)": "Area enlarged (analysis before Erase)",
- "Élargir la zone de {n} px (en orange) : le bord de l'objet n'est pas entièrement couvert, l'IA le redessinerait": "Enlarge the area by {n} px (in orange): the object's edge is not fully covered, the AI would redraw it"
+ "Élargir la zone de {n} px (en orange) : le bord de l'objet n'est pas entièrement couvert, l'IA le redessinerait": "Enlarge the area by {n} px (in orange): the object's edge is not fully covered, the AI would redraw it",
+ "Supprimer (IA) : peins sur un fil, une tache, un bouton… ; au lâcher, il disparaît (dans le calque choisi). Astuce : une image de très bonne qualité et des petites zones, l'une après l'autre, respectent mieux l'image d'origine. Pour un gros objet, préfère Effacer.": "Remove (AI): paint over a wire, a stain, a spot…; on release, it disappears (in the chosen layer). Tip: a very good quality image and small areas, one after another, respect the original image better. For a large object, use Erase instead."
 }

@@ -38,6 +38,8 @@ Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publ
   (désactivable dans les Préférences).
 - **Onglets Calques / Historique / Nuancier / Actions** : l'onglet ouvert se voit (gras, trait de couleur).
 
+- **Astuce pour l'outil Supprimer (IA)** (message du bas et guide) : image de très bonne qualité, petites zones.
+
 ## Corrections
 
 - Outil Texte : **Ctrl+Z** ne retirait pas un texte posé par erreur d'un clic (la case de saisie gardait le

@@ -1254,6 +1254,9 @@ pour *Effacer*, le résultat va **directement dans le calque choisi**. Avec l'op
 résultats dans un nouveau calque », il va dans un calque « Suppressions », réutilisé pour les coups suivants. Pour un gros objet, préférez
 *Effacer* (Maj+E), qui propose plusieurs résultats.
 
+> **Astuce** : utilisez une image de **très bonne qualité** et travaillez par **petites zones**, l'une après
+> l'autre. Plus l'image est de bonne qualité, plus la suppression respecte l'image d'origine.
+
 ### Pinceau correcteur (R)
 Comme le tampon, mais la copie **prend la lumière et la couleur d'autour** : idéal pour une ride, une tache sur la
 peau, une rayure sur un ciel dégradé.

@@ -1207,6 +1207,9 @@ result goes **directly into the chosen layer**. With the AI menu option "Put res
 "Removals" layer, reused for the following strokes. For a large object, use *Erase* (Shift+E), which offers several
 results.
 
+> **Tip**: use a **very good quality** image and work in **small areas**, one after another. The better the image
+> quality, the more the removal respects the original image.
+
 ### Healing brush (R)
 Like the clone stamp, but the copy **takes on the surrounding light and colour**: ideal for a wrinkle, a skin
 blemish, a scratch on a graded sky.
