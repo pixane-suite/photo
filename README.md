@@ -194,6 +194,37 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
 **Moteur IA** : au démarrage, Pixane Photo lance l'IA (ComfyUI) en arrière-plan, sans fenêtre. Comptez environ
 20 secondes. Le point en bas à gauche passe au vert quand le moteur est prêt ; les actions IA sont grisées avant.
 
+### Panneaux, espaces de travail et confort
+- **Panneaux déplaçables** : attrapez un panneau par son titre pour le poser sur un autre bord, le laisser flottant
+  ou le ranger en onglet avec un autre ; la petite croix le ferme. Menu **Fenêtre** : chaque panneau se montre ou se
+  cache ; *Verrouiller les panneaux* les fige. La disposition est retrouvée au prochain démarrage.
+- **Espaces de travail** (Fenêtre > Espace de travail) : *Essentiel*, *Retouche photo* (IA, Calques, Info,
+  Navigateur), *Peinture* (Calques, Nuancier, Navigateur) ; *Enregistrer l'espace actuel…* garde votre disposition
+  sous un nom ; *Revenir à la disposition d'origine*.
+- **Nouveaux panneaux** (menu Fenêtre) : **Navigateur** (toute la photo en vignette, le cadre rouge montre la partie
+  visible : cliquez ou glissez pour vous y rendre, glissière de zoom) ; **Info** (sous la souris : position, couleur
+  en RVB, TSV et hexadécimal ; taille de la sélection et de l'image) ; **Deuxième image** (une autre photo ouverte,
+  à côté, pour comparer ; *Même zoom* lui fait suivre le zoom de la photo).
+- **Écran d'accueil** : sans photo ouverte, *Nouvelle image*, *Ouvrir*, *Depuis le presse-papiers* et les fichiers
+  récents en vignettes (un clic l'ouvre).
+- **Rechercher une commande** (Édition, **Ctrl+F**) : tapez quelques lettres (« flou », « pivoter droite »,
+  « lasso ») ; toutes les commandes des menus et les outils qui correspondent ; Entrée lance la commande choisie.
+- **Raccourcis clavier…** (Édition, Ctrl+Alt+K) : changez le raccourci de n'importe quelle commande ou outil. Un
+  raccourci déjà pris est retiré à l'autre commande (un message le dit) ; *D'origine* et *Tout remettre d'origine*.
+- **Plein écran** : F11 (Fenêtre > Plein écran).
+- **Barre contextuelle** (Affichage > Barre contextuelle) : une petite barre sur la photo avec les actions utiles du
+  moment. Sous la sélection : Effacer, Remplir, Modifier, Contour, Inverser, Désélectionner ; sans sélection :
+  Sujet, Sans arrière-plan, Agrandir, Upscale.
+- **Menu rapide** : **clic droit** sur la photo : une roue avec vos 8 derniers outils et, au milieu, vos dernières
+  couleurs ; un clic choisit. Échap ou clic à côté ferme.
+- **Taille du pinceau à la souris** : **Alt + clic droit** glissé : vers la droite / la gauche, la taille ; vers le
+  haut / le bas, la dureté (le rond s'affiche avec ses valeurs).
+- **Régler en glissant sur un nom** : partout, le nom posé juste avant une case à chiffres ou une glissière (Taille,
+  Opacité, Dureté, Rayon…) se règle en glissant dessus à gauche ou à droite (Maj : plus vite, Ctrl : plus fin) ; le
+  curseur devient une double flèche.
+- **Fichier changé ailleurs** : si un autre programme modifie le fichier d'une photo ouverte, Pixane propose de la
+  recharger (en prévenant si vos changements seraient perdus).
+
 ---
 
 ## 2. Ouvrir et enregistrer
@@ -336,6 +367,9 @@ onglets. Rien ne change avant **OK** ; **Annuler** laisse tout comme avant. Les 
   curseur devient une double flèche au-dessus) ; tiré hors de la photo, il disparaît. *Nouveau repère…* le pose à une position exacte, *Effacer les repères* les enlève tous,
   Ctrl+; les cache ou les montre. Ils sont gardés dans le fichier .piximg.
 - **Grille** (Ctrl+') : lignes régulières sur la photo ; *Taille de la grille…* règle l'écart (100 px par défaut).
+- **Plans de travail** (Image > Plans de travail…) : des zones nommées de la même image (ex. « Instagram »,
+  « Bannière »), d'après la sélection ou toute l'image, montrées en pointillés bleus ; *Exporter tous les plans…*
+  les enregistre d'un coup, chacun dans son fichier (PNG, JPG ou WebP). Gardés dans le .piximg.
 - **Règle** (outil rangé avec la Pipette) : glissez d'un point à un autre (Maj : par pas de 15°) ; la longueur, l'angle
   et les écarts en x et y s'affichent dans la barre du haut. **Redresser** tourne la photo pour que cette ligne
   devienne horizontale (ou verticale si elle en est plus proche) et recadre les coins vides : tracez la règle le
@@ -379,6 +413,9 @@ directement leur touche.
   un seul Ctrl+Z annule tous les appuis.
 - **Sélection > Modifier la sélection** : *Agrandir…* ou *Réduire…* d'un nombre de pixels, *Adoucir les bords…*
   (bord progressif, utile pour les réglages de l'image).
+- **Masque rapide** (Sélection > Masque rapide, **Maj+Q**) : la sélection se peint avec le pinceau de couleur ou le
+  crayon : **blanc** sélectionne, **noir** retire, gris sélectionne à moitié ; la goutte d'eau adoucit son bord. Un
+  bandeau rouge rappelle le mode ; Maj+Q pour finir. Le calque n'est pas touché.
 - **Sélection > Sélectionner le sujet (IA)** (Ctrl+Alt+S) : l'IA trouve le sujet principal (personne, animal,
   objet) et le sélectionne. Voir chapitre 5, « Sujet et arrière-plan ».
 

@@ -119,6 +119,8 @@ class CanevasPlusMixin:
         self._mag_points: list[QPointF] = []  # lasso magnétique : points validés (image)
         self._mag_ancres: list[int] = []      # index des ancrages dans _mag_points
         self._mag_suite: list[QPointF] = []   # chemin vers la souris (pas encore validé)
+        self.masque_rapide = False            # masque rapide : le pinceau peint la sélection (blanc / noir)
+        self._sur_selection = False           # coup de pinceau en cours sur la sélection (masque rapide)
 
     # ---------------------------------------------------------- rotation de la vue
     def _transfo_vue(self) -> QTransform:
@@ -165,6 +167,19 @@ class CanevasPlusMixin:
         if self.symetrie == "vh":
             res.append(lambda q: QPointF(w - q.x(), h - q.y()))
         return res
+
+    # ---------------------------------------------------------- clic droit
+    def _presser_droit(self, e, pos: QPointF) -> bool:
+        """Alt + clic droit glissé : taille (gauche / droite) et dureté (haut / bas) du pinceau, comme Photoshop.
+        Clic droit seul : le menu rapide (outils récents et couleurs) sous la souris."""
+        from .canevas import OUTILS_ROND
+        if e.modifiers() & Qt.AltModifier and self.outil in OUTILS_ROND:
+            self._plus = ("taille", pos, self.taille_pinceau, self.durete)
+            self.setCursor(Qt.BlankCursor)
+            self.update()
+            return True
+        self.menu_rapide_demande.emit(self.mapToGlobal(self._transfo_vue().map(pos).toPoint()))
+        return True
 
     # ---------------------------------------------------------- souris
     def _presser_plus(self, e, pos: QPointF) -> bool:
@@ -226,6 +241,14 @@ class CanevasPlusMixin:
             return False
         genre = self._plus[0]
         pt = self.vers_image(pos)
+        if genre == "taille":
+            _g, depart, taille, durete = self._plus
+            d = pos - depart
+            self.definir_taille(max(1.0, taille * (2 ** (d.x() / 150))))       # 150 px à droite : deux fois plus
+            self.durete = min(1.0, max(0.0, durete - d.y() / 300))
+            self.durete_demandee.emit(round(self.durete * 100))
+            self.update()
+            return True
         if genre == "pipette":
             self._prendre_couleur(pt)
         elif genre == "loupe":
@@ -259,6 +282,10 @@ class CanevasPlusMixin:
             return False
         geste, self._plus = self._plus, None
         genre = geste[0]
+        if genre == "taille":
+            self._curseur()
+            self.update()
+            return True
         if genre == "loupe":
             _g, a, b, alt = geste
             if QLineF(a, b).length() > 8 and not alt:                  # cadre : zoom pour le remplir
@@ -299,6 +326,75 @@ class CanevasPlusMixin:
                 (self.piece_glissee if self.outil == PIECE else self.objet_deplace).emit(dx, dy)
         self.update()
         return True
+
+    # ---------------------------------------------------------- masque rapide
+    def _selection_en_gris(self) -> QImage:
+        from .document import masque
+        a = masque(self.doc.selection)
+        h, w = a.shape
+        g = np.empty((h, w, 4), np.uint8)
+        g[..., 0] = g[..., 1] = g[..., 2] = a
+        g[..., 3] = 255
+        return QImage(np.ascontiguousarray(g).data, w, h, w * 4, QImage.Format_RGBA8888).convertToFormat(
+            QImage.Format_ARGB32_Premultiplied)
+
+    def _gris_vers_selection(self, img: QImage):
+        from .document import _masque_vers_selection, tableau
+        a = tableau(img.convertToFormat(QImage.Format_RGBA8888))[..., 0]
+        self.doc.selection = _masque_vers_selection(np.ascontiguousarray(a)).convertToFormat(
+            self.doc.selection.format())
+
+    def _presser_masque_rapide(self, pt: QPointF) -> bool:
+        """Masque rapide : le pinceau de couleur, le crayon et la goutte d'eau peignent la sélection ; la clarté de
+        la couleur dit combien (blanc : sélectionné, noir : retiré, gris : à moitié)."""
+        from .canevas import GOUTTE, PEINTURE
+        from .retouche import Trait
+        if not self.masque_rapide or self.outil not in (PEINTURE, CRAYON, GOUTTE):
+            if self.masque_rapide:
+                self.refus.emit(tr("Masque rapide : peins avec le pinceau de couleur ou le crayon (blanc ajoute, noir "
+                                   "retire) ; la goutte d'eau adoucit le bord. Maj+Q pour finir."))
+                return True
+            return False
+        self._avant = self.doc.etat()
+        gris = self._selection_en_gris()
+        if self.outil == GOUTTE:
+            self._trait = Trait("goutte", gris, self.taille_pinceau, self.durete, self.opacite)
+        else:
+            g = round(QColor(self.couleur_peinture).lightnessF() * 255)
+            self._trait = Trait("peinture", gris, self.taille_pinceau, 1.0 if self.outil == CRAYON else self.durete,
+                                self.opacite, couleur=QColor(g, g, g))
+            self._trait.net = self.outil == CRAYON
+            self._trait.miroirs = self.miroirs()
+        self._sur_selection = True
+        self._trait.ajouter(pt, self._pression_evt)
+        self._gris_vers_selection(self._trait.image)
+        self.update()
+        return True
+
+    def _glisser_masque_rapide(self, pos: QPointF) -> bool:
+        if not self._sur_selection:
+            return False
+        self._trait.ajouter(self.vers_image(pos), self._pression_evt)
+        self._gris_vers_selection(self._trait.image)
+        return True
+
+    def _lacher_masque_rapide(self) -> bool:
+        if not self._sur_selection:
+            return False
+        self._sur_selection = False
+        self._gris_vers_selection(self._trait.image)
+        self._trait = None
+        self.selection_modifiee.emit(self._avant, tr("Masque rapide"))
+        self._avant = None
+        self.update()
+        return True
+
+    def basculer_masque_rapide(self, actif: bool | None = None):
+        self.masque_rapide = (not self.masque_rapide) if actif is None else actif
+        self.message.emit(tr("Masque rapide : peins la sélection avec le pinceau de couleur (blanc = sélectionner, "
+                             "noir = retirer, gris = à moitié) ; la goutte d'eau adoucit son bord. Maj+Q pour "
+                             "finir.") if self.masque_rapide else tr("Masque rapide fini : la sélection est prête."))
+        self.update()
 
     def _prendre_couleur(self, pt: QPointF):
         img = self.doc.calque_actif.image if self.pipette_calque else self.doc.image
@@ -387,6 +483,38 @@ class CanevasPlusMixin:
 
     # ---------------------------------------------------------- dessin
     def _dessiner_plus(self, p: QPainter):
+        if self.doc is not None and getattr(self.doc, "plans", None):      # plans de travail : pointillés bleus
+            for nom, x, y, w, h in self.doc.plans:
+                r = QRectF(self.vers_ecran(QPointF(x, y)), self.vers_ecran(QPointF(x + w, y + h)))
+                p.setBrush(Qt.NoBrush)
+                p.setPen(QPen(QColor(40, 120, 255), 1.5, Qt.DashLine))
+                p.drawRect(r)
+                p.setPen(QColor(40, 120, 255))
+                p.drawText(r.topLeft() + QPointF(2, -4), nom)
+        if self._plus is not None and self._plus[0] == "taille":
+            centre = self._plus[1]
+            r = self.taille_pinceau * self.zoom / 2
+            for coul, ep in ((QColor(0, 0, 0, 170), 3), (QColor(255, 255, 255), 1)):
+                p.setPen(QPen(coul, ep))
+                p.setBrush(Qt.NoBrush)
+                p.drawEllipse(centre, r, r)
+            if self.durete < 0.99:
+                p.setPen(QPen(QColor(255, 255, 255, 150), 1, Qt.DashLine))
+                p.drawEllipse(centre, r * self.durete, r * self.durete)
+            texte = tr("{t} px · dureté {d} %", t=round(self.taille_pinceau), d=round(self.durete * 100))
+            boite = QRectF(centre.x() - 80, centre.y() + r + 8, 160, 22)
+            p.fillRect(boite, QColor(0, 0, 0, 160))
+            p.setPen(QColor(255, 255, 255))
+            p.drawText(boite, Qt.AlignCenter, texte)
+        if self.masque_rapide:
+            p.save()
+            p.resetTransform()
+            texte = tr("MASQUE RAPIDE (Maj+Q) : blanc = sélectionner, noir = retirer")
+            boite = QRectF(10, 10, p.fontMetrics().horizontalAdvance(texte) + 24, 24)
+            p.fillRect(boite, QColor(200, 30, 30, 200))
+            p.setPen(QColor(255, 255, 255))
+            p.drawText(boite, Qt.AlignCenter, texte)
+            p.restore()
         if self._plus is not None and self._plus[0] == "loupe":
             _g, a, b, _alt = self._plus
             if QLineF(a, b).length() > 8:

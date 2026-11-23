@@ -192,6 +192,37 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
 **AI engine**: when it starts, Pixane Photo launches the AI (ComfyUI) in the background, without a window. Allow about
 20 seconds. The dot at the bottom left turns green when the engine is ready; AI actions are greyed out before that.
 
+### Panels, workspaces and comfort
+- **Movable panels**: grab a panel by its title to put it on another edge, leave it floating or stack it as a tab
+  with another one; the small cross closes it. **Window** menu: each panel can be shown or hidden; *Lock panels*
+  freezes them. The layout is restored at the next start.
+- **Workspaces** (Window > Workspace): *Essential*, *Photo retouching* (AI, Layers, Info, Navigator), *Painting*
+  (Layers, Swatches, Navigator); *Save the current workspace…* keeps your layout under a name; *Back to the default
+  layout*.
+- **New panels** (Window menu): **Navigator** (the whole photo as a thumbnail, the red frame shows the visible part:
+  click or drag to go there, zoom slider); **Info** (under the mouse: position, colour in RGB, HSV and hex; size of
+  the selection and of the image); **Second image** (another open photo, side by side, to compare; *Same zoom* makes
+  it follow the photo's zoom).
+- **Start screen**: with no photo open, *New image*, *Open*, *From the clipboard* and the recent files as thumbnails
+  (one click opens it).
+- **Search a command** (Edit, **Ctrl+F**): type a few letters ("blur", "rotate right", "lasso"); all the matching
+  menu commands and tools; Enter runs the chosen command.
+- **Keyboard shortcuts…** (Edit, Ctrl+Alt+K): change the shortcut of any command or tool. A shortcut already taken is
+  removed from the other command (a message says so); *Default* and *Reset all to default*.
+- **Full screen**: F11 (Window > Full screen).
+- **Contextual bar** (View > Contextual bar): a small bar on the photo with the actions useful right now. Under the
+  selection: Erase, Fill, Edit, Outline, Reverse, Deselect; without a selection: Subject, No background, Expand,
+  Upscale.
+- **Quick menu**: **right-click** on the photo: a wheel with your last 8 tools and, in the middle, your last colours;
+  one click chooses. Esc or a click outside closes it.
+- **Brush size with the mouse**: **Alt + right-drag**: right / left, the size; up / down, the hardness (the circle is
+  shown with its values).
+- **Adjust by dragging a name**: everywhere, the name right before a number box or a slider (Size, Opacity, Hardness,
+  Radius…) can be adjusted by dragging on it left or right (Shift: faster, Ctrl: finer); the cursor becomes a double
+  arrow.
+- **File changed elsewhere**: if another program changes the file of an open photo, Pixane offers to reload it
+  (warning you if your changes would be lost).
+
 ---
 
 ## 2. Opening and saving
@@ -329,6 +360,9 @@ before **OK**; **Cancel** leaves everything as it was. The same settings stay in
   guide…* places one at an exact position, *Clear guides* removes them all, Ctrl+; hides or shows them. They are
   saved in the .piximg file.
 - **Grid** (Ctrl+'): regular lines over the photo; *Grid size…* sets the spacing (100 px by default).
+- **Artboards** (Image > Artboards…): named areas of the same image (e.g. "Instagram", "Banner"), from the
+  selection or the whole image, shown as blue dashed frames; *Export all artboards…* saves them at once, each in its
+  own file (PNG, JPG or WebP). Kept in the .piximg file.
 - **Ruler** (tool grouped with the Eyedropper): drag from one point to another (Shift: in 15° steps); the length,
   the angle and the x and y distances are shown in the top bar. **Straighten** rotates the photo so that this line
   becomes horizontal (or vertical if it is closer to it) and crops the empty corners: draw the ruler along a tilted
@@ -371,6 +405,9 @@ The selection tools share **two buttons** in the left bar (small triangle): the 
   undoes all the presses.
 - **Select > Modify selection**: *Expand…* or *Shrink…* by a number of pixels, *Soften edges…* (gradual edge,
   useful for image adjustments).
+- **Quick mask** (Select > Quick mask, **Shift+Q**): the selection is painted with the colour brush or the pencil:
+  **white** selects, **black** removes, grey half-selects; the blur tool softens its edge. A red banner reminds you of
+  the mode; Shift+Q to finish. The layer is not touched.
 - **Select > Select subject (AI)** (Ctrl+Alt+S): the AI finds the main subject (person, animal, object) and selects
   it. See chapter 5, "Subject and background".
 

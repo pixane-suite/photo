@@ -579,6 +579,7 @@ class Document(QObject):
         self._fusion: QImage | None = None
         self.cible_masque = False           # outils de peinture sur le masque du calque choisi (panneau)
         self.reperes: list = []              # repères : (« h » ou « v », position en pixels) ; hors Annuler
+        self.plans: list = []                # plans de travail : [nom, x, y, largeur, hauteur] ; hors Annuler
         self.dpi: float = 72.0               # résolution (points par pouce), gardée dans les fichiers
         self.mode: str = "rvb"               # « rvb » ou « gris » (niveaux de gris : l'image vue et enregistrée)
         self.nom: str | None = None          # nom d'une image nouvelle, pas encore enregistrée
@@ -800,6 +801,7 @@ class Document(QObject):
             doc = cls(chemin=chemin, calques=lire_ora(chemin))
             infos = lire_infos_ora(chemin)
             doc.reperes, doc.dpi, doc.mode = infos["reperes"], infos["dpi"], infos["mode"]
+            doc.plans = infos["plans"]
             b = max([infos["profondeur"]] + [prof.bits(c.image) for c in doc.calques])
             if b > 8:
                 doc.definir_profondeur(b)             # (un .ora 16 bits de Krita aussi)
@@ -834,7 +836,7 @@ class Document(QObject):
             natif = ext in EXTENSIONS_NATIVES   # .piximg : styles modifiables ; .ora (Krita, GIMP) : effets figés
             ecrire_ora(chemin, self.calques if natif else calques_figes(self.calques, garder_groupes=True),
                        self.image, natif=natif, reperes=self.reperes, dpi=self.dpi, mode=self.mode,
-                       profondeur=self.profondeur)
+                       profondeur=self.profondeur, plans=self.plans)
             self.chemin = chemin
             self.modifie = False
             return
@@ -2012,7 +2014,7 @@ def _lire_png(donnees: bytes, src: str = "") -> QImage:
 
 
 def ecrire_ora(chemin: Path, calques, fusion: QImage, natif: bool = False, reperes=None, dpi: float = 72.0,
-               mode: str = "rvb", profondeur: int = 8) -> None:
+               mode: str = "rvb", profondeur: int = 8, plans=None) -> None:
     """Groupes = piles imbriquées, modes de fusion = composite-op (lus par Krita et GIMP). En .piximg (natif) :
     masques, calques de réglage, styles et textes gardés en attributs « pixane-… »."""
     w, h = calques[0].image.width(), calques[0].image.height()
@@ -2023,6 +2025,8 @@ def ecrire_ora(chemin: Path, calques, fusion: QImage, natif: bool = False, reper
         pile.set("pixane-profondeur", str(profondeur))
     if natif and reperes:
         pile.set("pixane-reperes", json.dumps([list(r) for r in reperes]))
+    if natif and plans:
+        pile.set("pixane-plans", json.dumps([list(r) for r in plans], ensure_ascii=False))
     racine = ET.SubElement(pile, "stack")
     temporaire = chemin.with_name(chemin.name + ".tmp")
     compte = [0]
@@ -2184,7 +2188,7 @@ def _attr(e, nom: str):
 
 def lire_infos_ora(chemin: Path) -> dict:
     """Repères, résolution (xres de la norme OpenRaster) et mode (gris / rvb) d'un .piximg ou d'un .ora."""
-    infos = {"reperes": [], "dpi": 72.0, "mode": "rvb", "profondeur": 8}
+    infos = {"reperes": [], "dpi": 72.0, "mode": "rvb", "profondeur": 8, "plans": []}
     try:
         with zipfile.ZipFile(chemin) as z:
             e = ET.fromstring(z.read("stack.xml"))
@@ -2193,6 +2197,11 @@ def lire_infos_ora(chemin: Path) -> dict:
     try:
         r = _attr(e, "reperes")
         infos["reperes"] = [(str(a), float(b)) for a, b in json.loads(r)] if r else []
+    except (ValueError, TypeError):
+        pass
+    try:
+        r = _attr(e, "plans")
+        infos["plans"] = [[str(n), int(x), int(y), int(w), int(h)] for n, x, y, w, h in json.loads(r)] if r else []
     except (ValueError, TypeError):
         pass
     try:

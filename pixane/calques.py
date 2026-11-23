@@ -219,6 +219,12 @@ class PanneauCalques(QWidget):
         self._trait.setFixedHeight(3)
         self._trait.setStyleSheet("background: #f97316; border: none")
         self._trait.hide()
+        from PySide6.QtWidgets import QLineEdit
+        self.recherche = QLineEdit()                # chercher un calque par son nom
+        self.recherche.setPlaceholderText(tr("Chercher un calque…"))
+        self.recherche.setClearButtonEnabled(True)
+        self.recherche.textChanged.connect(lambda _t: self.rafraichir() if self.doc else None)
+        lay.addWidget(self.recherche)
         lay.addWidget(self.liste, 1)
 
         opacite = QHBoxLayout()
@@ -368,6 +374,8 @@ class PanneauCalques(QWidget):
             ligne.remplir(c, vig, vm, len(parents(doc.calques, index)), doc.cible_masque, index == doc.actif,
                           visible_en_vrai(doc.calques, index))
             ligne.marquer(index in self.choisis and index != doc.actif)
+            cherche = self.recherche.text().strip().lower()
+            self.liste.setRowHidden(rang, bool(cherche) and cherche not in c.nom.lower())
         if doc:
             if doc.actif in self._indexes:
                 self.liste.setCurrentRow(self._indexes.index(doc.actif))

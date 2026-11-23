@@ -4,7 +4,7 @@ Fenetre (fenetre.py) hérite de FenetrePlusMixin."""
 from __future__ import annotations
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QActionGroup
+from PySide6.QtGui import QActionGroup, QColor
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox, QHBoxLayout, QLabel, QMenu,
                                QPushButton, QSlider, QToolButton, QWidget)
 
@@ -158,6 +158,58 @@ class FenetrePlusMixin:
             w.hide()
         c.piece_glissee.connect(self._piece)
         c.objet_deplace.connect(self._deplacer_objet)
+        c.menu_rapide_demande.connect(self.ouvrir_menu_rapide)
+        c.durete_demandee.connect(lambda v: self.opt_durete.setValue(v))
+        self._outils_recents: list[str] = []
+        from .barre_contextuelle import BarreContextuelle
+        self.barre_ctx = BarreContextuelle(self)
+        self.barre_ctx.actif = self.a_barre_ctx.isChecked()
+        from .glisser_noms import installer
+        app = QApplication.instance()
+        if getattr(app, "_glisser_noms", None) is None:      # régler une valeur en glissant sur son nom
+            app._glisser_noms = installer(app)
+
+    def _barre_ctx_visible(self, v: bool):
+        self.reglages.setValue("barre_contextuelle", v)
+        if getattr(self, "barre_ctx", None) is not None:
+            self.barre_ctx.actif = v
+            self.barre_ctx.verifier()
+
+    # ---------------------------------------------------------- menu rapide (clic droit), couleurs récentes
+    def _noter_couleur(self, couleur: str):
+        nom = QColor(couleur).name()
+        liste = [c for c in (self.reglages.value("couleurs_recentes", []) or []) if c != nom]
+        self.reglages.setValue("couleurs_recentes", ([nom] + liste)[:8])
+
+    def ouvrir_menu_rapide(self, ou):
+        from .canevas import GOMME_CALQUE, PEINTURE, PINCEAU, TAMPON, TEXTE
+        from .menu_rapide import MenuRapide
+        if not self.doc:
+            return
+        cles = list(self._outils_recents)
+        for o in (PINCEAU, PEINTURE, GOMME_CALQUE, PIPETTE, TAMPON, TEXTE, CRAYON, LOUPE):   # complétés d'office
+            if len(cles) >= 8:
+                break
+            if o not in cles:
+                cles.append(o)
+        outils = [(o, self._actions_outils[o].text()) for o in cles if o in self._actions_outils]
+        icones = {o: self._actions_outils[o].icon() for o, _n in outils}
+        couleurs = list(self.reglages.value("couleurs_recentes", []) or [])
+        m = MenuRapide(outils, icones, self.canevas.couleur_peinture, couleurs, self)
+        m.outil_choisi.connect(self._choisir_outil)
+        m.couleur_choisie.connect(self._couleur_prise)
+        self._menu_rapide = m
+        m.ouvrir(ou)
+
+    # ---------------------------------------------------------- masque rapide
+    def masque_rapide(self, actif: bool):
+        from .canevas import CRAYON as _C, GOUTTE, PEINTURE
+        if not self.doc:
+            self.a_masque_rapide.setChecked(False)
+            return
+        self.canevas.basculer_masque_rapide(actif)
+        if actif and self.canevas.outil not in (PEINTURE, _C, GOUTTE):
+            self._choisir_outil(PEINTURE)
 
     def definir_symetrie(self, cle: str):
         self.canevas.symetrie = cle
@@ -168,6 +220,8 @@ class FenetrePlusMixin:
             self.statusBar().showMessage(tr("Symétrie : {quoi}", quoi=self._actions_symetrie[cle].text()), 5000)
 
     def _visibilite_plus(self, outil: str):
+        recents = [o for o in getattr(self, "_outils_recents", []) if o != outil]
+        self._outils_recents = [outil] + recents[:7]
         from .canevas import OUTILS_FILTRE, PEINTURE
         self.opt_pipette.setVisible(outil == PIPETTE)
         self.opt_symetrie.setVisible(outil in (PEINTURE, CRAYON, MELANGEUR) + OUTILS_FILTRE)

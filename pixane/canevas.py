@@ -123,6 +123,8 @@ class Canevas(CanevasPlusMixin, PlumeMixin, QWidget):
     regle_changee = Signal()                    # outil Règle : nouvelle mesure
     piece_glissee = Signal(int, int)            # outil Pièce : zone à réparer glissée sur une partie saine (dx, dy)
     objet_deplace = Signal(int, int)            # Déplacer un objet (IA) : sélection glissée de (dx, dy)
+    menu_rapide_demande = Signal(object)        # clic droit : menu rapide à cette place (écran)
+    durete_demandee = Signal(int)               # Alt + clic droit glissé : nouvelle dureté (%)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1099,6 +1101,8 @@ class Canevas(CanevasPlusMixin, PlumeMixin, QWidget):
             if 0 <= x < self.doc.image.width() and 0 <= y < self.doc.image.height():
                 self.couleur_prise.emit(QColor(self.doc.image.pixel(x, y)).name())
             return
+        if self.masque_rapide and self._presser_masque_rapide(pt):
+            return
         if alt and self.outil in (TAMPON, CORRECTEUR):   # point source
             self.source_tampon = pt
             self._decalage_tampon = None
@@ -1231,6 +1235,8 @@ class Canevas(CanevasPlusMixin, PlumeMixin, QWidget):
                   "(Ctrl+Z pour revenir).", nom=c.nom)
 
     def _glisser_retouche(self, pos: QPointF):
+        if self._glisser_masque_rapide(pos):
+            return
         if self._pinceau_en_cours is not None:
             pt = self.vers_image(pos)
             self._pinceau_en_cours[3].append((pt.x(), pt.y(), self._pression_evt))
@@ -1255,6 +1261,8 @@ class Canevas(CanevasPlusMixin, PlumeMixin, QWidget):
         return False
 
     def _lacher_retouche(self):
+        if self._lacher_masque_rapide():
+            return
         if self._pinceau_en_cours is not None:         # calque de pinceau : le trait est gardé, tout est redessiné
             index, p, graine, points = self._pinceau_en_cours
             self._pinceau_en_cours = None
@@ -2274,6 +2282,8 @@ class Canevas(CanevasPlusMixin, PlumeMixin, QWidget):
         if e.button() == Qt.MiddleButton or (e.button() == Qt.LeftButton and (self.outil == MAIN or self._espace)):
             self._glisse = pos
             self.setCursor(Qt.ClosedHandCursor)
+            return
+        if e.button() == Qt.RightButton and self._presser_droit(e, pos):
             return
         if e.button() != Qt.LeftButton:
             return

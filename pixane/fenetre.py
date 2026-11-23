@@ -38,6 +38,7 @@ from .canevas import (DENSITE_MOINS, DENSITE_PLUS, DOIGT, EPONGE, GOUTTE, HISTOR
                       TAILLE_MAX, TAMPON, TAMPON_MOTIF, TEXTE, Canevas)
 from .dialogues import Attente, BarreAgrandir, ChoixResultat, ReglagesUpscale
 from .fenetre_plus import FenetrePlusMixin, outils_plus
+from .interface_plus import InterfacePlusMixin
 from .outils_plus import (CRAYON, DEPLACER_IA, ELLIPSE_SEL, LASSO_MAG, LOUPE, MELANGEUR, PIECE, PIPETTE, REGLE,
                           ROTATION_VUE)
 from .document import (EXTENSIONS_CALQUES, EXTENSIONS_LECTURE, FORMAT_IMAGE, Document, image_entiere,
@@ -261,7 +262,7 @@ class Carte(QPushButton):
         self.image.setPixmap(ic.pixmap(28, 28))
 
 
-class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsForme, ActionsPhotoIA,
+class Fenetre(FenetrePlusMixin, InterfacePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsPinceau, OptionsForme, ActionsPhotoIA,
               QMainWindow):
     etat_moteur = Signal(str)
 
@@ -335,6 +336,7 @@ class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsP
         self.surveillance_polices.nouvelles.connect(lambda noms: self.statusBar().showMessage(
             tr("Nouvelle police disponible : {noms}", noms=", ".join(noms[:5])), 8000))
         self._barre_etat()
+        self._interface_plus()
         from .selection_ia import SelectionAuto
         self.selection_auto = SelectionAuto(self)
         from .suppression import Suppression
@@ -662,6 +664,10 @@ class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsP
         self._action(m, tr("Désélectionner"), "Ctrl+D", lambda: self._modifier_selection("rien"), "a_rien")
         self._action(m, tr("Inverser la sélection"), "Ctrl+Shift+I", lambda: self._modifier_selection("inverser"),
                      "a_inverser")
+        a = self._action(m, tr("Masque rapide"), "Shift+Q", None, "a_masque_rapide")
+        a.setCheckable(True)
+        a.setToolTip(tr("Peindre la sélection avec le pinceau de couleur : blanc = sélectionner, noir = retirer"))
+        a.toggled.connect(self.masque_rapide)
         sous = m.addMenu(tr("Modifier la sélection"))
         self._action(sous, tr("Agrandir…"), None, lambda: self._modifier_bord("agrandir"), "a_sel_agrandir")
         self._action(sous, tr("Réduire…"), None, lambda: self._modifier_bord("reduire"), "a_sel_reduire")
@@ -772,6 +778,12 @@ class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsP
         m.addSeparator()
         self.a_barre_rapide = self._action(m, tr("Barre d'accès rapide"), None, None, "a_barre_rapide")
         self.a_barre_rapide.setCheckable(True)
+        a = self._action(m, tr("Barre contextuelle"), None, None, "a_barre_ctx")
+        a.setCheckable(True)
+        a.setChecked(self.reglages.value("barre_contextuelle", True, type=bool))
+        a.setToolTip(tr("Petite barre sur la photo avec les actions utiles du moment (sous la sélection : Effacer, "
+                        "Remplir… ; sans sélection : Sélectionner le sujet, Agrandir…)"))
+        a.toggled.connect(self._barre_ctx_visible)
         # option choisie à l'installation (case « Recherche de police semblable »), modifiable ici
         a = self._action(m, tr("Recherche de police semblable"), None, None, "a_option_polices")
         a.setCheckable(True)
@@ -1362,6 +1374,8 @@ class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsP
             self.reglages.setValue("peinture_couleur", couleur)
         if hasattr(self, "case_calque_pinceau"):
             self.pinceau_barre_change()
+        if enregistrer:
+            self._noter_couleur(couleur)
 
     def _couleur_prise(self, couleur: str):
         self.opt_couleur.definir(QColor(couleur).name(QColor.HexArgb))
@@ -2466,6 +2480,7 @@ class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsP
         finally:
             QApplication.restoreOverrideCursor()
         self._ajouter_recent(str(chemin))
+        self.noter_fichier(self.doc)                 # ce changement du fichier vient de Pixane : pas de question
         self._recuperation.enregistree(self.doc)
         self.doc.suffixe_nom = None                 # déjà dans le nom du fichier enregistré
         ext = chemin.suffix.lower()
@@ -2544,6 +2559,7 @@ class Fenetre(FenetrePlusMixin, ActionsCalques, ActionContour, Onglets, OptionsP
             return
         if self.dock_texte.isVisible():
             self.reglages.setValue("largeur_volet_texte", self.dock_texte.width())
+        self._sauver_interface()
         self.moteur.arreter()
         traduction.arreter()
         self._recuperation.tout_effacer()

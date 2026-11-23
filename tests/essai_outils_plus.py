@@ -43,6 +43,8 @@ doc = Document(qimage_rgb(img))
 f._installer_document(doc)
 c = f.canevas
 app.processEvents()
+f.opt_opacite.setValue(100)                     # réglages laissés par d'autres essais
+f.opt_durete.setValue(80)
 
 
 def souris(genre, pt_image, mod=Qt.NoModifier, bouton=Qt.LeftButton):
