@@ -837,8 +837,9 @@ supprimer d'un coup, et donner au groupe une opacité, un mode de fusion et un m
   son contenu. Avec un seul calque choisi : ce calque seul. **Ctrl+Maj+G** : défait le groupe (les calques restent).
 - **Déplacer un groupe** : choisissez le groupe, puis l'outil Déplacer (V), à la souris ou aux flèches : tous ses
   calques bougent ensemble (une seule étape d'Annuler). De même pour plusieurs calques choisis (Ctrl+clic).
-- **Calque qui dépasse de l'image** (texte, image, forme…) : quand il est choisi, un **cadre en pointillés** montre
-  où il est, avec n'importe quel outil.
+- **Calque qui dépasse de l'image** (texte, image, forme…) : un **cadre en pointillés** montre où il est, avec
+  n'importe quel outil, même quand il n'est pas choisi : gris pour les autres calques, en couleur pour le calque
+  choisi.
 - **Calque > Pixelliser** (aussi au clic droit) : *Texte*, *Forme, pinceau, remplissage*, *Style du calque* (les
   effets deviennent des pixels), *Objet dynamique* (sa meilleure version est oubliée) ou *Calque entier* (tout à la
   fois). Le calque devient une image ordinaire ; Annuler revient en arrière.

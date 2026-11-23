@@ -785,45 +785,55 @@ class Canevas(PlumeMixin, QWidget):
             poly = contour_bloc(c.texte)
         elif c.hors is not None and not c.groupe and c.reglage is None:
             cle = (id(c.image), id(c.hors), c.hors_x, c.hors_y)
-            if getattr(self, "_etendue_cle", None) != cle:
+            memoire = self.__dict__.setdefault("_etendues", {})     # par calque : (clé, rectangle du contenu)
+            vu = memoire.get(id(c))
+            if vu is None or vu[0] != cle:
                 import numpy as np
                 img, x, y = image_entiere(c)
                 a = tableau(img)[..., 3]
                 lignes, colonnes = np.where(a.any(axis=1))[0], np.where(a.any(axis=0))[0]
-                self._etendue = (None if len(lignes) == 0 else
-                                 QRectF(x + colonnes[0], y + lignes[0], colonnes[-1] - colonnes[0] + 1,
-                                        lignes[-1] - lignes[0] + 1))
-                self._etendue_cle = cle
-            if self._etendue is None:
+                vu = (cle, None if len(lignes) == 0 else
+                      QRectF(x + colonnes[0], y + lignes[0], colonnes[-1] - colonnes[0] + 1, lignes[-1] - lignes[0] + 1))
+                if len(memoire) > 200:
+                    memoire.clear()
+                memoire[id(c)] = vu
+            if vu[1] is None:
                 return None
-            poly = QPolygonF(self._etendue)
+            poly = QPolygonF(vu[1])
         else:
             return None
         feuille = QRectF(0, 0, self.doc.image.width(), self.doc.image.height())
         return None if feuille.contains(poly.boundingRect()) else poly
 
     def _dessiner_cadre_hors(self, p: QPainter):
-        """Calque choisi qui dépasse de la feuille (texte, image, forme…) : cadre en pointillés autour de lui, avec
-        tous les outils (l'outil Texte a déjà le sien), pour voir où il est."""
-        if self.doc is None or self.cadre is not None or (self.outil == TEXTE and self.doc.calque_actif.texte):
+        """Calques qui dépassent de la feuille (texte, image, forme…) : cadre en pointillés autour de chacun, avec
+        tous les outils, pour voir où ils sont ; gris pour les autres calques, couleur d'accent pour le calque choisi
+        (l'outil Texte a déjà son cadre pour le texte choisi)."""
+        if self.doc is None or self.cadre is not None:
             return
-        c = self.doc.calque_actif
-        if not c.visible:
-            return
-        try:
-            poly = self._etendue_calque(c)
-        except Exception:
-            return
-        if poly is None:
-            return
-        ecran = QPolygonF([self.vers_ecran(q) for q in poly])
+        actif = self.doc.actif
         p.save()
         p.setRenderHint(QPainter.Antialiasing)
         p.setBrush(Qt.NoBrush)
-        p.setPen(QPen(QColor(0, 0, 0, 150), 1))
-        p.drawPolygon(ecran)
-        p.setPen(QPen(self.couleur_accent, 1.5, Qt.DashLine))
-        p.drawPolygon(ecran)
+        for i, c in enumerate(self.doc.calques):
+            if not c.visible or c.special or (i == actif and self.outil == TEXTE and c.texte is not None):
+                continue
+            try:
+                poly = self._etendue_calque(c)
+            except Exception:
+                continue
+            if poly is None:
+                continue
+            ecran = QPolygonF([self.vers_ecran(q) for q in poly])
+            if i == actif:
+                p.setPen(QPen(QColor(0, 0, 0, 150), 1))
+                p.drawPolygon(ecran)
+                p.setPen(QPen(self.couleur_accent, 1.5, Qt.DashLine))
+            else:
+                p.setPen(QPen(QColor(255, 255, 255, 140), 1))
+                p.drawPolygon(ecran)
+                p.setPen(QPen(QColor(90, 90, 90, 200), 1, Qt.DashLine))
+            p.drawPolygon(ecran)
         p.restore()
 
     def _sur_poignee_texte(self, pos: QPointF) -> bool:
