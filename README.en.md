@@ -17,10 +17,11 @@ Free photo editor for Windows, with artificial intelligence retouching **that ru
 **AI retouching** (several proposals each time: you pick the best one, as in Photoshop; the result goes into the chosen layer, without spilling outside the selection, or into a new layer if you prefer; Undo puts everything back)
 - **Erase** an object: paint over it, the AI removes it and rebuilds the background
 - **Fill** an area: the AI invents what fits best in that spot (with or without a prompt)
-- **Expand the image** beyond its edges (outpaint): the AI extends the scenery, joined without a lighter part; it also redraws damaged edges (border line, frame, blurred edge, detected automatically); for a plain background, an “Extended background” proposal without AI
+- **Expand the image** beyond its edges (outpaint): the AI extends the scenery, joined without a lighter part; it also redraws damaged edges (border line, frame, blurred edge, detected automatically); for a plain background, an “Extended background” proposal without AI; an optional **description** guides what is added (the AI can write it itself)
 - **Upscale**: increase the resolution (×1.5 to ×4), fast or sharper (details redrawn)
 - **Start from this one**: an option that is almost right? The AI makes variations of it (Close ↔ Free setting), instead of starting over
-- **Remove** (J): one brush stroke on a small defect (wire, spot, dust), it disappears on release
+- **Remove** (J): one brush stroke on a small defect (wire, spot, dust), it disappears on release; **One-click erase**: one click on an object is enough
+- **Move an object**: the AI rebuilds the background behind it; **Replace a text** of the photo with another one, in a similar font
 - **Remove background** and **Select subject** in one click
 - **Reduce noise** (grain, JPEG artefacts) and **Sharpen** (slight blur)
 - **Restore an old photo** (scratches, stains, creases, grain), keeping its colours or **colourising** it
@@ -29,24 +30,27 @@ Free photo editor for Windows, with artificial intelligence retouching **that ru
 - **Sky**: select, replace (6 skies, edge refined between branches); **Colourise**; **Change the light** (8 lights); chosen from example thumbnails
 - **Depth blur**: one click on what stays sharp, brushes to correct the AI
 - **Remove people** (the AI finds them, you tick the ones to erase), **Portrait retouch** (skin smoothed while keeping its grain, eyes, teeth)
+- **Faces**: **restore blurry faces** (GFPGAN), **face liquify** (eyes, face, nose, smile), **face retouch** (smile, gaze, age…) and **make-up**
+- **Change clothes**, **new background** (12 settings or your description, or another photo), **suggested crop** (rule of thirds, square, 4:5, 16:9)
 - Time of each calculation **measured on your PC** and shown
 
 **Selection**
-- Rectangle, lasso, selection brush and eraser; add / subtract with Shift / Alt
+- Rectangle, ellipse, lasso (freehand, polygonal, **magnetic**), selection brush and eraser; add / subtract with Shift / Alt; **quick mask** (Shift+Q)
 - AI **object selection** and **quick selection** (SAM 3.1), **magic wand** adjusted by dragging, **text selection** (a frame around a title: only the letters, thin strokes included)
 - **Refine edge** for hair, fur and soft edges; expand, shrink, feather, invert
 - **Colour range**; **Pen** (paths with lines and curves, to a selection or a shape)
 
 **Layers, as in Photoshop**
-- Visibility, opacity, lock, order (buttons or **drag with the mouse**), merge, flatten
+- Visibility, opacity, lock, order (buttons or **drag with the mouse**), merge, flatten, rasterize; **search a layer** by name
 - Several layers chosen at once (Ctrl+click, Shift+click); **align**, **distribute**, flip, group, from the **quick access bar**
 - Pixels that stick out of the sheet are kept (**Reveal all**)
 - **17 blend modes**, **layer masks**, **clipping mask** (a photo inside the letters of a text), **groups**, **adjustment layers** and **fill layers** (colour, gradient, pattern) editable at any time
 - **Harmonize with the background**: a pasted object takes on the light of the photo
-- Non-destructive **layer styles**: drop shadow (including a realistic shadow), perspective ground shadow, inner shadow, glows, multiple outlines, bevel, colour, gradient (several colours) and pattern overlays; 14 ready-made styles, saved styles
+- Non-destructive **layer styles**: drop shadow (including a realistic shadow), perspective ground shadow, inner shadow, glows, multiple outlines, bevel, colour, gradient (several colours) and pattern overlays; 24 ready-made styles (including **3D text**), saved styles
 
 **Tools**
-- Crop, colour brush, clone stamp, **healing brush**, layer eraser, move (also with the arrow keys)
+- Crop, colour brush, **pencil**, **mixer brush**, **symmetry** painting, clone stamp, **healing brush**, **patch tool**, **red eye**, layer eraser, move (also with the arrow keys)
+- **Eyedropper**, **zoom**, **ruler** (with Straighten), **view rotation**; **puppet warp**
 - **Shaped brushes** as in Photoshop and Krita: 235 brushes and 87 patterns included, **17 ready-made styles** (pencil, charcoal, watercolour, oil, spray…), import of Photoshop (.abr), GIMP and Krita brushes; size up to 5000 px, rotation, full settings (spacing, angle, scattering, texture, dual brush…) and **tablet pressure**
 - **Multi-colour gradient** with a **Photoshop-like editor** (colour and opacity stops, ready-made and saved gradients), shown **live** while you drag; on a text, it goes on the letters (the text stays editable)
 - **Patterns**: paint bucket, Fill with a pattern, **pattern stamp**, Pattern overlay style (Photoshop .pat, GIMP, Krita patterns, images)
@@ -55,17 +59,22 @@ Free photo editor for Windows, with artificial intelligence retouching **that ru
 - **Retouching brushes**: Dodge / Burn, Sponge, Blur, Sharpen, Smudge, History brush
 - **Editable text, as in Photoshop**: font, size, colour, outline, shadow, background, rotation, kerning, case, superscript, ligatures, text in a frame (justified, hyphenation), vertical text, **warp** (arc, flag, wave…), **text on a path**, **per-letter style**, glyphs, text styles
 - **Spelling** (French, English) and **find / replace** in texts
-- **Find a similar font**: select the letters of a title, Pixane Photo searches the installed fonts for the ones that look most like it (no Internet)
+- **Find a similar font**: select the letters of a title, Windows reads the letters, Pixane Photo searches the installed fonts (and, if you wish, 1,960 free Google Fonts) for the ones that look most like it
 - Rulers, guides, grid and snapping; **Swatches** panel (Photoshop .aco, GIMP .gpl)
 
 **Adjustments and filters**
 - Image adjustments with an **Auto** button (brightness, contrast, saturation, hue, temperature, sharpness)
 - **Levels**, **Curves**, **Colour balance**, **Black & white** (with sepia toning), **Vibrance**, **Photo filter**, **Channel mixer**, **Gradient map**, **Replace colour**, Invert, Threshold, Posterize
-- Filters: Gaussian blur, motion blur, **radial blur**, **lens blur**, **surface blur**, noise reduction, sharpen, vignette, **Liquify**
+- Filters: Gaussian blur, motion blur, **radial blur**, **lens blur**, **surface blur**, noise reduction, sharpen, vignette, **Liquify**, **lens correction**
+- **Creative effects**: retro (halftone, VHS, film, pixel art), painting (watercolour, oil, pencil, comic book), light (lens flare, sun rays, light leaks), miniature effect, borders and frames; **colours from another image**
 - Image size, **canvas size**, rotate, flip, straighten, **content-aware scale** (change the proportions without squashing the subject); transform a layer (size, rotation, **perspective**, **distort**, **warp**), **lossless** when shrinking then enlarging again (like a smart object); **perspective crop**
 - **Actions**: record a series of adjustments and filters, replay it in one click, also on a whole folder
 - **RGB colour** or **greyscale** mode
 - **16 bits per channel** (65,536 shades per colour: gradients and strong adjustments without banding), with **dithering** when going back to 8 bits; **32 bits per channel (HDR)**: colours brighter than white, preview exposure, **HDR toning**; brushes work in the image's depth
+
+**Create**
+- **Photo collage**, **panorama**, **animated GIF** (one layer = one frame), **ID photo** (official formats, 10 × 15 cm sheet), **vectorize** (SVG)
+- **Paste in perspective** (onto a wall, a screen), **double exposure**, **clean a photographed document** (straightened, white background), **artboards** exported at once, **watermark** on export
 
 **Files**
 - **New image** with 34 ready-made formats (CD and vinyl covers, Spotify, books, Amazon KDP, social media, A4, posters…), units (px, cm, mm, inches, points, picas), resolution, **bleed** and **safe area** for print
@@ -77,12 +86,14 @@ Free photo editor for Windows, with artificial intelligence retouching **that ru
 - **Batch processing** of a whole folder (resize, auto adjust, AI upscale, background, format, recorded action)
 - **Print** (Ctrl+P): paper, orientation, actual size or fill the page, preview
 - **New image from the clipboard**; **Export as** (a copy in another format, the open photo does not change)
-- Undo / Redo with a History panel (also with the mouse back / forward buttons); recent files
+- Undo / Redo (100 steps, adjustable) with a History panel and named **snapshots** (also with the mouse back / forward buttons); recent files; **next / previous photo in the folder**
 
 **Comfort**
 - Interface in **French** and **English** (Windows language by default)
 - **Interface size** from 75 % to 200 % (small screens, 4K screens), also in the installer; tool icon size
-- Light or dark theme, Windows accent colour; built-in guide with search (F1)
+- Light or dark theme, Windows accent colour; built-in guide with search (F1); **Preferences** (Ctrl+,)
+- **Movable panels** and **workspaces**, **Navigator**, **Info** and **Second image** panels, start screen, **full screen** (F11)
+- **Search a command** (Ctrl+F), customizable **keyboard shortcuts**, **contextual bar**, **quick menu** (right-click), adjust by dragging a name, **before / after comparison**
 - **Update check** (on request or at startup)
 - Installer that checks the PC and downloads the AI engine itself (ComfyUI and the models), resuming after an interruption; with a ComfyUI already installed, only what it is missing
 
@@ -1437,8 +1448,9 @@ Groups and adjustment layers have no pixels: a message asks you to choose an ima
 - **File > Export an animated GIF…**: each checked layer becomes a frame of the animation (from the bottom up), with
   the duration of each frame, the width, *Loop* and *Back and forth*.
 - **Image > ID photo…**: choose the format (35 × 45 mm for Belgium and France, 2 × 2 inches for the United States…),
-  **click on the face** to centre the red frame on it and adjust *Face size* (the head from the top of the frame to
-  just above the shoulders). Result: one photo, or a **10 × 15 cm (4 × 6 in) sheet** filled with copies and cut
+  then **click on the top of the head** (hair included) **and on the chin**: the red frame follows the format's
+  rules (head size, margin above). *Find the head (AI)* places both points for you (SAM 3.1, a few seconds); drag a
+  point to correct it. Result: one photo, or a **10 × 15 cm (4 × 6 in) sheet** filled with copies and cut
   lines, at 300 dpi: print it at 100%, without "fit to page".
 - **Image > Vectorize…**: the layer (a logo, a drawing, a scanned text) becomes vector shapes, in colour or black and
   white, more or less detailed, with a preview. OK puts it in a new layer; *Save the SVG…* keeps the vector file (it
@@ -1457,6 +1469,29 @@ Groups and adjustment layers have no pixels: a message asks you to choose an ima
   *Eyeshadow* (with a colour), *Eyeliner and mascara*, *Blush*, *Evening make-up*. The person, the pose and the
   background stay the same; with a selection, only that area changes. Same engine as *Edit with an instruction*
   (Flux Kontext, about 1 minute per option).
+
+### Faces, background, clothes, framing, document, puppet
+- **AI > Restore blurry faces (AI)…**: the AI finds each face, straightens it and makes it sharp again with
+  **GFPGAN** (old photo, blurry or too small photo), then puts it back with blended edges. *Strength* slider: 100% =
+  the redone face, less = blended with the photo (more natural; GFPGAN may slightly change the eye colour). GFPGAN
+  v1.4 model (349 MB, Apache-2.0), *Restore blurry faces* box when installing the AI engine.
+- **AI > Face liquify (AI)…**: *Bigger eyes*, *Slimmer face*, *Slimmer nose*, *Smile*, *Wider mouth* sliders (left of
+  the middle: the opposite), with a live preview, for all faces in the photo.
+- **AI > Change clothes (AI)…**: T-shirt, shirt, suit and tie, leather jacket, sweater, evening dress, sportswear or
+  only the colour, with a colour of your choice; the person, the pose and the background stay. Flux Kontext, about
+  1 minute per option.
+- **AI > New background (AI)…**: the subject stays, the background is redone by the AI from a choice (white, grey or
+  black studio, beach, city at night, forest, blurred office, sunset, mountains, concert stage, neon, bricks) or
+  your description; several options as with *Fill*. Or *Another photo*: it becomes the background, and the subject
+  goes into its own layer with a mask (*Layer > Harmonize with the background* matches its colours).
+- **Image > Suggested crop (AI)…**: the AI finds the subject and suggests framings (rule of thirds, centred subject,
+  square, portrait 4:5, landscape 16:9) as thumbnails; double-click to crop, Ctrl+Z to go back.
+- **Image > Clean a photographed document…**: a sheet, a receipt, a page photographed at an angle is found,
+  straightened (seen from the front), and its background turns plain white (shadows removed); in colour, grey or
+  black and white. The result opens as a new image.
+- **Edit > Puppet warp…**: place pins with a click on the layer (on what must stay in place and on what must move),
+  then drag one to bend the subject (an arm, a leg, a text); right-click: remove a pin. Works best on a cut-out
+  subject, in its own layer.
 
 ---
 

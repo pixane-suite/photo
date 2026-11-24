@@ -284,68 +284,47 @@ FORMATS_IDENTITE = {     # clé : (nom, largeur mm, hauteur mm, hauteur de la t�
 }
 
 
-def modele_visages() -> Path | None:
-    """Détecteur YuNet d'OpenCV (fichier .onnx d'environ 230 Ko), s'il a été installé dans le dossier de Pixane."""
-    import os
-    d = Path(os.environ.get("LOCALAPPDATA", "")) / "Pixane" / "modeles"
-    for nom in ("face_detection_yunet_2023mar.onnx", "face_detection_yunet.onnx"):
-        if (d / nom).exists():
-            return d / nom
-    return None
-
-
-def trouver_visage(img: QImage):
-    """(x, y, l, h) du plus grand visage (YuNet si son modèle est là), ou None : le cadre se place alors à la
-    souris."""
-    import cv2
-    modele = modele_visages()
-    if modele is None or not hasattr(cv2, "FaceDetectorYN"):
-        return None
-    a = _rgba(img)[..., :3]
-    k = min(1.0, 1200 / max(a.shape[:2]))
-    petit = cv2.resize(a, (round(a.shape[1] * k), round(a.shape[0] * k))) if k < 1 else a
-    try:
-        det = cv2.FaceDetectorYN.create(str(modele), "", (petit.shape[1], petit.shape[0]), 0.7)
-        _r, vus = det.detect(cv2.cvtColor(np.ascontiguousarray(petit), cv2.COLOR_RGB2BGR))
-    except cv2.error:
-        return None
-    if vus is None or len(vus) == 0:
-        return None
-    x, y, w, h = max((v[:4] for v in vus), key=lambda r: r[2] * r[3])
-    return int(x / k), int(y / k), int(w / k), int(h / k)
-
-
-def visage_par_defaut(img: QImage):
-    """Sans détection : un visage supposé au centre, un peu au-dessus du milieu (photo de face)."""
+def points_par_defaut(img: QImage):
+    """Sans repères : une tête supposée au centre, un peu au-dessus du milieu (photo de face)."""
     W, H = img.width(), img.height()
-    h = min(H * 0.3, W * 0.4)
-    return int(W / 2 - h * 0.4), int(H * 0.38 - h / 2), int(h * 0.8), int(h)
+    t = min(H * 0.45, W * 0.6)
+    return (W / 2, H * 0.42 - t / 2), (W / 2, H * 0.42 + t / 2)
 
 
-def cadre_depuis_visage(visage, format_cle: str):
-    """Rectangle (x, y, l, h) à découper pour que la tête ait la taille et la place voulues par le format.
-    visage : (x, y, l, h) du visage (des sourcils au menton, comme les détecteurs)."""
-    _n, lw, lh, tete, haut = FORMATS_IDENTITE[format_cle]
-    x, y, w, h = visage
-    tete_px = h * 1.55                                  # tête entière, cheveux compris
-    haut_tete = y - h * 0.42
+def cadre_depuis_points(haut, menton, format_cle: str):
+    """Rectangle (x, y, l, h) à découper : la tête (du haut des cheveux au menton) a la hauteur voulue par le
+    format, et le haut de la tête est à la bonne distance du bord."""
+    _n, lw, lh, tete, marge = FORMATS_IDENTITE[format_cle]
+    (xh, yh), (xm, ym) = haut, menton
+    tete_px = max(4.0, abs(ym - yh))
     echelle = tete_px / tete                            # px de la photo par mm
     cw, ch = lw * echelle, lh * echelle
-    cx = x + w / 2
-    return int(round(cx - cw / 2)), int(round(haut_tete - haut * echelle)), int(round(cw)), int(round(ch))
+    cx = (xh + xm) / 2
+    return int(round(cx - cw / 2)), int(round(min(yh, ym) - marge * echelle)), int(round(cw)), int(round(ch))
 
 
-def cadre_identite(img: QImage, format_cle: str):
-    """Rectangle à découper, et le visage trouvé (None : visage supposé au centre)."""
-    v = trouver_visage(img)
-    return cadre_depuis_visage(v or visage_par_defaut(img), format_cle), v
+def points_depuis_masques(tete: np.ndarray, visage: np.ndarray):
+    """Haut de la tête (cheveux compris) et menton, d'après les masques de SAM ; None si rien de trouvé."""
+    t = tete > 127
+    v = visage > 127
+    if v.sum() < 50:
+        return None
+    ys, xs = np.nonzero(v)
+    cx = float(xs.mean())
+    menton = (cx, float(ys.max()))
+    if t.sum() >= 50:
+        yt = np.nonzero(t)[0]
+        haut = (cx, float(yt.min()))
+    else:                                               # sans la tête : le front + un tiers du visage
+        haut = (cx, float(ys.min() - (ys.max() - ys.min()) * 0.3))
+    return haut, menton
 
 
 def photo_identite(img: QImage, format_cle: str, cadre=None) -> QImage:
     """La photo d'identité à 300 dpi (le dehors de la photo, s'il y en a, est blanc)."""
     _n, lw, lh, _t, _h = FORMATS_IDENTITE[format_cle]
     if cadre is None:
-        cadre, _v = cadre_identite(img, format_cle)
+        cadre = cadre_depuis_points(*points_par_defaut(img), format_cle)
     x, y, w, h = cadre
     res = QImage(mm(lw), mm(lh), QImage.Format_ARGB32_Premultiplied)
     res.fill(QColor(255, 255, 255))
@@ -377,35 +356,49 @@ def planche(photo: QImage, largeur_mm=150, hauteur_mm=100, ecart_mm=2) -> tuple[
 
 
 class DialogueIdentite(QDialog):
-    def __init__(self, image: QImage, parent):
+    """Deux points : le haut de la tête (cheveux compris) et le menton ; le cadre en découle, aux règles du format.
+    « Trouver la tête (IA) » les pose avec SAM 3.1."""
+
+    def __init__(self, image: QImage, parent, trouver=None):
+        """trouver(rappel) : demande à l'IA les deux points ; rappel((haut, menton) ou None)."""
         super().__init__(parent)
         self.setWindowTitle(tr("Photo d'identité"))
         self.image = image
+        self.points: list[list[float]] = []
+        self._tenu = None
         lay = QVBoxLayout(self)
         ligne = QHBoxLayout()
         self.vue = QLabel()
         self.vue.setFixedSize(420, 420)
         self.vue.setAlignment(Qt.AlignCenter)
         self.vue.setCursor(Qt.CrossCursor)
-        self.vue.mousePressEvent = self._clic
-        self.vue.mouseMoveEvent = self._clic
+        self.vue.mousePressEvent = self._presser
+        self.vue.mouseMoveEvent = self._glisser
+        self.vue.mouseReleaseEvent = lambda _e: setattr(self, "_tenu", None)
         ligne.addWidget(self.vue)
         self.resultat_vue = QLabel()
         self.resultat_vue.setFixedSize(200, 260)
         self.resultat_vue.setAlignment(Qt.AlignCenter)
         ligne.addWidget(self.resultat_vue)
         lay.addLayout(ligne)
+        haut = QHBoxLayout()
+        self.b_ia = QPushButton(tr("Trouver la tête (IA)"))
+        self.b_ia.setToolTip(tr("L'IA pose les deux points (SAM 3.1, quelques secondes) ; tu peux les corriger "
+                                "ensuite en les glissant"))
+        self.b_ia.setEnabled(trouver is not None)
+        self.b_ia.clicked.connect(lambda: trouver(self.poser_points))
+        haut.addWidget(self.b_ia)
+        b = QPushButton(tr("Recommencer"))
+        b.clicked.connect(self.recommencer)
+        haut.addWidget(b)
+        haut.addStretch(1)
+        lay.addLayout(haut)
         f = QFormLayout()
         self.format = QComboBox()
         for cle, (nom, *_r) in FORMATS_IDENTITE.items():
             self.format.addItem(tr(nom), cle)
-        self.format.currentIndexChanged.connect(self._calculer)
+        self.format.currentIndexChanged.connect(self._dessiner)
         f.addRow(tr("Format"), self.format)
-        self.zoom = QSlider(Qt.Horizontal)
-        self.zoom.setRange(40, 250)
-        self.zoom.setValue(100)
-        self.zoom.valueChanged.connect(self._dessiner)
-        f.addRow(tr("Taille du visage"), self.zoom)
         self.sortie = QComboBox()
         self.sortie.addItem(tr("Une photo"), "photo")
         self.sortie.addItem(tr("Planche à imprimer 10 × 15 cm"), "planche")
@@ -420,50 +413,80 @@ class DialogueIdentite(QDialog):
         boutons.accepted.connect(self.accept)
         boutons.rejected.connect(self.reject)
         lay.addWidget(boutons)
-        self._calculer()
+        self._dessiner()
 
-    def _calculer(self):
-        self.visage = trouver_visage(self.image)
-        self.centre = None
-        self.info.setText(tr("Visage trouvé : le cadrage suit les règles du format (tête de la bonne taille, "
-                             "centrée). Fond uni et clair conseillé ; regard vers l'objectif, sans sourire.")
-                          if self.visage else
-                          tr("Clique sur le visage pour y centrer le cadre (rouge), puis règle « Taille du "
-                             "visage » pour que la tête aille du haut du cadre jusqu'au-dessus des épaules."))
+    def recommencer(self):
+        self.points = []
+        self._dessiner()
+
+    def poser_points(self, pts):
+        if pts is None:
+            QMessageBox.information(self, tr("Photo d'identité"), tr(
+                "Aucune tête trouvée : clique sur le haut de la tête, puis sur le menton."))
+            return
+        self.points = [list(pts[0]), list(pts[1])]
         self._dessiner()
 
     def _echelle(self) -> float:
         return min(420 / self.image.width(), 420 / self.image.height())
 
-    def _clic(self, e):
+    def _vers_image(self, e):
         k = self._echelle()
         pm = self.vue.pixmap()
         dx = (self.vue.width() - pm.width()) / 2 if pm else 0
         dy = (self.vue.height() - pm.height()) / 2 if pm else 0
-        self.centre = ((e.position().x() - dx) / k, (e.position().y() - dy) / k)
+        return [(e.position().x() - dx) / k, (e.position().y() - dy) / k]
+
+    def _presser(self, e):
+        pt = self._vers_image(e)
+        if len(self.points) < 2:
+            self.points.append(pt)
+            self._tenu = len(self.points) - 1
+        else:                                         # le point le plus proche suit la souris
+            d = [(q[0] - pt[0]) ** 2 + (q[1] - pt[1]) ** 2 for q in self.points]
+            self._tenu = d.index(min(d))
+            self.points[self._tenu] = pt
         self._dessiner()
 
-    def visage_actuel(self):
-        """(x, y, l, h) du visage : trouvé ou supposé, déplacé par le clic, agrandi par la glissière."""
-        x, y, w, h = self.visage or visage_par_defaut(self.image)
-        if self.centre is not None:
-            x, y = self.centre[0] - w / 2, self.centre[1] - h / 2
-        z = self.zoom.value() / 100
-        cx, cy = x + w / 2, y + h / 2
-        return cx - w * z / 2, cy - h * z / 2, w * z, h * z
+    def _glisser(self, e):
+        if self._tenu is not None:
+            self.points[self._tenu] = self._vers_image(e)
+            self._dessiner()
+
+    def haut_menton(self):
+        if len(self.points) == 2:
+            a, b = sorted(self.points, key=lambda q: q[1])
+            return tuple(a), tuple(b)
+        return points_par_defaut(self.image)
 
     def cadre(self):
-        return cadre_depuis_visage(self.visage_actuel(), self.format.currentData())
+        return cadre_depuis_points(*self.haut_menton(), self.format.currentData())
 
     def _dessiner(self):
+        n = len(self.points)
+        self.info.setText(
+            tr("Clique sur le haut de la tête (cheveux compris).") if n == 0 else
+            tr("Clique maintenant sur le menton.") if n == 1 else
+            tr("Le cadre rouge suit les règles du format (taille de la tête, marge au-dessus). Glisse un point pour "
+               "le corriger. Fond uni et clair conseillé ; regard vers l'objectif, sans sourire."))
         img = self.image
         k = self._echelle()
         pm = QPixmap.fromImage(img.scaled(round(img.width() * k), round(img.height() * k), Qt.KeepAspectRatio,
                                           Qt.SmoothTransformation))
         p = QPainter(pm)
+        p.setRenderHint(QPainter.Antialiasing)
         x, y, w, h = self.cadre()
         p.setPen(QPen(QColor(255, 60, 60), 2))
         p.drawRect(QRectF(x * k, y * k, w * k, h * k))
+        for i, (px, py) in enumerate(self.points):
+            p.setPen(QPen(QColor(0, 0, 0), 2))
+            p.setBrush(QColor(0, 200, 255) if i == 0 else QColor(255, 200, 0))
+            p.drawEllipse(QPointF(px * k, py * k), 5, 5)
+        if len(self.points) == 2:
+            (hx, hy), (mx, my) = self.haut_menton()
+            p.setPen(QPen(QColor(0, 200, 255), 1, Qt.DashLine))
+            p.drawLine(QPointF(0, hy * k), QPointF(pm.width(), hy * k))
+            p.drawLine(QPointF(0, my * k), QPointF(pm.width(), my * k))
         p.end()
         self.vue.setPixmap(pm)
         self.resultat_vue.setPixmap(QPixmap.fromImage(self.resultat_photo()).scaled(
@@ -735,7 +758,10 @@ class DialogueVisage(QDialog):
 
 
 # ====================================================================== la fenêtre
-class CreationMixin:
+from .retouche_plus import RetouchePlusMixin  # noqa: E402
+
+
+class CreationMixin(RetouchePlusMixin):
 
     def _creation(self):
         menus = {a.text().replace("&", ""): a.menu() for a in self.menuBar().actions() if a.menu() is not None}
@@ -762,6 +788,7 @@ class CreationMixin:
         ajouter("IA", tr("Maquillage (IA)…"), lambda: self.ia_visage(True), "a_ia_maquillage",
                 tr("Retouche portrait…"))
         self._persp_coller = None
+        self._retouche_plus(ajouter)
         self._instantanes_ui()
 
     # ---------------------------------------------------------- vectoriser
@@ -838,7 +865,7 @@ class CreationMixin:
         if not self.doc:
             return None
         if d is None:
-            d = DialogueIdentite(self.doc.image, self)
+            d = DialogueIdentite(self.doc.image, self, self._trouver_tete)
             if not d.exec():
                 return None
         from .document import Document
@@ -849,6 +876,15 @@ class CreationMixin:
         self.statusBar().showMessage(tr("{nom} à {dpi} dpi : imprime-la à 100 % (sans « ajuster à la page »).",
                                         nom=nom, dpi=DPI), 10000)
         return doc
+
+    def _trouver_tete(self, rappel):
+        """Bouton « Trouver la tête (IA) » : SAM 3.1 cherche la tête et le visage."""
+        from . import recettes
+        if not self._sam_present(tr("Photo d'identité")):
+            return
+        self._carte_ia(tr("Recherche de la tête"), recettes.tete,
+                       lambda cartes: rappel(points_depuis_masques(cartes[0], cartes[1]) if len(cartes) >= 2
+                                             else None), toutes=True, vide_ok=True)
 
     # ---------------------------------------------------------- collage
     def nouveau_collage(self, d=None):

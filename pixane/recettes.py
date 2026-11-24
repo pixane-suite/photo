@@ -31,6 +31,8 @@ _sam: dict = {"fichier": None}
 # Réduction du bruit : SCUNet (Apache-2.0), chargé comme un modèle d'upscale (facteur 1)
 SCUNET = "scunet_color_real_psnr.pth"
 _scunet = {"ok": False}
+GFPGAN = "GFPGANv1.4.pth"
+_gfpgan = {"ok": False}
 # Restaurer une vieille photo : Flux Kontext dev (licence FLUX.1 [dev], non commerciale)
 KONTEXT = "flux1-dev-kontext_fp8_scaled.safetensors"
 _kontext: dict = {"type": None, "fichier": None}
@@ -116,6 +118,7 @@ def configurer(infos: dict) -> str | None:
     _sam["fichier"] = (SAM if SAM in sams else sorted(sams)[-1] if sams else None) if "SAM3_Detect" in infos \
         else None
     _scunet["ok"] = SCUNET in _options(infos, "UpscaleModelLoader", "model_name")
+    _gfpgan["ok"] = GFPGAN in _options(infos, "UpscaleModelLoader", "model_name")
     da3 = sorted(f for f in _options(infos, "LoadDA3Model", "model_name") if "depth_anything_3" in f.lower())
     _profondeur["fichier"] = (PROFONDEUR if PROFONDEUR in da3 else da3[0] if da3 else None) \
         if "DA3Inference" in infos and "DA3Render" in infos else None
@@ -242,6 +245,63 @@ def visage(image: str):
         p[str(b + 2)] = _n("MaskToImage", mask=[str(b + 1), 0])
         p[str(b + 3)] = _n("PreviewImage", images=[str(b + 2), 0])
         sorties[str(b + 3)] = nom
+    return p, sorties
+
+
+def visages_un_par_un(image: str):
+    """Pour la restauration et la fluidité des visages : un masque par visage (« face »), puis tous les yeux et
+    toutes les lèvres ensemble (séparés ensuite par visage), et le nez. Sorties dans l'ordre : visages…, yeux,
+    lèvres, nez."""
+    p = {"10": _n("LoadImage", image=image),
+         "11": _n("CheckpointLoaderSimple", ckpt_name=_sam["fichier"] or SAM)}
+    sorties = {}
+    for k, (nom, texte, seul) in enumerate((("visage", "face:10", True), ("yeux", "eye:20", False),
+                                           ("levres", "lips:10", False), ("nez", "nose:10", False))):
+        b = 20 + 10 * k
+        p[str(b)] = _n("CLIPTextEncode", text=texte, clip=["11", 1])
+        p[str(b + 1)] = _n("SAM3_Detect", model=["11", 0], image=["10", 0], conditioning=[str(b), 0], threshold=0.3,
+                           refine_iterations=2, individual_masks=seul)
+        p[str(b + 2)] = _n("MaskToImage", mask=[str(b + 1), 0])
+        p[str(b + 3)] = _n("PreviewImage", images=[str(b + 2), 0])
+        sorties[str(b + 3)] = nom
+    return p, sorties
+
+
+def tete(image: str):
+    """Photo d'identité : la tête entière (cheveux compris) et le visage, pour trouver le haut de la tête et le
+    menton."""
+    p = {"10": _n("LoadImage", image=image),
+         "11": _n("CheckpointLoaderSimple", ckpt_name=_sam["fichier"] or SAM)}
+    sorties = {}
+    for k, (nom, texte) in enumerate((("tete", "head:5"), ("visage", "face:5"))):
+        b = 20 + 10 * k
+        p[str(b)] = _n("CLIPTextEncode", text=texte, clip=["11", 1])
+        p[str(b + 1)] = _n("SAM3_Detect", model=["11", 0], image=["10", 0], conditioning=[str(b), 0], threshold=0.3,
+                           refine_iterations=2, individual_masks=False)
+        p[str(b + 2)] = _n("MaskToImage", mask=[str(b + 1), 0])
+        p[str(b + 3)] = _n("PreviewImage", images=[str(b + 2), 0])
+        sorties[str(b + 3)] = nom
+    return p, sorties
+
+
+def visages_flous_disponible() -> bool:
+    return _gfpgan["ok"]
+
+
+def restaurer_visages(noms: list[str]):
+    """GFPGAN v1.4 sur chaque visage redressé (512 × 512) ; une sortie par visage, dans l'ordre."""
+    p = {"11": _n("UpscaleModelLoader", model_name=GFPGAN)}
+    sorties = {}
+    for k, nom in enumerate(noms):
+        b = 20 + 10 * k
+        p[str(b)] = _n("LoadImage", image=nom)
+        # passage par « lanczos » (même taille) : l'image ressort rangée en mémoire comme GFPGAN l'attend (sinon
+        # « view size is not compatible… » dans le nœud d'upscale de ComfyUI)
+        p[str(b + 3)] = _n("ImageScale", image=[str(b), 0], upscale_method="lanczos", width=512, height=512,
+                           crop="disabled")
+        p[str(b + 1)] = _n("ImageUpscaleWithModel", upscale_model=["11", 0], image=[str(b + 3), 0])
+        p[str(b + 2)] = _n("PreviewImage", images=[str(b + 1), 0])
+        sorties[str(b + 2)] = f"visage {k + 1}"
     return p, sorties
 
 

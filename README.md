@@ -17,10 +17,11 @@ Fait partie de la **[Suite Pixane](https://github.com/pixane-suite)** : des logi
 **Retouche par IA** (plusieurs propositions à chaque fois : vous choisissez la meilleure, comme dans Photoshop ; le résultat va dans le calque choisi, sans déborder de la sélection, ou dans un nouveau calque si vous préférez ; Annuler remet tout comme avant)
 - **Effacer** un objet : on peint dessus, l'IA le fait disparaître et reconstruit le fond
 - **Remplir** une zone : l'IA invente ce qui va le mieux à cet endroit (avec ou sans texte)
-- **Agrandir l'image** au-delà de ses bords (outpaint) : l'IA prolonge le décor, raccordé sans partie plus claire ; elle refait aussi les bords abîmés (liseré, cadre, bord flou, détectés d'office) ; pour un fond uni, une proposition « Fond prolongé » sans IA
+- **Agrandir l'image** au-delà de ses bords (outpaint) : l'IA prolonge le décor, raccordé sans partie plus claire ; elle refait aussi les bords abîmés (liseré, cadre, bord flou, détectés d'office) ; pour un fond uni, une proposition « Fond prolongé » sans IA ; une **description** facultative guide ce qui est ajouté (l'IA peut l'écrire elle-même)
 - **Upscale** : augmenter la définition (×1,5 à ×4), en version rapide ou plus nette (détails redessinés)
 - **Partir de celle-ci** : une proposition presque bonne ? L'IA en fait des variantes (réglage Proche ↔ Libre), au lieu de tout recommencer
-- **Supprimer** (J) : un coup de pinceau sur un petit défaut (fil, tache, poussière), il disparaît au lâcher
+- **Supprimer** (J) : un coup de pinceau sur un petit défaut (fil, tache, poussière), il disparaît au lâcher ; **Effacer d'un clic** : un clic sur un objet suffit
+- **Déplacer un objet** : l'IA refait le fond derrière lui ; **Remplacer un texte** de la photo par un autre, dans une police semblable
 - **Supprimer l'arrière-plan** et **Sélectionner le sujet** en un clic
 - **Réduire le bruit** (grain, défauts JPEG) et **Netteté** (flou léger)
 - **Restaurer une vieille photo** (rayures, taches, plis, grain), en gardant ses couleurs ou en la **colorisant**
@@ -29,24 +30,27 @@ Fait partie de la **[Suite Pixane](https://github.com/pixane-suite)** : des logi
 - **Ciel** : sélectionner, remplacer (6 ciels, bord affiné entre les branches) ; **Coloriser** ; **Changer la lumière** (8 lumières) ; choix sur des vignettes d'exemple
 - **Flou selon la profondeur** : un clic sur ce qui reste net, pinceaux pour corriger l'IA
 - **Supprimer les personnes** (l'IA les trouve, vous cochez celles à effacer), **Retouche portrait** (peau lissée en gardant le grain, yeux, dents)
+- **Visages** : **restaurer les visages flous** (GFPGAN), **fluidité des visages** (yeux, visage, nez, sourire), **retouche du visage** (sourire, regard, âge…) et **maquillage**
+- **Changer les vêtements**, **nouveau fond** (12 décors ou votre description, ou une autre photo), **recadrage conseillé** (règle des tiers, carré, 4:5, 16:9)
 - Durée de chaque calcul **mesurée sur votre PC** et affichée
 
 **Sélection**
-- Rectangle, lasso, pinceau et gomme de sélection ; ajouter / retirer avec Maj / Alt
+- Rectangle, ellipse, lasso (libre, par points, **magnétique**), pinceau et gomme de sélection ; ajouter / retirer avec Maj / Alt ; **masque rapide** (Maj+Q)
 - **Sélection d'objet** et **sélection rapide** par IA (SAM 3.1), **baguette magique** réglable en glissant, **sélection de texte** (un cadre autour d'un titre : les lettres seules, traits fins compris)
 - **Améliorer le contour** pour les cheveux, poils et bords flous ; agrandir, réduire, adoucir, inverser
 - **Plage de couleurs** ; **Plume** (tracés en lignes et en courbes, vers une sélection ou une forme)
 
 **Calques, comme dans Photoshop**
-- Visibilité, opacité, verrou, ordre (boutons ou **glisser à la souris**), fusion, aplatir
+- Visibilité, opacité, verrou, ordre (boutons ou **glisser à la souris**), fusion, aplatir, pixelliser ; **chercher un calque** par son nom
 - Plusieurs calques choisis à la fois (Ctrl+clic, Maj+clic) ; **aligner**, **répartir**, retourner, grouper, depuis la **barre d'accès rapide**
 - Les pixels qui dépassent de la feuille sont gardés (**Tout faire apparaître**)
 - **17 modes de fusion**, **masques de calque**, **masque d'écrêtage** (une photo dans les lettres d'un texte), **groupes**, **calques de réglage** et **calques de remplissage** (couleur, dégradé, motif) modifiables à tout moment
 - **Harmoniser avec l'arrière-plan** : un objet collé prend la lumière de la photo
-- **Styles de calque** non destructifs : ombre portée (dont ombre réaliste), ombre au sol en perspective, ombre interne, lueurs, contours multiples, biseau, incrustations couleur, dégradé (plusieurs couleurs) et motif ; 14 styles tout prêts, styles enregistrés
+- **Styles de calque** non destructifs : ombre portée (dont ombre réaliste), ombre au sol en perspective, ombre interne, lueurs, contours multiples, biseau, incrustations couleur, dégradé (plusieurs couleurs) et motif ; 24 styles tout prêts (dont **texte 3D**), styles enregistrés
 
 **Outils**
-- Recadrer, pinceau de couleur, tampon, **pinceau correcteur**, gomme de calque, déplacer (aussi aux flèches du clavier)
+- Recadrer, pinceau de couleur, **crayon**, **pinceau mélangeur**, peinture en **symétrie**, tampon, **pinceau correcteur**, **outil Pièce**, **yeux rouges**, gomme de calque, déplacer (aussi aux flèches du clavier)
+- **Pipette**, **loupe**, **règle** (avec Redresser), **rotation de la vue** ; **déformation de la marionnette**
 - **Pinceaux à forme** comme dans Photoshop et Krita : 235 pinceaux et 87 motifs livrés, **17 styles prêts** (crayon, fusain, aquarelle, huile, bombe…), import des pinceaux Photoshop (.abr), GIMP et Krita ; taille jusqu'à 5000 px, rotation, réglages complets (espacement, angle, dispersion, texture, double pinceau…) et **pression de la tablette**
 - **Dégradé à plusieurs couleurs** avec un **éditeur comme Photoshop** (points de couleur et d'opacité, dégradés tout prêts et enregistrés), vu **en direct** pendant qu'on le tire ; sur un texte, il se pose sur les lettres (le texte reste modifiable)
 - **Motifs** : pot de peinture, Remplir avec un motif, **tampon de motif**, style Incrustation de motif (motifs Photoshop .pat, GIMP, Krita, images)
@@ -55,17 +59,22 @@ Fait partie de la **[Suite Pixane](https://github.com/pixane-suite)** : des logi
 - **Pinceaux de retouche** : Densité − / +, Éponge, Goutte d'eau, Netteté, Doigt, Pinceau d'historique
 - **Texte modifiable, comme dans Photoshop** : police, taille, couleur, contour, ombre, fond, rotation, crénage, casse, exposant, ligatures, texte en cadre (justifié, césure), texte vertical, **déformation** (arc, drapeau, vague…), **texte sur un tracé**, **style par lettre**, glyphes, styles de texte
 - **Orthographe** (français, anglais) et **rechercher / remplacer** dans les textes
-- **Trouver une police semblable** : on sélectionne les lettres d'un titre, Pixane Photo cherche parmi les polices installées celles qui lui ressemblent le plus (sans Internet)
+- **Trouver une police semblable** : on sélectionne les lettres d'un titre, Windows lit les lettres, Pixane Photo cherche parmi les polices installées (et, si vous le voulez, 1 960 polices gratuites Google Fonts) celles qui lui ressemblent le plus
 - Règles, repères, grille et magnétisme ; panneau **Nuancier** (.aco Photoshop, .gpl GIMP)
 
 **Réglages et filtres**
 - Réglages de l'image avec bouton **Auto** (luminosité, contraste, saturation, teinte, température, netteté)
 - **Niveaux**, **Courbes**, **Balance des couleurs**, **Noir et blanc** (avec virage sépia), **Vibrance**, **Filtre photo**, **Mélangeur de couches**, **Courbe de transfert de dégradé**, **Remplacer la couleur**, Négatif, Seuil, Postérisation
-- Filtres : flou gaussien, flou de mouvement, **flou radial**, **flou de l'objectif**, **flou de surface**, réduction du bruit, netteté, vignette, **Fluidité**
+- Filtres : flou gaussien, flou de mouvement, **flou radial**, **flou de l'objectif**, **flou de surface**, réduction du bruit, netteté, vignette, **Fluidité**, **correction de l'objectif**
+- **Effets créatifs** : rétro (demi-teinte, VHS, pellicule, pixel art), peinture (aquarelle, huile, crayon, bande dessinée), lumière (reflet d'objectif, rayons, fuites de lumière), effet miniature, bordures et cadres ; **couleurs d'une autre image**
 - Taille de l'image, **taille de la zone de travail**, pivoter, retourner, redresser, **mise à l'échelle d'après le contenu** (changer les proportions sans écraser le sujet) ; transformer un calque (taille, rotation, **perspective**, **distordre**, **déformation**), **sans perte** en réduisant puis réagrandissant (comme un objet dynamique) ; **recadrage en perspective**
 - **Actions** : enregistrer une suite de réglages et de filtres, la rejouer d'un clic, aussi sur tout un dossier
 - Mode **couleurs RVB** ou **niveaux de gris**
 - **16 bits par couche** (65 536 nuances par couleur : dégradés et réglages forts sans cassures), avec **tramage** au retour en 8 bits ; **32 bits par couche (HDR)** : couleurs plus claires que le blanc, exposition de l'aperçu, **Virage HDR** ; les pinceaux travaillent dans la profondeur de l'image
+
+**Créer**
+- **Collage de photos**, **panorama**, **GIF animé** (un calque = une image), **photo d'identité** (formats officiels, planche 10 × 15 cm), **vectoriser** (SVG)
+- **Coller en perspective** (sur un mur, un écran), **double exposition**, **nettoyer un document photographié** (redressé, fond blanc), **plans de travail** exportés d'un coup, **filigrane** à l'export
 
 **Fichiers**
 - **Nouvelle image** avec 34 formats tout prêts (pochettes CD et vinyle, Spotify, livres, Amazon KDP, réseaux sociaux, A4, affiches…), unités (px, cm, mm, pouces, points, picas), résolution, **fond perdu** et **zone de sécurité** pour l'impression
@@ -77,12 +86,14 @@ Fait partie de la **[Suite Pixane](https://github.com/pixane-suite)** : des logi
 - **Traitement par lot** d'un dossier entier (réduire, réglage auto, upscale IA, arrière-plan, format, action enregistrée)
 - **Imprimer** (Ctrl+P) : papier, orientation, taille réelle ou remplir la page, aperçu
 - **Nouvelle image depuis le presse-papiers** ; **Exporter sous** (une copie dans un autre format, la photo ouverte ne change pas)
-- Annuler / Rétablir avec panneau Historique (aussi avec les boutons retour / suivant de la souris) ; fichiers récents
+- Annuler / Rétablir (100 étapes, réglable) avec panneau Historique et **instantanés** nommés (aussi avec les boutons retour / suivant de la souris) ; fichiers récents ; **photo suivante / précédente du dossier**
 
 **Confort**
 - Interface en **français** et en **anglais** (langue de Windows par défaut)
 - **Taille de l'interface** réglable de 75 % à 200 % (petits écrans, écrans 4K), aussi dans l'installateur ; taille des icônes des outils
-- Thème clair ou sombre, couleur d'accent de Windows ; guide intégré avec recherche (F1)
+- Thème clair ou sombre, couleur d'accent de Windows ; guide intégré avec recherche (F1) ; **Préférences** (Ctrl+,)
+- **Panneaux déplaçables** et **espaces de travail**, panneaux **Navigateur**, **Info** et **Deuxième image**, écran d'accueil, **plein écran** (F11)
+- **Rechercher une commande** (Ctrl+F), **raccourcis clavier** personnalisables, **barre contextuelle**, **menu rapide** (clic droit), réglage en glissant sur un nom, **comparer avant / après**
 - **Recherche des mises à jour** (sur demande ou au démarrage)
 - Installateur qui vérifie le PC et télécharge lui-même le moteur IA (ComfyUI et les modèles), avec reprise après coupure ; avec un ComfyUI déjà installé, seulement ce qui lui manque
 
@@ -1495,8 +1506,9 @@ Les groupes et calques de réglage n'ont pas de pixels : un message invite à ch
 - **Fichier > Exporter un GIF animé…** : chaque calque coché devient une image de l'animation (du bas vers le haut),
   avec la durée de chaque image, la largeur, *En boucle* et *Aller-retour*.
 - **Image > Photo d'identité…** : choisissez le format (35 × 45 mm pour la Belgique et la France, 2 × 2 pouces
-  pour les États-Unis…), **cliquez sur le visage** pour y centrer le cadre rouge et réglez *Taille du visage* (la
-  tête du haut du cadre jusqu'au-dessus des épaules). Résultat : une photo, ou une **planche 10 × 15 cm** remplie de
+  pour les États-Unis…), puis **cliquez sur le haut de la tête** (cheveux compris) **et sur le menton** : le cadre
+  rouge suit les règles du format (taille de la tête, marge au-dessus). *Trouver la tête (IA)* pose les deux points
+  pour vous (SAM 3.1, quelques secondes) ; glissez un point pour le corriger. Résultat : une photo, ou une **planche 10 × 15 cm** remplie de
   copies avec traits de coupe, à 300 dpi : imprimez-la à 100 %, sans « ajuster à la page ».
 - **Image > Vectoriser…** : le calque (un logo, un dessin, un texte scanné) devient des formes vectorielles, en
   couleurs ou en noir et blanc, plus ou moins détaillées, avec un aperçu. OK le pose dans un nouveau calque ;
@@ -1516,6 +1528,29 @@ Les groupes et calques de réglage n'ont pas de pixels : un message invite à ch
   *Maquillage naturel*, *Rouge à lèvres*, *Fard à paupières* (avec une couleur), *Eye-liner et mascara*, *Blush*,
   *Maquillage de soirée*. La personne, la pose et le fond restent les mêmes ; avec une sélection, seule cette zone
   change. Même moteur que *Modifier avec une consigne* (Flux Kontext, environ 1 minute par proposition).
+
+### Visages, fond, vêtements, cadrage, document, marionnette
+- **IA > Restaurer les visages flous (IA)…** : l'IA trouve chaque visage, le redresse et le refait net avec
+  **GFPGAN** (vieille photo, photo floue ou trop petite), puis le remet en place, bords fondus. Curseur *Force* :
+  100 % = le visage refait, moins = mélangé avec la photo (plus naturel ; GFPGAN peut changer un peu la couleur des
+  yeux). Modèle GFPGAN v1.4 (349 Mo, Apache-2.0), case *Restaurer les visages flous* à l'installation du moteur IA.
+- **IA > Fluidité des visages (IA)…** : curseurs *Yeux plus grands*, *Visage plus fin*, *Nez plus fin*, *Sourire*,
+  *Bouche plus large* (à gauche du milieu : l'inverse), avec l'aperçu en direct, pour tous les visages de la photo.
+- **IA > Changer les vêtements (IA)…** : T-shirt, chemise, costume et cravate, veste en cuir, pull, robe de soirée,
+  tenue de sport ou seulement la couleur, avec une couleur au choix ; la personne, la pose et le fond restent.
+  Flux Kontext, environ 1 minute par proposition.
+- **IA > Nouveau fond (IA)…** : le sujet reste, le fond est refait par l'IA d'après un choix (studio blanc, gris ou
+  noir, plage, ville la nuit, forêt, bureau flou, coucher de soleil, montagnes, scène de concert, néons, briques)
+  ou votre description ; plusieurs propositions comme *Remplir*. Ou *Une autre photo* : elle devient le fond, et le
+  sujet va dans son propre calque avec un masque (*Calque > Harmoniser avec l'arrière-plan* accorde ses couleurs).
+- **Image > Recadrage conseillé (IA)…** : l'IA trouve le sujet et propose des cadrages (règle des tiers, sujet
+  centré, carré, portrait 4:5, paysage 16:9) en vignettes ; double-clic pour recadrer, Ctrl+Z pour revenir.
+- **Image > Nettoyer un document photographié…** : une feuille, un ticket, une page photographiés de biais sont
+  trouvés, redressés (vus de face), et leur fond devient blanc et uni (ombres enlevées) ; en couleurs, en gris ou en
+  noir et blanc. Le résultat s'ouvre en nouvelle image.
+- **Édition > Déformation de la marionnette…** : posez des épingles d'un clic sur le calque (sur ce qui doit rester
+  en place et sur ce qui doit bouger), puis glissez-en une pour plier le sujet (un bras, une jambe, un texte) ; clic
+  droit : retirer une épingle. Marche le mieux sur un sujet détouré, dans son propre calque.
 
 ---
 

@@ -136,6 +136,7 @@ french.MoteurCase=Télécharger et installer le moteur IA après l'installation 
 french.MoteurDossier=Dossier du moteur IA :
 french.MoteurListe=ComfyUI portable 0.44 (le moteur) — 1,9 Go — GitHub — GPL-3.0%nExtensions Inpaint nodes, Crop and Stitch, Ultimate SD Upscale, GGUF — moins de 5 Mo — GitHub — GPL-3.0, Apache-2.0%nFlux Fill, version GGUF Q8 (effacer, remplir, agrandir) — 11,9 Go — Hugging Face — FLUX.1 [dev] non commerciale%nEncodeurs de texte T5 et CLIP — 5,0 Go — Hugging Face — Apache-2.0%nDécodeur d'image (VAE) — 0,3 Go — Hugging Face — Apache-2.0%nLaMa (effacer) — 0,2 Go — GitHub — Apache-2.0%nBiRefNet (sujet, arrière-plan) — 0,4 Go — Hugging Face — MIT%nSAM 3.1 (sélection d'objet, sélection rapide) — 1,6 Go — Hugging Face — SAM License (Meta)%nRealESRGAN x4 (upscale) — 64 Mo — GitHub — BSD-3-Clause%nSCUNet (réduire le bruit) — 72 Mo — GitHub — Apache-2.0%n7-Zip (pour décompresser) — 0,6 Mo — GitHub — LGPL-2.1%nTotal : 21,5 Go à télécharger, environ 31 Go sur le disque.
 french.MoteurProfondeur=Ajouter Depth Anything 3 pour « Flou selon la profondeur » (137 Mo, Apache-2.0, facultatif)
+french.MoteurVisages=Ajouter GFPGAN pour « Restaurer les visages flous » (349 Mo, Apache-2.0, facultatif)
 french.MoteurDescription=Ajouter Qwen3.5 2B pour la description automatique d'« Agrandir l'image » (4,2 Go, Apache-2.0, facultatif)
 french.MoteurSchnell=Ajouter Flux Schnell pour « Upscale net » (11,8 Go de plus, facultatif ; l'upscale simple marche sans)
 french.MoteurLicence=Flux Fill est sous licence FLUX.1 [dev] non commerciale : usage personnel permis, pas d'usage commercial.
@@ -192,6 +193,7 @@ english.MoteurCase=Download and install the AI engine after installing Pixane Ph
 english.MoteurDossier=AI engine folder:
 english.MoteurListe=ComfyUI portable 0.44 (the engine) — 1.9 GB — GitHub — GPL-3.0%nExtensions Inpaint nodes, Crop and Stitch, Ultimate SD Upscale, GGUF — under 5 MB — GitHub — GPL-3.0, Apache-2.0%nFlux Fill, GGUF Q8 version (erase, fill, expand) — 11.9 GB — Hugging Face — FLUX.1 [dev] non-commercial%nT5 and CLIP text encoders — 5.0 GB — Hugging Face — Apache-2.0%nImage decoder (VAE) — 0.3 GB — Hugging Face — Apache-2.0%nLaMa (erase) — 0.2 GB — GitHub — Apache-2.0%nBiRefNet (subject, background) — 0.4 GB — Hugging Face — MIT%nSAM 3.1 (object selection, quick selection) — 1.6 GB — Hugging Face — SAM License (Meta)%nRealESRGAN x4 (upscale) — 64 MB — GitHub — BSD-3-Clause%nSCUNet (noise reduction) — 72 MB — GitHub — Apache-2.0%n7-Zip (to unpack) — 0.6 MB — GitHub — LGPL-2.1%nTotal: 21.5 GB to download, about 31 GB on disk.
 english.MoteurProfondeur=Add Depth Anything 3 for "Depth blur" (137 MB, Apache-2.0, optional)
+english.MoteurVisages=Add GFPGAN for "Restore blurry faces" (349 MB, Apache-2.0, optional)
 english.MoteurDescription=Add Qwen3.5 2B for the automatic description of "Expand image" (4.2 GB, Apache-2.0, optional)
 english.MoteurSchnell=Add Flux Schnell for "Sharp upscale" (11.8 GB more, optional; the simple upscale works without it)
 english.MoteurLicence=Flux Fill is under the FLUX.1 [dev] non-commercial licence: personal use allowed, no commercial use.
@@ -323,7 +325,7 @@ var
   CarteMo: Integer;
   CarteAutre: String;           { carte qui n'est pas NVIDIA (AMD, Intel…), pour le message }
   PageMoteur: TWizardPage;
-  CaseMoteur, CaseSchnell, CaseProfondeur, CaseDescription, CaseLicence: TNewCheckBox;
+  CaseMoteur, CaseSchnell, CaseProfondeur, CaseVisages, CaseDescription, CaseLicence: TNewCheckBox;
   EditMoteur: TNewEdit;
   MoteurAbsent: Boolean;        { ComfyUI introuvable au moment de la page Moteur IA }
   PageTrad: TWizardPage;
@@ -790,6 +792,7 @@ begin
   EditMoteur.Enabled := CaseMoteur.Checked;
   CaseSchnell.Enabled := CaseMoteur.Checked;
   CaseProfondeur.Enabled := CaseMoteur.Checked;
+  CaseVisages.Enabled := CaseMoteur.Checked;
   CaseDescription.Enabled := CaseMoteur.Checked;
   CaseLicence.Enabled := CaseMoteur.Checked;
 end;
@@ -857,7 +860,7 @@ begin
   Liste.Parent := PageMoteur.Surface;
   Liste.Top := Y + ScaleY(28);
   Liste.Width := PageMoteur.SurfaceWidth;
-  Liste.Height := ScaleY(74);
+  Liste.Height := ScaleY(52);
   Liste.ReadOnly := True;
   Liste.ScrollBars := ssVertical;
   Liste.WordWrap := False;
@@ -878,9 +881,17 @@ begin
   CaseProfondeur.Caption := CustomMessage('MoteurProfondeur');
   CaseProfondeur.Checked := True;
 
+  CaseVisages := TNewCheckBox.Create(PageMoteur);
+  CaseVisages.Parent := PageMoteur.Surface;
+  CaseVisages.Top := CaseProfondeur.Top + CaseProfondeur.Height + ScaleY(4);
+  CaseVisages.Width := PageMoteur.SurfaceWidth;
+  CaseVisages.Height := ScaleY(18);
+  CaseVisages.Caption := CustomMessage('MoteurVisages');
+  CaseVisages.Checked := True;
+
   CaseDescription := TNewCheckBox.Create(PageMoteur);
   CaseDescription.Parent := PageMoteur.Surface;
-  CaseDescription.Top := CaseProfondeur.Top + CaseProfondeur.Height + ScaleY(4);
+  CaseDescription.Top := CaseVisages.Top + CaseVisages.Height + ScaleY(4);
   CaseDescription.Width := PageMoteur.SurfaceWidth;
   CaseDescription.Height := ScaleY(18);
   CaseDescription.Caption := CustomMessage('MoteurDescription');
@@ -1029,6 +1040,7 @@ begin
   if CaseSchnell.Checked then Result := Result + ' --schnell';
   if not TraducteurChoisi then Result := Result + ' --sans-traducteur';
   if not CaseProfondeur.Checked then Result := Result + ' --sans-profondeur';
+  if not CaseVisages.Checked then Result := Result + ' --sans-visages';
   if CaseDescription.Checked then Result := Result + ' --description';
 end;
 

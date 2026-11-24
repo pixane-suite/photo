@@ -1342,8 +1342,9 @@ Groups and adjustment layers have no pixels: a message asks you to choose an ima
 - **File > Export an animated GIF…**: each checked layer becomes a frame of the animation (from the bottom up), with
   the duration of each frame, the width, *Loop* and *Back and forth*.
 - **Image > ID photo…**: choose the format (35 × 45 mm for Belgium and France, 2 × 2 inches for the United States…),
-  **click on the face** to centre the red frame on it and adjust *Face size* (the head from the top of the frame to
-  just above the shoulders). Result: one photo, or a **10 × 15 cm (4 × 6 in) sheet** filled with copies and cut
+  then **click on the top of the head** (hair included) **and on the chin**: the red frame follows the format's
+  rules (head size, margin above). *Find the head (AI)* places both points for you (SAM 3.1, a few seconds); drag a
+  point to correct it. Result: one photo, or a **10 × 15 cm (4 × 6 in) sheet** filled with copies and cut
   lines, at 300 dpi: print it at 100%, without "fit to page".
 - **Image > Vectorize…**: the layer (a logo, a drawing, a scanned text) becomes vector shapes, in colour or black and
   white, more or less detailed, with a preview. OK puts it in a new layer; *Save the SVG…* keeps the vector file (it
@@ -1362,6 +1363,29 @@ Groups and adjustment layers have no pixels: a message asks you to choose an ima
   *Eyeshadow* (with a colour), *Eyeliner and mascara*, *Blush*, *Evening make-up*. The person, the pose and the
   background stay the same; with a selection, only that area changes. Same engine as *Edit with an instruction*
   (Flux Kontext, about 1 minute per option).
+
+### Faces, background, clothes, framing, document, puppet
+- **AI > Restore blurry faces (AI)…**: the AI finds each face, straightens it and makes it sharp again with
+  **GFPGAN** (old photo, blurry or too small photo), then puts it back with blended edges. *Strength* slider: 100% =
+  the redone face, less = blended with the photo (more natural; GFPGAN may slightly change the eye colour). GFPGAN
+  v1.4 model (349 MB, Apache-2.0), *Restore blurry faces* box when installing the AI engine.
+- **AI > Face liquify (AI)…**: *Bigger eyes*, *Slimmer face*, *Slimmer nose*, *Smile*, *Wider mouth* sliders (left of
+  the middle: the opposite), with a live preview, for all faces in the photo.
+- **AI > Change clothes (AI)…**: T-shirt, shirt, suit and tie, leather jacket, sweater, evening dress, sportswear or
+  only the colour, with a colour of your choice; the person, the pose and the background stay. Flux Kontext, about
+  1 minute per option.
+- **AI > New background (AI)…**: the subject stays, the background is redone by the AI from a choice (white, grey or
+  black studio, beach, city at night, forest, blurred office, sunset, mountains, concert stage, neon, bricks) or
+  your description; several options as with *Fill*. Or *Another photo*: it becomes the background, and the subject
+  goes into its own layer with a mask (*Layer > Harmonize with the background* matches its colours).
+- **Image > Suggested crop (AI)…**: the AI finds the subject and suggests framings (rule of thirds, centred subject,
+  square, portrait 4:5, landscape 16:9) as thumbnails; double-click to crop, Ctrl+Z to go back.
+- **Image > Clean a photographed document…**: a sheet, a receipt, a page photographed at an angle is found,
+  straightened (seen from the front), and its background turns plain white (shadows removed); in colour, grey or
+  black and white. The result opens as a new image.
+- **Edit > Puppet warp…**: place pins with a click on the layer (on what must stay in place and on what must move),
+  then drag one to bend the subject (an arm, a leg, a text); right-click: remove a pin. Works best on a cut-out
+  subject, in its own layer.
 
 ---
 

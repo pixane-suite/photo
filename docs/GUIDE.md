@@ -1402,8 +1402,9 @@ Les groupes et calques de réglage n'ont pas de pixels : un message invite à ch
 - **Fichier > Exporter un GIF animé…** : chaque calque coché devient une image de l'animation (du bas vers le haut),
   avec la durée de chaque image, la largeur, *En boucle* et *Aller-retour*.
 - **Image > Photo d'identité…** : choisissez le format (35 × 45 mm pour la Belgique et la France, 2 × 2 pouces
-  pour les États-Unis…), **cliquez sur le visage** pour y centrer le cadre rouge et réglez *Taille du visage* (la
-  tête du haut du cadre jusqu'au-dessus des épaules). Résultat : une photo, ou une **planche 10 × 15 cm** remplie de
+  pour les États-Unis…), puis **cliquez sur le haut de la tête** (cheveux compris) **et sur le menton** : le cadre
+  rouge suit les règles du format (taille de la tête, marge au-dessus). *Trouver la tête (IA)* pose les deux points
+  pour vous (SAM 3.1, quelques secondes) ; glissez un point pour le corriger. Résultat : une photo, ou une **planche 10 × 15 cm** remplie de
   copies avec traits de coupe, à 300 dpi : imprimez-la à 100 %, sans « ajuster à la page ».
 - **Image > Vectoriser…** : le calque (un logo, un dessin, un texte scanné) devient des formes vectorielles, en
   couleurs ou en noir et blanc, plus ou moins détaillées, avec un aperçu. OK le pose dans un nouveau calque ;
@@ -1423,6 +1424,29 @@ Les groupes et calques de réglage n'ont pas de pixels : un message invite à ch
   *Maquillage naturel*, *Rouge à lèvres*, *Fard à paupières* (avec une couleur), *Eye-liner et mascara*, *Blush*,
   *Maquillage de soirée*. La personne, la pose et le fond restent les mêmes ; avec une sélection, seule cette zone
   change. Même moteur que *Modifier avec une consigne* (Flux Kontext, environ 1 minute par proposition).
+
+### Visages, fond, vêtements, cadrage, document, marionnette
+- **IA > Restaurer les visages flous (IA)…** : l'IA trouve chaque visage, le redresse et le refait net avec
+  **GFPGAN** (vieille photo, photo floue ou trop petite), puis le remet en place, bords fondus. Curseur *Force* :
+  100 % = le visage refait, moins = mélangé avec la photo (plus naturel ; GFPGAN peut changer un peu la couleur des
+  yeux). Modèle GFPGAN v1.4 (349 Mo, Apache-2.0), case *Restaurer les visages flous* à l'installation du moteur IA.
+- **IA > Fluidité des visages (IA)…** : curseurs *Yeux plus grands*, *Visage plus fin*, *Nez plus fin*, *Sourire*,
+  *Bouche plus large* (à gauche du milieu : l'inverse), avec l'aperçu en direct, pour tous les visages de la photo.
+- **IA > Changer les vêtements (IA)…** : T-shirt, chemise, costume et cravate, veste en cuir, pull, robe de soirée,
+  tenue de sport ou seulement la couleur, avec une couleur au choix ; la personne, la pose et le fond restent.
+  Flux Kontext, environ 1 minute par proposition.
+- **IA > Nouveau fond (IA)…** : le sujet reste, le fond est refait par l'IA d'après un choix (studio blanc, gris ou
+  noir, plage, ville la nuit, forêt, bureau flou, coucher de soleil, montagnes, scène de concert, néons, briques)
+  ou votre description ; plusieurs propositions comme *Remplir*. Ou *Une autre photo* : elle devient le fond, et le
+  sujet va dans son propre calque avec un masque (*Calque > Harmoniser avec l'arrière-plan* accorde ses couleurs).
+- **Image > Recadrage conseillé (IA)…** : l'IA trouve le sujet et propose des cadrages (règle des tiers, sujet
+  centré, carré, portrait 4:5, paysage 16:9) en vignettes ; double-clic pour recadrer, Ctrl+Z pour revenir.
+- **Image > Nettoyer un document photographié…** : une feuille, un ticket, une page photographiés de biais sont
+  trouvés, redressés (vus de face), et leur fond devient blanc et uni (ombres enlevées) ; en couleurs, en gris ou en
+  noir et blanc. Le résultat s'ouvre en nouvelle image.
+- **Édition > Déformation de la marionnette…** : posez des épingles d'un clic sur le calque (sur ce qui doit rester
+  en place et sur ce qui doit bouger), puis glissez-en une pour plier le sujet (un bras, une jambe, un texte) ; clic
+  droit : retirer une épingle. Marche le mieux sur un sujet détouré, dans son propre calque.
 
 ---
 

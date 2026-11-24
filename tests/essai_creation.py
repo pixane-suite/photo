@@ -100,13 +100,17 @@ verifier(n == 6 and g.n_frames == 6 and g.info.get("duration") == 150, f"GIF : {
 
 # ---------------------------------------------------------------- photo d'identité
 photo_essai = scene(800, 1000, 5)
-cadre, v = creation.cadre_identite(photo_essai, "35x45")
-vx, vy, vw, vh = 300, 300, 160, 200                     # un visage connu : la tête doit faire 34 mm sur 45
-cx_, cy_, cw_, ch_ = creation.cadre_depuis_visage((vx, vy, vw, vh), "35x45")
-verifier(abs(vh * 1.55 / ch_ * 45 - 34) < 0.5 and abs(cx_ + cw_ / 2 - (vx + vw / 2)) < 1,
-         "identité : tête de 34 mm sur 45, centrée")
+haut_, menton_ = (400, 250), (410, 550)                 # tête de 300 px : 34 mm sur 45
+cadre = creation.cadre_depuis_points(haut_, menton_, "35x45")
 x, y, w, h = cadre
-verifier(abs(w / h - 35 / 45) < 0.02, f"identité : cadre aux proportions 35 × 45 ({w} × {h}, visage {v})")
+verifier(abs(w / h - 35 / 45) < 0.02 and abs(300 / h * 45 - 34) < 0.3 and abs(x + w / 2 - 405) < 1
+         and abs((250 - y) / h * 45 - 4) < 0.3, f"identité : tête de 34 mm, 4 mm au-dessus, centrée ({cadre})")
+tete_m = np.zeros((1000, 800), np.uint8)
+tete_m[240:560, 300:500] = 255
+vis_m = np.zeros((1000, 800), np.uint8)
+vis_m[330:560, 320:480] = 255
+pts = creation.points_depuis_masques(tete_m, vis_m)
+verifier(pts is not None and pts[0][1] == 240 and pts[1][1] == 559, f"identité : points d'après les masques {pts}")
 ph = creation.photo_identite(photo_essai, "35x45", cadre)
 verifier((ph.width(), ph.height()) == (creation.mm(35), creation.mm(45)), f"identité : {ph.width()} × {ph.height()} px à 300 dpi")
 pl, nb = creation.planche(ph)
@@ -177,16 +181,28 @@ verifier(len(f.doc.calques) == avant, "vectoriser : Ctrl+Z l'enlève")
 
 # photo d'identité dans la fenêtre
 from pixane.creation import DialogueIdentite
-di = DialogueIdentite(photo_essai, f)
+di = DialogueIdentite(photo_essai, f, f._trouver_tete)
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtCore import QEvent
-avant_cadre = di.cadre()
 k_ = di._echelle()
 pm_ = di.vue.pixmap()
-pos = QPointF((di.vue.width() - pm_.width()) / 2 + 200 * k_, (di.vue.height() - pm_.height()) / 2 + 250 * k_)
-di._clic(QMouseEvent(QEvent.MouseButtonPress, pos, pos, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+
+
+def clic_(x, y):
+    pos = QPointF((di.vue.width() - pm_.width()) / 2 + x * k_, (di.vue.height() - pm_.height()) / 2 + y * k_)
+    di._presser(QMouseEvent(QEvent.MouseButtonPress, pos, pos, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+
+
+clic_(300, 200)
+clic_(310, 500)
 x_, y_, w_, h_ = di.cadre()
-verifier(abs(x_ + w_ / 2 - 200) < 3 and di.cadre() != avant_cadre, "identité : un clic centre le cadre sur le visage")
+verifier(abs(x_ + w_ / 2 - 305) < 3 and abs(300 / h_ * 45 - 34) < 0.5, "identité : deux clics (haut, menton) -> cadre")
+appels = []
+f._carte_ia = lambda titre, fab, suite, **k: (appels.append(fab), suite([tete_m, vis_m]))
+from pixane import recettes as rec_
+rec_.sam_disponible = lambda: True
+di.b_ia.click()
+verifier(appels and di.points[0][1] == 240, "identité : « Trouver la tête (IA) » pose les deux points")
 doc = f.photo_identite(di)
 verifier(doc is not None and doc.taille() == (creation.mm(150), creation.mm(100)) and doc.dpi == 300,
          "photo d'identité : planche ouverte à 300 dpi")

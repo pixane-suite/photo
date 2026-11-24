@@ -4,95 +4,12 @@ Carnet tenu à chaque modification (consigne de Christophe, 11/11/2026) : on ne 
 plusieurs modifications. Ce jour-là, tout ce qui est listé ici sert à mettre à jour le README, les notes de version,
 etc. ; puis le carnet est vidé (en gardant la « Dernière publication » à jour).
 
-**Dernière publication : 0.26.0** (16/11/2026, GitHub pixane-suite/photo v0.26.0, version normale).
-Les installateurs fabriqués depuis portent toujours le numéro 0.26.0 (non publiés).
+**Dernière publication : 0.27.0** (24/11/2026, GitHub pixane-suite/photo v0.27.0, version normale).
+Les installateurs fabriqués depuis porteront le numéro 0.28.0 (non publiés), comme demandé par Christophe le 24/11/2026.
 
 ## Nouveautés
 
-- **Édition > Préférences…** (Ctrl+,), comme Pixane Video : tous les réglages durables en onglets
-  (Affichage, Fonctions installées, Intelligence artificielle, Enregistrement, Mises à jour), appliqués à OK ; les
-  menus restent. Nouveaux réglages visibles : fréquence de la copie de récupération (ou jamais), dossier des images.
-- **Agrandir l'image : description facultative** (ligne « Description » de la barre) : guide ce que l'IA ajoute
-  (moins d'objets ou de personnages hors sujet). **Décrire (IA)** : l'IA écrit elle-même la description, modifiable ;
-  modèle facultatif **Qwen3.5 2B** (4,2 Go, Apache-2.0, Hugging Face Comfy-Org), case dans l'installateur et dans
-  Installer / Compléter le moteur IA.
-- **Polices gratuites Google Fonts dans « Trouver une police semblable »** (option, décochée d'office ; case dans
-  l'installateur, Affichage et Préférences) : environ 1 960 polices gratuites (surtout OFL), téléchargées une fois en
-  arrière-plan (environ 100 Mo, depuis Fontsource), comparées comme les polices installées. Une police Google pas
-  installée est marquée comme telle ; **Télécharger et installer** l'installe dans Windows pour l'utilisateur.
-
-- **Outil Texte plus pratique** : double-clic sur un texte de la photo ou sur un calque de texte pour l'éditer ;
-  lettres sélectionnées surlignées sur la photo ; couleur (texte, contour, ombre, fond) montrée sur la photo pendant
-  le choix ; liste des polices filtrée par **style** (avec / sans empattements, manuscrites, fantaisie, chasse fixe)
-  et de **taille** réglable (petite, moyenne, grande) ; **panneau Texte élargissable** à la souris (largeur retenue).
-- **Nouvelle image en 16 ou 32 bits par couche** (choix retenu).
-
-- **Calques** : l'outil Déplacer bouge un **groupe entier** (ou plusieurs calques choisis) ; **cadre en pointillés**
-  autour de chaque texte et de chaque calque qui dépasse de l'image (gris, en couleur pour le calque choisi) ; **Calque > Pixelliser** (texte, forme, style, objet
-  dynamique, tout), aussi au clic droit.
-- **Lasso par points** (choix « Libre / Par points » dans la barre du Lasso).
-- **Outil Texte** : choisir des lettres en glissant sur le texte de la photo, double-clic = un mot ; déplacer par le
-  bord du cadre ou Ctrl + glisser.
-- **Polices installées pendant que Pixane est ouvert** : visibles tout de suite.
-- **Effacer : analyse de la zone** avant de lancer (ombre de l'objet, bord oublié), montrés en couleur et proposés
-  (désactivable dans les Préférences).
-- **Onglets Calques / Historique / Nuancier / Actions** : l'onglet ouvert se voit (gras, trait de couleur).
-
-- **Astuces** : nouveau chapitre du guide, ouvert par **Aide > Astuces** (IA, sélection, texte, calques), dont l'astuce de l'outil Supprimer (IA) : image de très bonne qualité, petites zones (aussi dans le message du bas).
-
-- **IA > Remplacer un texte…** : lettres lues par Windows, police semblable, l'ancien texte effacé par l'IA et le
-  nouveau posé à la même place, à la même hauteur et dans la même couleur (calque Texte modifiable).
-- **Outil Effacer d'un clic (IA)** : un clic sur un objet, SAM le détoure, puis Effacer (analyse de l'ombre,
-  propositions).
-- **Outil Yeux rouges** (sans IA, immédiat).
-- **Filtres > Correction de l'objectif** : déformation tonneau / coussin, vignetage, franges de couleur.
-- **Affichage > Comparer avant / après** (Ctrl+Alt+B) : rideau entre la photo à l'ouverture et la photo actuelle.
-
-- **Coller et glisser une image** : elle garde sa **taille réelle** (plus de réduction automatique) ; une image
-  glissée sur la photo ouverte devient un **nouveau calque**, centré là où on la lâche (un projet s'ouvre toujours
-  dans son onglet).
-
-- **Nuancier enrichi** : cercle de couleurs (avec *+ Ajouter au nuancier*), harmonies et nuances de la couleur de
-  peinture, couleurs principales de l'image ouverte, groupes repliables ; clic droit pour ranger une couleur dans
-  *Mes couleurs*.
-
-- **Effets créatifs** (menu Filtres) : Rétro (demi-teinte, cassette VHS, pellicule ancienne, pixel art), Peinture
-  (aquarelle, peinture à l'huile, croquis au crayon, bande dessinée), Lumière (reflet d'objectif, rayons de soleil,
-  fuites de lumière), Effet miniature, Bordure et cadre (Polaroid, coins arrondis, bords déchirés, passe-partout…).
-- **Annuler** : 100 étapes au lieu de 30, et le nombre se choisit dans Préférences > Enregistrement (10 à 1000).
-
-- **Styles de texte** : 8 de plus (Ombre longue, Contour double, Arc-en-ciel, Glitch, Rétro 80, Argent, Glace, Bande
-  dessinée).
-- **Couleurs d'une autre image** (Image > Réglages) : la photo prend l'ambiance de couleurs d'une référence.
-- **Filigrane** (Fichier > Filigrane…) : texte ou logo ajouté aux exports (Exporter sous, pour le web, par lot).
-- **Nouveaux outils** : pipette (échantillon moyenné), sélection elliptique, lasso magnétique, outil Pièce, Déplacer un objet (IA), loupe, rotation de la vue (la photo ne bouge pas), règle avec Redresser, crayon (trait net), pinceau mélangeur, peinture en symétrie (2 ou 4 traits).
-- **Interface** : panneaux déplaçables et menu Fenêtre, espaces de travail, panneaux Navigateur, Info et Deuxième image, écran d'accueil, rechercher une commande (Ctrl+F), raccourcis clavier personnalisables, plein écran (F11), barre contextuelle, menu rapide (clic droit), taille du pinceau avec Alt + clic droit, réglage en glissant sur un nom, masque rapide (Maj+Q), chercher un calque, plans de travail, photo suivante / précédente du dossier, photo rechargée si son fichier change.
-- **Créer** : collage de photos, panorama, GIF animé, photo d'identité (planche 10 × 15 cm), vectoriser (SVG), coller en perspective, double exposition, styles Texte 3D, instantanés nommés dans l'Historique, retouche du visage et maquillage par l'IA.
-
 ## Corrections
-
-- **Outil Déplacer** : il ne déplace plus d'autres calques choisis plus tôt dans le panneau quand le calque actif a changé depuis.
-- **Fenêtre des propositions** (Effacer, Remplir…) : l'aperçu montre exactement ce qui sera posé (le résultat de l'IA dans la zone, la photo d'origine autour) ; avant, il pouvait montrer des changements hors de la zone qui n'étaient pas gardés.
-- Outil Texte : **Ctrl+Z** ne retirait pas un texte posé par erreur d'un clic (la case de saisie gardait le
-  raccourci).
-
-- **Trouver une police semblable** donnait des polices sans rapport :
-  - comparaison **lettre par lettre** : les lettres espacées (« C O L D P L A Y ») et les textes gras retrouvent leur
-    police (essai sur 92 textes : 1re dans 46 cas sur 92 au lieu de 26, dans les 3 premières 59 fois au lieu de 28) ;
-  - la mémoire des polices rangeait, pour certaines polices, des morceaux d'autres lettres à la place des bonnes
-    (refaite une fois, automatiquement) ;
-  - les lettres prises sont montrées en noir sur blanc (un texte blanc était invisible) ;
-  - la case ne reprend plus le mot de la recherche d'avant ; **Windows lit les lettres** et la remplit (OCR intégré
-    à Windows, rien à télécharger) ; Pixane prévient si le nombre de lettres ne correspond pas, et essaie les
-    majuscules quand l'image l'est.
-- **Souris invisible à l'ouverture** : sans image ouverte, la flèche disparaissait au-dessus de la fenêtre (le
-  pinceau, choisi d'office, cache la flèche pour dessiner son rond, qui n'existe pas sans image). La flèche reste
-  visible tant qu'aucune image n'est ouverte.
-- **Agrandir l'image** en pleine définition : l'ajout ressortait sous un voile brumeux, et des personnages ou
-  objets de la proposition choisie pouvaient changer. Flux voit maintenant l'image comme modèle au lieu d'une zone
-  grise. Même correction pour « Partir de celle-ci » (variantes d'une proposition).
-- Désinstallation, « Supprimer aussi les réglages » : n'efface plus que les réglages de Pixane Photo (avant :
-  toute la clé Software\Pixane, donc aussi les réglages de Pixane Video). Signalé par le projet Video.
 
 ## À mettre à jour le jour de la publication
 

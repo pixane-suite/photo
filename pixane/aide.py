@@ -293,6 +293,8 @@ TELECHARGES = [
     Composant("LaMa", "https://github.com/advimman/lama", "Effacer (premier passage)", "Apache-2.0"),
     Composant("RealESRGAN x4plus", "https://github.com/xinntao/Real-ESRGAN", "Upscale", "BSD-3-Clause"),
     Composant("SCUNet", "https://github.com/cszn/SCUNet", "Réduire le bruit", "Apache-2.0"),
+    Composant("GFPGAN v1.4", "https://github.com/TencentARC/GFPGAN", "Restaurer les visages flous (facultatif)",
+              "Apache-2.0"),
     Composant("BiRefNet", "https://github.com/ZhengPeng7/BiRefNet", "Sujet, arrière-plan", "MIT"),
     Composant("SAM 3.1", "https://huggingface.co/facebook/sam3.1",
               "Sélection d'objet, sélection rapide, ciel, supprimer les personnes, retouche portrait",
